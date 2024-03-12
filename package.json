@@ -1,0 +1,19 @@
+{
+  "name": "frida-cshell",
+  "version": "1.0.0",
+  "description": "Frida's CShell",
+  "scripts": {
+    "prepare": "npm run build",
+    "build": "frida-compile src/entrypoint.ts -o frida-cshell.js -c",
+    "lint": "eslint --ext .ts .",
+    "pretty": "npx prettier --write src/**/*.ts"
+  },
+  "devDependencies": {
+    "@types/frida-gum": "^18.7",
+    "@typescript-eslint/eslint-plugin": "^7.1.1",
+    "@typescript-eslint/parser": "^7.1.1",
+    "eslint": "^8.57.0",
+    "frida-compile": "^16.2.1",
+    "prettier": "^3.2.5"
+  }
+}

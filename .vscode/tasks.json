@@ -1,0 +1,67 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "prepare",
+			"problemMatcher": [],
+			"label": "Build",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"type": "npm",
+			"script": "lint",
+			"problemMatcher": [],
+			"label": "Lint",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"type": "npm",
+			"script": "pretty",
+			"problemMatcher": [],
+			"label": "Pretty",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"type": "shell",
+			"command": "gcc -Wall -Werror -no-pie -o target target.c",
+			"problemMatcher": [],
+			"label": "Target",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"type": "shell",
+			"command": "frida-inject -s frida-cshell.js --interactive -f ./target",
+			"problemMatcher": [],
+			"label": "Test",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": true,
+				"close": true
+			},
+			"dependsOn": [
+				"Target"
+			]
+		}
+	]
+}

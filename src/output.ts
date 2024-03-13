@@ -2,7 +2,9 @@ import { CharCode } from "./char.js";
 import { History } from "./history.js";
 
 export class Output {
-  public static readonly PROMPT: string = "-> ";
+  private static readonly VERSION = '@VER@';
+
+  private static readonly PROMPT: string = "-> ";
 
   private static readonly shell: string[] = [
     "     _.---._         ",
@@ -35,7 +37,7 @@ export class Output {
 
     this.writeln();
     this.writeln(
-      this.bold(`CSHELL running in FRIDA ${Frida.version} using ${Script.runtime}`),
+      this.bold(`CSHELL v${this.VERSION}, running in FRIDA ${Frida.version} using ${Script.runtime}`),
     );
 
     this.writeln("Attached to:");

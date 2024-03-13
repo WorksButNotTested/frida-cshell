@@ -1,0 +1,37 @@
+name: Release
+on:
+  push:
+    branches:
+      - master
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Node
+        id: node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+      - name: Install
+        id: install
+        run: npm install
+      - name: Release
+        id: release
+        uses: justincy/github-action-npm-release@2.0.1
+      - name: Upload
+        id: upload
+        uses: actions/upload-release-asset@v1
+        if: ${{ steps.release.outputs.released == 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/frida-cshell.js
+          asset_name: frida-cshell.js
+          asset_content_type: text/javascript

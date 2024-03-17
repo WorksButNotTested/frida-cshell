@@ -3,8 +3,8 @@ The C-Shell is a command line interpreter embedded as part of the `frida-inject`
 
 # Getting Started
 The C-Shell can be started by using the `-s` flag provided to the `frida-inject` tool as follows:
-* `frida-inject -f <file> -s frida-cshell.js`
-* `frida-inject -p <pid> -s frida-cshell.js`
+* `frida-inject -f <file> --interactive -s frida-cshell.js`
+* `frida-inject -p <pid> --interactive -s frida-cshell.js`
 
 When launched the user will see the welcome banner as shown below:
 
@@ -21,6 +21,8 @@ Attached to:
         Name: vim.basic
 ->
 ```
+**Important** Be sure to include the `--interactive` command line option, otherwise the terminal will appear non-responsive.
+
 # Walkthrough
 Perhaps the easiest way to understand the C-Shell is by an example, let's walk through a fictional sequence of commands to analyse a program
 ## #0 Threads

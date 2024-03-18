@@ -375,6 +375,10 @@ Thus our mathematic operations use a prefix notation, e.g.
 
 ret: 0x00000000`00000008 (8)
 ```
+# Development
+The reponsitory is configured to support Visual Studio Code's `Dev Containers`. Open the repository in VSCode, install the `Dev Containers` extension and when prompted opt to `Reopen in Container` or select `Dev Containers: Reopen in Container` from the command pallete. To build, select `Terminal` -> `Run Build Task` from the menu. The output `frida-cshell.js` can be found in the root directory of the repository.
+
+To build without VSCode, refer to the file `.devcontainer/Dockerfile` to see the required dependencies.
 
 # Parameters
 C-Shell supports 4 kinds or parameters:

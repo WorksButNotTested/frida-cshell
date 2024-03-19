@@ -63,6 +63,29 @@
 				"Target",
 				"Build"
 			]
+		},
+		{
+			"type": "shell",
+			"command": "frida-inject -s frida-cshell.js -P '{\"verbose\": true}' --interactive -f ./target",
+			"problemMatcher": [],
+			"label": "Debug",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": true,
+				"close": true
+			},
+			"dependsOn": [
+				"Target",
+				"Build"
+			]
 		}
 	]
 }

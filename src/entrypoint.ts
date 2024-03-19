@@ -10,10 +10,18 @@
 import { Input } from './input.js';
 import { Output } from './output.js';
 
-Output.banner();
-Output.prompt();
+type InitParams = {
+  verbose: boolean | undefined;
+};
 
 rpc.exports = {
+  init(stage: string, params: InitParams | undefined) {
+    const verbose = params?.verbose ?? false;
+    Output.setVerbose(verbose);
+    Output.writeln(`init - stage: ${stage}, verbose: ${verbose}`, true);
+    Output.banner();
+    Output.prompt();
+  },
   /**
    * Support reading from stdin for communications with the injected script.
    * With the console in its default canonical mode, we will read a line at a
@@ -30,9 +38,5 @@ rpc.exports = {
    */
   getFridaTerminalMode() {
     return 'raw';
-  },
-
-  setDevelopment(dev: boolean) {
-    Output.setDevelopment(dev);
   },
 };

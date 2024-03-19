@@ -24,7 +24,7 @@ export class Output {
     '\\____|___/_| |_|\\___|_|_| ',
   ];
 
-  private static development: boolean = false;
+  private static verbose: boolean = false;
 
   public static banner() {
     this.shell
@@ -62,8 +62,8 @@ export class Output {
     this.write(backspaces);
   }
 
-  public static write(buffer?: string, development: boolean = false) {
-    if (development && !this.development) return;
+  public static write(buffer?: string, verbose: boolean = false) {
+    if (verbose && !this.verbose) return;
 
     if (buffer) {
       const fixed = buffer.replace(new RegExp('\n', 'g'), '\r\n');
@@ -71,16 +71,16 @@ export class Output {
     }
   }
 
-  public static writeln(buffer?: string, development: boolean = false) {
+  public static writeln(buffer?: string, verbose: boolean = false) {
     if (buffer) {
-      this.write(`${buffer}\n`, development);
+      this.write(`${buffer}\n`, verbose);
     } else {
-      this.write('\n', development);
+      this.write('\n', verbose);
     }
   }
 
-  public static setDevelopment(dev: boolean): void {
-    this.development = dev;
+  public static setVerbose(dev: boolean): void {
+    this.verbose = dev;
   }
 
   public static bold(input: string): string {

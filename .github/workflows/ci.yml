@@ -24,8 +24,8 @@ jobs:
       - name: Release
         id: release
         uses: justincy/github-action-npm-release@2.0.1
-      - name: Upload
-        id: upload
+      - name: Upload JS
+        id: uploadjs
         uses: actions/upload-release-asset@v1
         if: ${{ steps.release.outputs.released == 'true' }}
         env:
@@ -35,3 +35,14 @@ jobs:
           asset_path: ${{ github.workspace }}/frida-cshell.js
           asset_name: frida-cshell.js
           asset_content_type: text/javascript
+      - name: Upload SH
+        id: uploadsh
+        uses: actions/upload-release-asset@v1
+        if: ${{ steps.release.outputs.released == 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/frida-cshell
+          asset_name: frida-cshell
+          asset_content_type: text/x-shellscript

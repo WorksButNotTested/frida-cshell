@@ -17,5 +17,8 @@
     "--cap-add=SYS_PTRACE",
     "--security-opt",
     "seccomp=unconfined"
+  ],
+  "mounts": [
+    "source=${localEnv:HOME},target=/home/share,type=bind"
   ]
 }

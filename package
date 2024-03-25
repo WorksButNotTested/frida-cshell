@@ -1,0 +1,110 @@
+#!/bin/bash
+TEMPDIR=$(mktemp -d package-cshell.XXXXXXXXXX)
+trap "rm -rf $TEMPDIR" EXIT
+
+echo '#!/bin/bash'                >  $TEMPDIR/frida-cshell
+echo 'SCRIPT=$(cat <<EOF'         >> $TEMPDIR/frida-cshell
+base64 frida-cshell.js            >> $TEMPDIR/frida-cshell
+echo 'EOF'                        >> $TEMPDIR/frida-cshell
+echo ')'                          >> $TEMPDIR/frida-cshell
+
+cat <<EOF                         >> $TEMPDIR/frida-cshell
+FILE=\$(mktemp /tmp/frida-cshell.XXXXXXXXXX)
+trap "rm -f \$FILE" EXIT
+echo "\$SCRIPT" | base64 -d > \$FILE
+
+FRIDA_INJECT="\${FRIDA_INJECT:-frida-inject}"
+
+if ! command -v \$FRIDA_INJECT &> /dev/null
+then
+    echo "\$FRIDA_INJECT could not be found. Try setting set FRIDA_INJECT environment variable"
+    exit 1
+fi
+
+verbose=
+file=
+name=
+pid=
+
+options=\$(getopt -l "file:,help,name:,pid:,verbose,version" -o "f:hn:p:V" -a -- "\$@")
+
+eval set -- "\$options"
+
+while true
+do
+case "\$1" in
+-f|--file)
+    shift
+    file="\$1"
+    ;;
+-h|--help)
+    echo Usage
+    echo "  \$0 [OPTION?]"
+    echo
+    echo Help Options:
+    echo "  -h, --help         Show help options"
+    echo
+    echo Application Options:
+    echo "  -f, --file=FILE    spawn FILE"
+    echo "  -n, --name=NAME    attach to NAME"
+    echo "  -p, --pid=PID      attach to PID"
+    echo "  -V, --verbose      enable verbose mode"
+    echo
+    exit 0
+    ;;
+-n|--name)
+    shift
+    name="\$1"
+    ;;
+-p|--pid)
+    shift
+    pid="\$1"
+    ;;
+-V|--verbose)
+    verbose=true
+    ;;
+--version)
+    verbose=true
+    ;;
+--)
+    shift
+    break;;
+esac
+shift
+done
+
+if [ \${verbose} ]; then
+    opt="{\"verbose\":true}"
+else
+    opt="{}"
+fi
+
+if [ -z \${file} ] && [ -z \${name} ] && [ -z \${pid} ]; then
+    echo "file, name or pid must be specified";
+    exit 1
+fi
+
+if [ \${file} ]; then
+    if [ \${name} ] || [ \${pid}]; then
+        echo "file, name and pid are mutually exclusive"
+        exit 1
+    fi
+    \$FRIDA_INJECT --interactive -s \$FILE -P \$opt -f \$file
+elif [ \${name} ]; then
+    if [ \${file} ] || [ \${pid}]; then
+        echo "file, name and pid are mutually exclusive"
+        exit 1
+    fi
+    \$FRIDA_INJECT --interactive -s \$FILE -P \$opt -n \$name
+elif [ \${pid} ]; then
+    if [ \${file} ] || [ \${name}]; then
+        echo "file, name and pid are mutually exclusive"
+        exit 1
+    fi
+    \$FRIDA_INJECT --interactive -s \$FILE -P \$opt -p \$pid
+fi
+
+EOF
+
+cp $TEMPDIR/frida-cshell ./frida-cshell
+chmod +x ./frida-cshell

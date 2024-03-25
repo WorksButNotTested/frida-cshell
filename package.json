@@ -1,9 +1,9 @@
 {
   "name": "frida-cshell",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Frida's CShell",
   "scripts": {
-    "prepare": "npm run build && npm run version",
+    "prepare": "npm run build && npm run version && npm run package",
     "build": "frida-compile src/entrypoint.ts -o frida-cshell.js -c",
     "lint": "eslint --ext .ts .",
     "pretty": "npx prettier --write src",

@@ -4,15 +4,11 @@ trap "rm -rf $TEMPDIR" EXIT
 
 echo '#!/bin/bash'                >  $TEMPDIR/frida-cshell
 echo 'SCRIPT=$(cat <<EOF'         >> $TEMPDIR/frida-cshell
-base64 frida-cshell.js            >> $TEMPDIR/frida-cshell
+gzip -c frida-cshell.js | base64  >> $TEMPDIR/frida-cshell
 echo 'EOF'                        >> $TEMPDIR/frida-cshell
 echo ')'                          >> $TEMPDIR/frida-cshell
 
 cat <<EOF                         >> $TEMPDIR/frida-cshell
-FILE=\$(mktemp /tmp/frida-cshell.XXXXXXXXXX)
-trap "rm -f \$FILE" EXIT
-echo "\$SCRIPT" | base64 -d > \$FILE
-
 FRIDA_INJECT="\${FRIDA_INJECT:-frida-inject}"
 
 if ! command -v \$FRIDA_INJECT &> /dev/null
@@ -84,24 +80,68 @@ if [ -z \${file} ] && [ -z \${name} ] && [ -z \${pid} ]; then
     exit 1
 fi
 
+FILE=\$(mktemp /tmp/frida-cshell.XXXXXXXXXX)
+trap "rm -f \$FILE" EXIT
+
+if command -v base64 &> /dev/null; then
+  echo "\$SCRIPT" | base64 -d | gzip -d > \$FILE
+else
+    BASE64=\$(mktemp /tmp/frida-cshell-base64.XXXXXXXXXX)
+    cat <<EOI                         > \$BASE64
+#!/usr/bin/awk -f
+
+function decode64()
+{
+  b64="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+	while( getline < "/dev/stdin" )
+	{
+		l = length( \\\$0 );
+		for( i = 1; i <= l; ++i )
+		{
+			c = index( b64, substr( \\\$0, i, 1 ) );
+			if( c-- )
+			{
+				for( b = 0; b < 6; ++b )
+				{
+					o = o*2+int( c/32 );
+					c = (c*2)%64;
+					if( ++obc == 8 )
+					{
+						printf "%c", o;
+						obc = 0;
+						o = 0;
+					}
+				}
+			}
+		}
+	}
+}
+
+BEGIN { decode64() }
+EOI
+
+    trap "rm -f \$BASE64" EXIT
+    echo "\$SCRIPT" | awk -f "\$BASE64" | gzip -d > \$FILE
+fi
+
 if [ \${file} ]; then
     if [ \${name} ] || [ \${pid}]; then
         echo "file, name and pid are mutually exclusive"
         exit 1
     fi
-    \$FRIDA_INJECT --interactive -s \$FILE -P \$opt -f \$file
+    exec \$FRIDA_INJECT --interactive -s \$FILE -P \$opt -f \$file
 elif [ \${name} ]; then
     if [ \${file} ] || [ \${pid}]; then
         echo "file, name and pid are mutually exclusive"
         exit 1
     fi
-    \$FRIDA_INJECT --interactive -s \$FILE -P \$opt -n \$name
+    exec \$FRIDA_INJECT --interactive -s \$FILE -P \$opt -n \$name
 elif [ \${pid} ]; then
     if [ \${file} ] || [ \${name}]; then
         echo "file, name and pid are mutually exclusive"
         exit 1
     fi
-    \$FRIDA_INJECT --interactive -s \$FILE -P \$opt -p \$pid
+    exec \$FRIDA_INJECT --interactive -s \$FILE -P \$opt -p \$pid
 fi
 
 EOF

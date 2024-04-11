@@ -57,11 +57,20 @@ class Bp {
     Output.writeln();
     Regs.setThreadId(threadId);
     Regs.setContext(ctx);
-    for (const line of this.lines) {
-      const parser = new Parser(line.toString());
-      const tokens = parser.tokenize();
-      const ret = Command.run(tokens);
-      Vars.setRet(ret);
+    try {
+      for (const line of this.lines) {
+        const parser = new Parser(line.toString());
+        const tokens = parser.tokenize();
+        const ret = Command.run(tokens);
+        Vars.setRet(ret);
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        Output.writeln(`ERROR: ${error.message}`);
+        Output.writeln(`${error.stack}`, true);
+      } else {
+        Output.writeln(`ERROR: Unknown error`);
+      }
     }
     Output.writeRet();
     Output.prompt();

@@ -25,8 +25,7 @@ export class Token {
     const num = Numeric.parse(this.value);
     if (num !== undefined) return new Var(num);
 
-    if (this.value.charAt(0) === '$')
-      return Regs.get(this.value.slice(1));
+    if (this.value.charAt(0) === '$') return Regs.get(this.value.slice(1));
 
     const v = Vars.get(this.value);
     if (v !== undefined) return v;

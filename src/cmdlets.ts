@@ -35,7 +35,7 @@ import {
 import { HistoryCmdLet } from './cmdlets/history.js';
 import { HelpCmdLet } from './cmdlets/help.js';
 import { CopyCmdLet } from './cmdlets/copy.js';
-import { BpCmdLet } from './cmdlets/bp.js';
+import { BpCmdLet, InsnBpCmdLet } from './cmdlets/bp.js';
 import { RegCmdLet } from './cmdlets/reg.js';
 import { LdCmdLet } from './cmdlets/ld.js';
 
@@ -64,6 +64,7 @@ export class CmdLets {
     this.register(ExitCmdLet);
     this.register(HelpCmdLet);
     this.register(HistoryCmdLet);
+    this.register(InsnBpCmdLet);
     this.register(LdCmdLet);
     this.register(OrCmdLet);
     this.register(Read1CmdLet);

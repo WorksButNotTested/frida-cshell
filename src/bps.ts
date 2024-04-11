@@ -7,11 +7,21 @@ class Bp {
   private addr: Var;
   private lines: string[] = [];
   private count: number = 0;
+  private listener: InvocationListener;
+  private enabled: boolean = false;
 
   public constructor(addr: Var, literal: string, count: number) {
     this.addr = addr;
     this.literal = literal;
     this.count = count;
+
+    this.listener = Interceptor.attach(
+      addr.toPointer(),
+      function (this: InvocationContext, args: InvocationArguments) {
+        Bps.break(addr, this.threadId, this.context);
+      },
+    );
+    Interceptor.flush();
   }
 
   public setCount(count: number) {
@@ -20,6 +30,24 @@ class Bp {
 
   public setLines(lines: string[]) {
     this.lines = lines;
+  }
+
+  public enable() {
+    this.enabled = true;
+  }
+
+  public detach() {
+    this.listener.detach();
+  }
+
+  public break(tid: ThreadId, ctx: CpuContext) {
+    if (!this.enabled) return;
+    if(this.count == 0) 
+      return;
+    else if (this.count > 0)
+      this.count--;
+    Output.clearLine();
+    Output.writeln(`Break @ ${Util.toHexString(this.addr.toPointer())}`);
   }
 
   private countString(): string {
@@ -67,15 +95,19 @@ export class Bps {
     this.lines = [];
   }
 
+  public static addCommandLine(line: string) {
+    this.lines.push(line);
+  }
+
   public static done() {
     if (this.last === undefined) throw new Error('No breakpoint to modify');
     this.last.setLines(this.lines);
+    this.last.enable();
   }
 
-  public static abort() {}
-
-  public static addCommandLine(line: string) {
-    this.lines.push(line);
+  public static abort() {
+    if (this.last === undefined) throw new Error('No breakpoint to modify');
+    this.last.enable();
   }
 
   public static get(addr: Var): Bp | undefined {
@@ -86,6 +118,7 @@ export class Bps {
     const val = this.map.get(addr.toString());
     if (val === undefined) return undefined;
     this.map.delete(addr.toString());
+    val.detach();
     return val;
   }
 
@@ -94,5 +127,14 @@ export class Bps {
       b1.compare(b2),
     );
     return items;
+  }
+
+  public static break(addr: Var, tid: ThreadId, ctx: CpuContext) {
+    const bp = this.get(addr);
+    if (bp === undefined)
+      throw new Error(
+        `Hit breakpoint not found at ${Util.toHexString(addr.toPointer())}`,
+      );
+    bp.break(tid, ctx);
   }
 }

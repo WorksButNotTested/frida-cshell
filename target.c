@@ -27,6 +27,6 @@ int main(int argc, char **argv, char **envp)
     puts(buf);
 
     free(buf);
-    usleep(1000);
+    usleep(1000000);
   }
 }

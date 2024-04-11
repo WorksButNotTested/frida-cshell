@@ -195,3 +195,9 @@ export class FunctionEntryBpCmdLet extends TypedBpCmdLet {
   bpType = BpType.FunctionEntry;
   help = `${this.bpType} breakpoint`;
 }
+
+export class FunctionExitBpCmdLet extends TypedBpCmdLet {
+  name = '@F';
+  bpType = BpType.FunctionExit;
+  help = `${this.bpType} breakpoint`;
+}

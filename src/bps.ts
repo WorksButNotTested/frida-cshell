@@ -33,7 +33,7 @@ class Bp {
       case BpType.Instruction:
         this.listener = Interceptor.attach(
           addr.toPointer(),
-          function (this: InvocationContext, args: InvocationArguments) {
+          function (this: InvocationContext, _args: InvocationArguments) {
             Bps.break(addr, this.threadId, this.context, this.returnAddress);
           },
         );
@@ -43,12 +43,17 @@ class Bp {
           onEnter() {
             Bps.break(addr, this.threadId, this.context, this.returnAddress);
           },
-        })
+        });
         break;
       case BpType.FunctionExit:
-        throw new Error('TODO');
+        this.listener = Interceptor.attach(addr.toPointer(), {
+          onLeave() {
+            Bps.break(addr, this.threadId, this.context, this.returnAddress);
+          },
+        });
+        break;
     }
-    
+
     Interceptor.flush();
   }
 
@@ -85,7 +90,7 @@ class Bp {
     if (this.count == 0) return;
     else if (this.count > 0) this.count--;
     Output.clearLine();
-    Output.writeln(`Break @ ${Util.toHexString(this.addr.toPointer())}`);
+    Output.writeln(`Break [${this.type}] @ ${Util.toHexString(ctx.pc)}`);
     Output.writeln();
     Regs.setThreadId(threadId);
     Regs.setContext(ctx);

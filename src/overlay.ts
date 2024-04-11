@@ -1,8 +1,5 @@
 import { Base64 } from './base64.js';
-import { Output } from './output.js';
 import { Util } from './util.js';
-
-
 
 export class Overlay {
   private readonly address: NativePointer;
@@ -29,7 +26,9 @@ export class Overlay {
   private static readonly KEY_LENGTH: number = 32;
 
   private static generateKey(): string {
-    const numbers = Array.from({ length: this.KEY_LENGTH }, () => Math.floor(Math.random() * 256));
+    const numbers = Array.from({ length: this.KEY_LENGTH }, () =>
+      Math.floor(Math.random() * 256),
+    );
     const bytes = new Uint8Array(numbers);
     const key = Base64.encode(bytes);
     return key;
@@ -42,9 +41,8 @@ export class Overlay {
   }
 
   public static remove(key: string) {
-    const index = this.overlays.findIndex(([k,_v]) => k === key);
-    if (index === -1)
-        throw new Error(`Failed to find overlay key: ${key}`);
+    const index = this.overlays.findIndex(([k, _v]) => k === key);
+    if (index === -1) throw new Error(`Failed to find overlay key: ${key}`);
     this.overlays.splice(index, 1);
   }
 }

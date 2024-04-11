@@ -49,7 +49,7 @@ export class Bp {
     if (this.listener === undefined) return;
     this.listener.detach();
     this.listener = undefined;
-    Interceptor.flush()
+    Interceptor.flush();
     if (this.overlay === undefined) return;
     Overlay.remove(this.overlay);
   }

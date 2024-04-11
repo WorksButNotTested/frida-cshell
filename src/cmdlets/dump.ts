@@ -3,6 +3,7 @@ import { Output } from '../output.js';
 import { Util } from '../util.js';
 import { Token } from '../token.js';
 import { Var } from '../var.js';
+import { Overlay } from '../overlay.js';
 
 const DEFAULT_LENGTH: number = 32;
 
@@ -25,10 +26,21 @@ export class DumpCmdLet extends CmdLet {
 
   private dump(address: NativePointer, length: number) {
     try {
-      const dump = hexdump(address, {
+      const buff = address.readByteArray(length);
+      if (buff === null) {
+        throw new Error(
+          `Failed to read ${Util.toHexString(length)} bytes from ${Util.toHexString(address)}`,
+        );
+      }
+
+      const bytes = new Uint8Array(buff);
+      Overlay.fix(address, bytes);
+
+      const dump = hexdump(bytes.buffer as ArrayBuffer, {
         length: length,
         header: true,
         ansi: true,
+        address: address,
       });
       Output.writeln(dump);
     } catch (error) {

@@ -36,20 +36,22 @@ export class AssemblyCmdLet extends CmdLet {
 
       const bytes = new Uint8Array(buff);
       Overlay.fix(address, bytes);
-      
+
       copy.writeByteArray(bytes.buffer as ArrayBuffer);
       let read = 0;
       let insn = Instruction.parse(copy);
       while (read < length) {
         read += insn.size;
-        Output.writeln(`${Util.toHexString(address.add(read))}: ${insn.toString()}`);
+        Output.writeln(
+          `${Util.toHexString(address.add(read))}: ${insn.toString()}`,
+        );
         insn = Instruction.parse(insn.next);
       }
-      return new Var(uint64(insn.next.toString()));      
+      return new Var(uint64(insn.next.toString()));
     } catch (error) {
       throw new Error(
-          `Failed to read ${Util.toHexString(length)} bytes from ${Util.toHexString(address)}, ${error}`,
-        );
+        `Failed to read ${Util.toHexString(length)} bytes from ${Util.toHexString(address)}, ${error}`,
+      );
     }
   }
 

@@ -13,9 +13,6 @@ const BP_USAGE: string = `Usage: v
 
 @ addr - display a breakpoint
   addr    the address of the breakpoint to display
-
-@ addr ${DELETE_CHAR} - delete a breakpoint
-  addr    the address of the breakpoint to delete
 `;
 
 export class BpCmdLet extends CmdLet {
@@ -26,25 +23,6 @@ export class BpCmdLet extends CmdLet {
   public usage(): Var {
     Output.write(BP_USAGE);
     return Var.ZERO;
-  }
-
-  private runWithAddressAndHash(tokens: Token[]): Var | undefined {
-    if (tokens.length != 2) return undefined;
-
-    const value = tokens[0]?.toVar();
-    if (value === undefined) return undefined;
-
-    const literal = tokens[1]?.getLiteral();
-    if (literal === undefined) return undefined;
-
-    if (literal != DELETE_CHAR) return undefined;
-
-    if (Bps.delete(value) === undefined) {
-      throw new Error(
-        `No breakpoint at ${Util.toHexString(value.toPointer())}`,
-      );
-    }
-    return value;
   }
 
   private runWithAddress(tokens: Token[]): Var | undefined {
@@ -58,13 +36,21 @@ export class BpCmdLet extends CmdLet {
 
     const literal = token.getLiteral();
 
-    const bp = Bps.get(value);
-    if (bp === undefined)
+    let found = false;
+
+    for (const t in BpType) {
+      const bp = Bps.get(t as BpType, value);
+      if (bp === undefined) continue;
+      Output.writeln(
+        `${Util.toHexString(value.toPointer())}: ${bp.toString()}`,
+      );
+      found = true;
+    }
+
+    if (!found)
       throw new Error(
         `No breakpoint found at ${Util.toHexString(value.toPointer())} (${literal})`,
       );
-
-    Output.writeln(`${Util.toHexString(value.toPointer())}: ${bp.toString()}`);
 
     return value;
   }
@@ -81,9 +67,6 @@ export class BpCmdLet extends CmdLet {
   }
 
   public run(tokens: Token[]): Var {
-    const retWithAddressAndHash = this.runWithAddressAndHash(tokens);
-    if (retWithAddressAndHash !== undefined) return retWithAddressAndHash;
-
     const retWithAddress = this.runWithAddress(tokens);
     if (retWithAddress !== undefined) return retWithAddress;
 
@@ -101,6 +84,9 @@ abstract class TypedBpCmdLet extends CmdLet implements CmdLetEdit {
 
   public usage(): Var {
     const INSN_BP_USAGE: string = `Usage: ${this.name}
+${this.name} addr ${DELETE_CHAR} - delete a ${this.bpType} breakpoint
+  addr    the address of the breakpoint to delete
+  
 ${this.name} addr - create, or modify an ${this.bpType} breakpoint
    addr    the address of the breakpoint to manage
 
@@ -112,8 +98,27 @@ ${this.name} addr hits - create or modify an ${this.bpType} breakpoint to fire a
     return Var.ZERO;
   }
 
+  private runWithAddressAndHash(tokens: Token[]): Var | undefined {
+    if (tokens.length != 2) return undefined;
+
+    const value = tokens[0]?.toVar();
+    if (value === undefined) return undefined;
+
+    const literal = tokens[1]?.getLiteral();
+    if (literal === undefined) return undefined;
+
+    if (literal != DELETE_CHAR) return undefined;
+
+    if (Bps.delete(this.bpType, value) === undefined) {
+      throw new Error(
+        `No breakpoint at ${Util.toHexString(value.toPointer())}`,
+      );
+    }
+    return value;
+  }
+
   private setBreakpoint(value: Var, literal: string, count: number) {
-    const bp = Bps.get(value);
+    const bp = Bps.get(this.bpType, value);
     if (bp !== undefined) {
       Output.writeln(
         `${Util.toHexString(value.toPointer())}: ${bp.toString()}`,
@@ -162,6 +167,9 @@ ${this.name} addr hits - create or modify an ${this.bpType} breakpoint to fire a
   }
 
   public run(tokens: Token[]): Var {
+    const retWithAddressAndHash = this.runWithAddressAndHash(tokens);
+    if (retWithAddressAndHash !== undefined) return retWithAddressAndHash;
+
     const retWithAddressAndCount = this.runWithAddressAndCount(tokens);
     if (retWithAddressAndCount !== undefined) return retWithAddressAndCount;
 

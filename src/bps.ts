@@ -20,45 +20,14 @@ class Bp {
   private count: number = 0;
 
   private lines: string[] = [];
-  private listener: InvocationListener;
-  private enabled: boolean = false;
+  private listener: InvocationListener | undefined;
 
   public constructor(type: BpType, addr: Var, literal: string, count: number) {
     this.type = type;
     this.addr = addr;
     this.literal = literal;
     this.count = count;
-
-    switch (this.type) {
-      case BpType.Instruction:
-        this.listener = Interceptor.attach(
-          addr.toPointer(),
-          function (this: InvocationContext, _args: InvocationArguments) {
-            Bps.break(addr, this.threadId, this.context, this.returnAddress);
-          },
-        );
-        break;
-      case BpType.FunctionEntry:
-        this.listener = Interceptor.attach(addr.toPointer(), {
-          onEnter() {
-            Bps.break(addr, this.threadId, this.context, this.returnAddress);
-          },
-        });
-        break;
-      case BpType.FunctionExit:
-        this.listener = Interceptor.attach(addr.toPointer(), {
-          onLeave() {
-            Bps.break(addr, this.threadId, this.context, this.returnAddress);
-          },
-        });
-        break;
-    }
-
-    Interceptor.flush();
-  }
-
-  public getType(): BpType {
-    return this.type;
+    this.listener = undefined;
   }
 
   public setCount(count: number) {
@@ -70,15 +39,58 @@ class Bp {
   }
 
   public disable() {
-    this.enabled = false;
+    if (this.listener === undefined) return;
+    this.listener.detach();
+    this.listener = undefined;
   }
 
   public enable() {
-    this.enabled = true;
-  }
+    if (this.listener !== undefined) return;
+    const addr = this.addr;
+    switch (this.type) {
+      case BpType.Instruction:
+        this.listener = Interceptor.attach(
+          addr.toPointer(),
+          function (this: InvocationContext, _args: InvocationArguments) {
+            Bps.break(
+              BpType.Instruction,
+              addr,
+              this.threadId,
+              this.context,
+              this.returnAddress,
+            );
+          },
+        );
+        break;
+      case BpType.FunctionEntry:
+        this.listener = Interceptor.attach(addr.toPointer(), {
+          onEnter() {
+            Bps.break(
+              BpType.FunctionEntry,
+              addr,
+              this.threadId,
+              this.context,
+              this.returnAddress,
+            );
+          },
+        });
+        break;
+      case BpType.FunctionExit:
+        this.listener = Interceptor.attach(addr.toPointer(), {
+          onLeave() {
+            Bps.break(
+              BpType.FunctionExit,
+              addr,
+              this.threadId,
+              this.context,
+              this.returnAddress,
+            );
+          },
+        });
+        break;
+    }
 
-  public detach() {
-    this.listener.detach();
+    Interceptor.flush();
   }
 
   public break(
@@ -86,7 +98,6 @@ class Bp {
     ctx: CpuContext,
     returnAddress: NativePointer,
   ) {
-    if (!this.enabled) return;
     if (this.count == 0) return;
     else if (this.count > 0) this.count--;
     Output.clearLine();
@@ -150,20 +161,20 @@ export class Bps {
 
   private constructor() {}
 
+  private static buildKey(type: BpType, addr: Var): string {
+    return `${type}:${addr.toPointer().toString()}`;
+  }
+
   public static add(type: BpType, addr: Var, literal: string, count: number) {
-    let bp = this.map.get(addr.toString());
+    const key = this.buildKey(type, addr);
+    let bp = this.map.get(key);
     if (bp === undefined) {
       bp = new Bp(type, addr, literal, count);
-      this.map.set(addr.toString(), bp);
-    } else if (bp.getType() == type) {
+      this.map.set(key, bp);
+    } else {
       /* If it is the same type, then we will modify in place */
       bp.disable();
       bp.setCount(count);
-    } else {
-      /* If it is a different type then we will start anew */
-      bp.detach();
-      bp = new Bp(type, addr, literal, count);
-      this.map.set(addr.toString(), bp);
     }
 
     this.last = bp;
@@ -185,16 +196,18 @@ export class Bps {
     this.last.enable();
   }
 
-  public static get(addr: Var): Bp | undefined {
-    return this.map.get(addr.toString());
+  public static get(type: BpType, addr: Var): Bp | undefined {
+    const key = this.buildKey(type, addr);
+    return this.map.get(key);
   }
 
-  public static delete(addr: Var): Bp | undefined {
-    const val = this.map.get(addr.toString());
-    if (val === undefined) return undefined;
-    this.map.delete(addr.toString());
-    val.detach();
-    return val;
+  public static delete(type: BpType, addr: Var): Bp | undefined {
+    const key = this.buildKey(type, addr);
+    const bp = this.map.get(key);
+    if (bp === undefined) return undefined;
+    this.map.delete(key);
+    bp.disable();
+    return bp;
   }
 
   public static all(): Bp[] {
@@ -205,12 +218,13 @@ export class Bps {
   }
 
   public static break(
+    type: BpType,
     addr: Var,
     threadId: ThreadId,
     ctx: CpuContext,
     returnAddress: NativePointer,
   ) {
-    const bp = this.get(addr);
+    const bp = this.get(type, addr);
     if (bp === undefined)
       throw new Error(
         `Hit breakpoint not found at ${Util.toHexString(addr.toPointer())}`,

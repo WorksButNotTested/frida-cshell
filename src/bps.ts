@@ -1,12 +1,15 @@
 import { Output } from './output.js';
+import { Util } from './util.js';
 import { Var } from './var.js';
 
 class Bp {
   private readonly literal: string;
+  private addr: Var;
   private lines: string[] = [];
   private count: number = 0;
 
-  public constructor(literal: string, count: number) {
+  public constructor(addr: Var, literal: string, count: number) {
+    this.addr = addr;
     this.literal = literal;
     this.count = count;
   }
@@ -29,12 +32,18 @@ class Bp {
     }
   }
 
+  public compare(other: Bp): number {
+    return this.addr.compare(other.addr);
+  }
+
   public toString(): string {
-    return (
-      `${Output.bold(this.literal)} [hits:${this.countString()}]\n` +
-      this.lines.map(l => `  - ${Output.yellow(l)}`).join('\n') +
-      '\n'
-    );
+    const addr = Output.bold(Util.toHexString(this.addr.toPointer()));
+    const literal = Output.bold(this.literal);
+    const hits = `[hits:${this.countString()}]`;
+    const header = `${addr}: ${literal} ${hits}`;
+    const lines = this.lines.map(l => `  - ${Output.yellow(l)}`);
+    lines.unshift(header);
+    return `${lines.join('\n')}\n`;
   }
 }
 
@@ -48,7 +57,7 @@ export class Bps {
   public static add(addr: Var, literal: string, count: number) {
     let bp = this.map.get(addr.toString());
     if (bp === undefined) {
-      bp = new Bp(literal, count);
+      bp = new Bp(addr, literal, count);
       this.map.set(addr.toString(), bp);
     } else {
       bp.setCount(count);
@@ -80,12 +89,10 @@ export class Bps {
     return val;
   }
 
-  public static all(): [Var, Bp][] {
-    const items: [string, Bp][] = Array.from(this.map.entries());
-    const vars: [Var, Bp][] = items.map(([k, v]) => [new Var(k), v]);
-    const ret = vars.sort(([k1, _v1], [k2, _v2]) =>
-      k1.toPointer().compare(k2.toPointer()),
+  public static all(): Bp[] {
+    const items: Bp[] = Array.from(this.map.values()).sort((b1, b2) =>
+      b1.compare(b2),
     );
-    return ret;
+    return items;
   }
 }

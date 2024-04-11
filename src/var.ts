@@ -19,6 +19,10 @@ export class Var {
     else return uint64(this.p.toString());
   }
 
+  public compare(other: Var): number {
+    return this.toU64().compare(other.toU64());
+  }
+
   public toString(): string {
     if (this.val instanceof UInt64)
       return `${Util.toHexString(this.val)} ${Util.toDecString(this.val)}`;

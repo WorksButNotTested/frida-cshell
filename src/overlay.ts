@@ -71,4 +71,8 @@ export class Overlay {
       o.fix(address, data);
     }
   }
+
+  public static overlaps(address: NativePointer, length: number) {
+    return this.overlays.some(([_, v]) => v.overlaps(address, length));
+  }
 }

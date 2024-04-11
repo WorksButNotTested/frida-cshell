@@ -3,6 +3,7 @@ import { Output } from '../output.js';
 import { Util } from '../util.js';
 import { Token } from '../token.js';
 import { Var } from '../var.js';
+import { Overlay } from '../overlay.js';
 
 abstract class WriteCmdLet extends CmdLet {
   category = 'data';
@@ -31,6 +32,11 @@ ${this.name} address value - write ${this.SIZE} bytes to memory
 
     const val = tokens[1]?.toVar()?.toU64();
     if (val === undefined) return this.usage();
+
+    if (Overlay.overlaps(address, this.SIZE))
+      throw new Error(
+        `Failed to write ${Util.toHexString(this.SIZE)} bytes to ${Util.toHexString(address)} as the address has been modified (check for breakpoints)`,
+      );
 
     this.write(address, val);
     return t0;

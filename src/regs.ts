@@ -1,8 +1,12 @@
 import { Var } from './var.js';
 
+const THREAD_ID_NAME: string = 'tid';
+const RETURN_ADDRESS_NAME: string = 'ra';
+
 export class Regs {
   private static threadId: ThreadId | undefined = undefined;
   private static ctx: CpuContext | undefined = undefined;
+  private static returnAddress: NativePointer | undefined = undefined;
 
   private constructor() {}
 
@@ -14,6 +18,10 @@ export class Regs {
     this.ctx = ctx;
   }
 
+  public static setReturnAddress(returnAddress: NativePointer) {
+    this.returnAddress = returnAddress;
+  }
+
   public static clear() {
     this.threadId = undefined;
     this.ctx = undefined;
@@ -21,31 +29,47 @@ export class Regs {
 
   public static set(name: string, value: Var) {
     const regs = this.getRegs();
-    if (!regs.has(name)) throw new Error(`Variable name '${name}' is invalid`);
+    if (!regs.has(name)) throw new Error(`Register name '${name}' is invalid`);
     regs.set(name, value);
     this.setRegs(regs);
   }
 
   public static get(name: string): Var {
-    const regs = this.getRegs();
-    const val = regs.get(name);
-    if (val === undefined)
-      throw new Error(`Variable name '${name}' is invalid`);
+    if (name === THREAD_ID_NAME) {
+      if (this.threadId === undefined)
+        throw new Error('Thread ID not available outside of a breakpoint');
+      return new Var(uint64(this.threadId));
+    } else if (name === RETURN_ADDRESS_NAME) {
+      if (this.returnAddress === undefined)
+        throw new Error('Return address not available outside of a breakpoint');
+      return new Var(uint64(this.returnAddress.toString()));
+    } else {
+      const regs = this.getRegs();
+      const val = regs.get(name);
+      if (val === undefined)
+        throw new Error(`Variable name '${name}' is invalid`);
 
-    return val;
+      return val;
+    }
   }
 
   public static all(): [string, Var][] {
     if (this.ctx == undefined)
       throw new Error('Registers not available outside of a breakpoint');
 
-    return Array.from(this.getRegs().entries());
-  }
-
-  public static getThreadId(): ThreadId {
-    if (this.threadId == undefined)
+    if (this.threadId === undefined)
       throw new Error('Thread ID not available outside of a breakpoint');
-    return this.threadId;
+
+    if (this.returnAddress === undefined)
+      throw new Error('Return address not available outside of a breakpoint');
+
+    const regs = Array.from(this.getRegs().entries());
+    regs.push([THREAD_ID_NAME, new Var(uint64(this.threadId))]);
+    regs.push([
+      RETURN_ADDRESS_NAME,
+      new Var(uint64(this.returnAddress.toString())),
+    ]);
+    return regs;
   }
 
   private static getRegs(): Map<string, Var> {

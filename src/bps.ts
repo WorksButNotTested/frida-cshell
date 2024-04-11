@@ -22,7 +22,7 @@ class Bp {
     this.listener = Interceptor.attach(
       addr.toPointer(),
       function (this: InvocationContext, args: InvocationArguments) {
-        Bps.break(addr, this.threadId, this.context);
+        Bps.break(addr, this.threadId, this.context, this.returnAddress);
       },
     );
     Interceptor.flush();
@@ -48,7 +48,11 @@ class Bp {
     this.listener.detach();
   }
 
-  public break(threadId: ThreadId, ctx: CpuContext) {
+  public break(
+    threadId: ThreadId,
+    ctx: CpuContext,
+    returnAddress: NativePointer,
+  ) {
     if (!this.enabled) return;
     if (this.count == 0) return;
     else if (this.count > 0) this.count--;
@@ -57,6 +61,7 @@ class Bp {
     Output.writeln();
     Regs.setThreadId(threadId);
     Regs.setContext(ctx);
+    Regs.setReturnAddress(returnAddress);
     try {
       for (const line of this.lines) {
         const parser = new Parser(line.toString());
@@ -159,12 +164,17 @@ export class Bps {
     return items;
   }
 
-  public static break(addr: Var, threadId: ThreadId, ctx: CpuContext) {
+  public static break(
+    addr: Var,
+    threadId: ThreadId,
+    ctx: CpuContext,
+    returnAddress: NativePointer,
+  ) {
     const bp = this.get(addr);
     if (bp === undefined)
       throw new Error(
         `Hit breakpoint not found at ${Util.toHexString(addr.toPointer())}`,
       );
-    bp.break(threadId, ctx);
+    bp.break(threadId, ctx, returnAddress);
   }
 }

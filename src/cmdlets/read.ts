@@ -3,6 +3,7 @@ import { Output } from '../output.js';
 import { Util } from '../util.js';
 import { Token } from '../token.js';
 import { Var } from '../var.js';
+import { Overlay } from '../overlay.js';
 
 abstract class ReadCmdLet extends CmdLet {
   category = 'data';
@@ -26,7 +27,19 @@ ${this.name} address - read ${this.SIZE} bytes from memory
     const address = tokens[0]?.toVar()?.toPointer();
     if (address === undefined) return this.usage();
 
-    return new Var(this.read(address));
+    const copy = Memory.alloc(this.SIZE);
+    const buff = address.readByteArray(this.SIZE);
+    if (buff === null) {
+      throw new Error(
+        `Failed to read ${Util.toHexString(this.SIZE)} bytes from ${Util.toHexString(address)}`,
+      );
+    }
+
+    const bytes = new Uint8Array(buff);
+    Overlay.fix(address, bytes);
+    copy.writeByteArray(bytes.buffer as ArrayBuffer);
+
+    return new Var(this.read(copy));
   }
 }
 

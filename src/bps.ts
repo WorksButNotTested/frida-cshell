@@ -4,18 +4,34 @@ import { Var } from './var.js';
 class Bp {
   private readonly literal: string;
   private lines: string[] = [];
+  private count: number = 0;
 
-  public constructor(literal: string) {
+  public constructor(literal: string, count: number) {
     this.literal = literal;
+    this.count = count;
   }
 
-  public setLines(lines: string[]) {
+  public setCount(count: number): void {
+    this.count = count;
+  }
+
+  public setLines(lines: string[]): void {
     this.lines = lines;
+  }
+
+  private countString(): string {
+    if (this.count < 0) {
+      return 'unlimited';
+    } else if (this.count == 0) {
+      return 'disabled';
+    } else {
+      return this.count.toString();
+    }
   }
 
   public toString(): string {
     return (
-      `${Output.bold(this.literal)}\n` +
+      `${Output.bold(this.literal)} [hits:${this.countString()}]\n` +
       this.lines.map(l => `  - ${Output.yellow(l)}`).join('\n') +
       '\n'
     );
@@ -29,11 +45,13 @@ export class Bps {
 
   private constructor() {}
 
-  public static add(addr: Var, literal: string) {
+  public static add(addr: Var, literal: string, count: number) {
     let bp = this.map.get(addr.toString());
     if (bp === undefined) {
-      bp = new Bp(literal);
+      bp = new Bp(literal, count);
       this.map.set(addr.toString(), bp);
+    } else {
+      bp.setCount(count);
     }
 
     this.last = bp;

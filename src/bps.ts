@@ -6,15 +6,25 @@ import { Util } from './util.js';
 import { Var } from './var.js';
 import { Vars } from './vars.js';
 
+export enum BpType {
+  Instruction = "instruction",
+  FunctionEntry = "function entry",
+  FunctionExit = "function exit",
+}
+
 class Bp {
+  private readonly type: BpType;
+  private readonly addr: Var;
   private readonly literal: string;
-  private addr: Var;
-  private lines: string[] = [];
+
   private count: number = 0;
+  
+  private lines: string[] = [];
   private listener: InvocationListener;
   private enabled: boolean = false;
 
-  public constructor(addr: Var, literal: string, count: number) {
+  public constructor(type: BpType, addr: Var, literal: string, count: number) {
+    this.type = type;
     this.addr = addr;
     this.literal = literal;
     this.count = count;
@@ -99,10 +109,11 @@ class Bp {
   }
 
   public toString(): string {
+    const type = this.type.toString();
     const addr = Output.bold(Util.toHexString(this.addr.toPointer()));
     const literal = Output.bold(this.literal);
     const hits = `[hits:${this.countString()}]`;
-    const header = `${addr}: ${literal} ${hits}`;
+    const header = `${type} ${addr}: ${literal} ${hits}`;
     const lines = this.lines.map(l => `  - ${Output.yellow(l)}`);
     lines.unshift(header);
     return `${lines.join('\n')}\n`;
@@ -116,10 +127,10 @@ export class Bps {
 
   private constructor() {}
 
-  public static add(addr: Var, literal: string, count: number) {
+  public static add(type: BpType, addr: Var, literal: string, count: number) {
     let bp = this.map.get(addr.toString());
     if (bp === undefined) {
-      bp = new Bp(addr, literal, count);
+      bp = new Bp(type, addr, literal, count);
       this.map.set(addr.toString(), bp);
     } else {
       bp.disable();

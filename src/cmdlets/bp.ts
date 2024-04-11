@@ -1,4 +1,4 @@
-import { Bps } from '../bps.js';
+import { BpType, Bps } from '../bps.js';
 import { CmdLet, CmdLetEdit } from '../cmdlet.js';
 import { Input } from '../input.js';
 import { Output } from '../output.js';
@@ -94,21 +94,20 @@ export class BpCmdLet extends CmdLet {
   }
 }
 
-const INSN_BP_USAGE: string = `Usage: @i
-@i addr - create, or modify an instruction breakpoint
+abstract class TypedBpCmdLet extends CmdLet implements CmdLetEdit {
+  public abstract readonly bpType: BpType;
+  
+  category = 'breakpoints';
+  
+  public usage(): Var {
+    const INSN_BP_USAGE: string = `Usage: ${this.name}
+${this.name} addr - create, or modify an ${this.bpType} breakpoint
    addr    the address of the breakpoint to manage
 
-@i addr hits - create or modify an instruction breakpoint to fire a set number of times
+${this.name} addr hits - create or modify an ${this.bpType} breakpoint to fire a set number of times
    addr    the address of the breakpoint to manage
    count   the number of times the breakpoint should fire
 `;
-
-export class InsnBpCmdLet extends CmdLet implements CmdLetEdit {
-  name = '@i';
-  category = 'breakpoints';
-  help = 'instruction breakpoint';
-
-  public usage(): Var {
     Output.write(INSN_BP_USAGE);
     return Var.ZERO;
   }
@@ -122,9 +121,9 @@ export class InsnBpCmdLet extends CmdLet implements CmdLetEdit {
     }
 
     Output.writeln(
-      `Setting breakpoint at ${Util.toHexString(value.toPointer())} (${literal})`,
+      `Setting ${this.bpType} breakpoint at ${Util.toHexString(value.toPointer())} (${literal})`,
     );
-    Bps.add(value, literal, count);
+    Bps.add(this.bpType, value, literal, count);
     Input.setEdit(this);
   }
 
@@ -183,4 +182,10 @@ export class InsnBpCmdLet extends CmdLet implements CmdLetEdit {
   abort() {
     Bps.abort();
   }
+}
+
+export class InsnBpCmdLet extends TypedBpCmdLet {
+  name = '@i';
+  bpType = BpType.Instruction;
+  help = `${this.bpType} breakpoint`;
 }

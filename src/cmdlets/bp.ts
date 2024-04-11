@@ -41,7 +41,9 @@ export class BpCmdLet extends CmdLet {
 
     if (literal != DELETE_CHAR) return undefined;
 
-    /* TODO - Delete here */
+    if (Bps.delete(value) === undefined) {
+        throw new Error(`No breakpoint at ${Util.toHexString(value.toPointer())}`);
+    }
     return value;
   }
 

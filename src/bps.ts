@@ -29,12 +29,26 @@ class Bp {
     this.literal = literal;
     this.count = count;
 
-    this.listener = Interceptor.attach(
-      addr.toPointer(),
-      function (this: InvocationContext, args: InvocationArguments) {
-        Bps.break(addr, this.threadId, this.context, this.returnAddress);
-      },
-    );
+    switch (this.type) {
+      case BpType.Instruction:
+        this.listener = Interceptor.attach(
+          addr.toPointer(),
+          function (this: InvocationContext, args: InvocationArguments) {
+            Bps.break(addr, this.threadId, this.context, this.returnAddress);
+          },
+        );
+        break;
+      case BpType.FunctionEntry:
+        this.listener = Interceptor.attach(addr.toPointer(), {
+          onEnter() {
+            Bps.break(addr, this.threadId, this.context, this.returnAddress);
+          },
+        })
+        break;
+      case BpType.FunctionExit:
+        throw new Error('TODO');
+    }
+    
     Interceptor.flush();
   }
 

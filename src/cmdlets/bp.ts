@@ -189,3 +189,9 @@ export class InsnBpCmdLet extends TypedBpCmdLet {
   bpType = BpType.Instruction;
   help = `${this.bpType} breakpoint`;
 }
+
+export class FunctionEntryBpCmdLet extends TypedBpCmdLet {
+  name = '@f';
+  bpType = BpType.FunctionEntry;
+  help = `${this.bpType} breakpoint`;
+}

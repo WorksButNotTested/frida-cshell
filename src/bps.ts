@@ -127,7 +127,9 @@ export class Bp {
       }
     }
     Output.writeRet();
-    Output.prompt();
+
+    if (Bps.adding()) Output.promptEdit();
+    else Output.prompt();
 
     Regs.clear();
   }
@@ -188,15 +190,22 @@ export class Bps {
     this.lines.push(line);
   }
 
+  public static adding(): boolean {
+    if (this.last === undefined) return false;
+    else return true;
+  }
+
   public static done() {
     if (this.last === undefined) throw new Error('No breakpoint to modify');
     this.last.setLines(this.lines);
     this.last.enable();
+    this.last = undefined;
   }
 
   public static abort() {
     if (this.last === undefined) throw new Error('No breakpoint to modify');
     this.last.enable();
+    this.last = undefined;
   }
 
   public static get(type: BpType, addr: Var): Bp | undefined {

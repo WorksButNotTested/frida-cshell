@@ -38,7 +38,11 @@ export class BpCmdLet extends CmdLet {
 
     let found = false;
 
-    for (const t of [BpType.Instruction, BpType.FunctionEntry, BpType.FunctionExit]) {
+    for (const t of [
+      BpType.Instruction,
+      BpType.FunctionEntry,
+      BpType.FunctionExit,
+    ]) {
       const bp = Bps.get(t, value);
       if (bp === undefined) continue;
       Output.writeln(
@@ -68,7 +72,8 @@ export class BpCmdLet extends CmdLet {
       return result;
     }, new Map<BpType, Bp[]>());
 
-    Array.from(groups.entries()).sort(([k1, _v1], [k2, _v2]) => k1.localeCompare(k2))
+    Array.from(groups.entries())
+      .sort(([k1, _v1], [k2, _v2]) => k1.localeCompare(k2))
       .forEach(([k, v]) => {
         Output.writeln(`${Output.blue(k)} ${Output.blue('breakpoints')}:`);
         Array.from(v)
@@ -76,7 +81,7 @@ export class BpCmdLet extends CmdLet {
           .forEach(bp => {
             Output.writeln(bp.toString(true));
           });
-    });
+      });
 
     return Var.ZERO;
   }

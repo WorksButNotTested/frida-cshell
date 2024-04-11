@@ -3,9 +3,7 @@ import { Util } from './util.js';
 
 export class Overlay {
   private readonly address: NativePointer;
-  private readonly length: number;
   private readonly data: Uint8Array;
-  private refCount = 0;
 
   public constructor(address: NativePointer, length: number) {
     const bytes = address.readByteArray(length);
@@ -14,12 +12,34 @@ export class Overlay {
         `Failed to read: ${Util.toHexString(address)}, length: ${length}`,
       );
     this.address = address;
-    this.length = length;
     this.data = new Uint8Array(bytes);
   }
 
-  public toString(): string {
-    return `address: ${this.address}, length: ${this.length}, data: ${this.data}, refCount: ${this.refCount}`;
+  private overlaps(addr: NativePointer, length: number): boolean {
+    if (this.address.add(this.data.length).compare(addr) < 0) return false;
+    if (this.address.compare(addr.add(length)) > 0) return false;
+    return true;
+  }
+
+  public fix(addr: NativePointer, data: Uint8Array): void {
+    if (!this.overlaps(addr, data.length)) return;
+
+    const thisEnd = this.address.add(this.data.length);
+    const otherEnd = addr.add(data.length);
+
+    const overlapStart = Util.maxPtr(addr, this.address);
+    const overlapEnd = Util.minPtr(otherEnd, thisEnd);
+
+    const thisOverlapOffset = overlapStart.sub(this.address).toUInt32();
+    const otherOverlapOffset = overlapStart.sub(addr).toUInt32();
+
+    const overlapLength = overlapEnd.sub(overlapStart).toUInt32();
+    const thisOverlapData = this.data.subarray(
+      thisOverlapOffset,
+      thisOverlapOffset + overlapLength,
+    );
+
+    data.set(thisOverlapData, otherOverlapOffset);
   }
 
   public static overlays: [string, Overlay][] = [];
@@ -44,5 +64,11 @@ export class Overlay {
     const index = this.overlays.findIndex(([k, _v]) => k === key);
     if (index === -1) throw new Error(`Failed to find overlay key: ${key}`);
     this.overlays.splice(index, 1);
+  }
+
+  public static fix(address: NativePointer, data: Uint8Array) {
+    for (const [_, o] of this.overlays) {
+      o.fix(address, data);
+    }
   }
 }

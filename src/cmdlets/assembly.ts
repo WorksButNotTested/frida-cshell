@@ -3,6 +3,7 @@ import { Output } from '../output.js';
 import { Util } from '../util.js';
 import { Token } from '../token.js';
 import { Var } from '../var.js';
+import { Overlay } from '../overlay.js';
 
 const DEFAULT_LENGTH: number = 32;
 const USAGE: string = `Usage: l
@@ -24,18 +25,31 @@ export class AssemblyCmdLet extends CmdLet {
 
   private list(address: NativePointer, length: number): Var {
     try {
+      const copy = Memory.alloc(length);
+
+      const buff = address.readByteArray(length);
+      if (buff === null) {
+        throw new Error(
+          `Failed to read ${Util.toHexString(length)} bytes from ${Util.toHexString(address)}`,
+        );
+      }
+
+      const bytes = new Uint8Array(buff);
+      Overlay.fix(address, bytes);
+      
+      copy.writeByteArray(bytes.buffer as ArrayBuffer);
       let read = 0;
-      let insn = Instruction.parse(address);
+      let insn = Instruction.parse(copy);
       while (read < length) {
         read += insn.size;
-        Output.writeln(`${Util.toHexString(insn.address)}: ${insn.toString()}`);
+        Output.writeln(`${Util.toHexString(address.add(read))}: ${insn.toString()}`);
         insn = Instruction.parse(insn.next);
       }
-      return new Var(uint64(insn.next.toString()));
+      return new Var(uint64(insn.next.toString()));      
     } catch (error) {
       throw new Error(
-        `Failed to read ${Util.toHexString(length)} bytes from ${Util.toHexString(address)}, ${error}`,
-      );
+          `Failed to read ${Util.toHexString(length)} bytes from ${Util.toHexString(address)}, ${error}`,
+        );
     }
   }
 

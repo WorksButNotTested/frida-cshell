@@ -46,4 +46,14 @@ export class Util {
       return `${val.toString().padStart(4, ' ')} B`;
     }
   }
+
+  public static maxPtr(a: NativePointer, b: NativePointer): NativePointer {
+    if (a.compare(b) > 0) return a;
+    else return b;
+  }
+
+  public static minPtr(a: NativePointer, b: NativePointer): NativePointer {
+    if (a.compare(b) < 0) return a;
+    else return b;
+  }
 }

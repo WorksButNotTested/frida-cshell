@@ -33,6 +33,10 @@ export class Bps {
     this.last = bp;
   }
 
+  public static done(): void {}
+
+  public static abort(): void {}
+
   public static addCommandLine(line: string) {
     if (this.last === undefined) throw new Error('No breakpoint to modify');
     this.last.addCommandLine(line);

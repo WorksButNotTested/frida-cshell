@@ -2,6 +2,7 @@ import { Output } from './output.js';
 import { History } from './history.js';
 import { Vars } from './vars.js';
 import { CharCode, Vt } from './char.js';
+import { CmdLetEdit } from './cmdlet.js';
 
 enum InputState {
   Default,
@@ -9,9 +10,13 @@ enum InputState {
   Csi,
 }
 
+const QUIT_CHAR: string = 'q';
+const ABORT_CHAR: string = 'x';
+
 export class Input {
   private static buffer: string = '';
   private static state: InputState = InputState.Default;
+  private static edit: CmdLetEdit | undefined = undefined;
 
   private constructor() {}
 
@@ -29,6 +34,45 @@ export class Input {
     return false;
   }
 
+  private static parseEnter() {
+    try {
+      if (this.edit === undefined) {
+        const ret = History.run();
+        /* If our command hasn't caused us to enter edit mode */
+        if (this.edit === undefined) {
+          Output.writeln();
+          Output.writeln(`ret: ${Output.bold(ret.toString())}`);
+        }
+        Vars.setRet(ret);
+      } else {
+        const line = History.getCurrent().toString();
+        this.edit.addCommandLine(line);
+        Output.clearLine();
+        Output.writeln(`- ${line}`);
+        if (line == QUIT_CHAR) {
+          this.edit.done();
+          this.edit = undefined;
+          Output.writeln();
+          Output.writeln(`ret: ${Output.bold(Vars.getRet().toString())}`);
+        } else if(line == ABORT_CHAR) {
+          this.edit.abort();
+          this.edit = undefined;
+          Output.writeln();
+          Output.writeln(`ret: ${Output.bold(Vars.getRet().toString())}`);
+        }
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        Output.writeln(`ERROR: ${error.message}`);
+        Output.writeln(`${error.stack}`, true);
+      } else {
+        Output.writeln(`ERROR: Unknown error`);
+      }
+    } finally {
+      History.clearLine();
+    }
+  }
+
   private static parseDefault() {
     const c = this.pop();
     switch (c) {
@@ -42,18 +86,7 @@ export class Input {
         /* TODO - Command Completion */
         break;
       case CharCode.CR:
-        try {
-          const ret = History.run();
-          Output.writeln(`ret: ${Output.bold(ret.toString())}`);
-          Vars.setRet(ret);
-        } catch (error) {
-          if (error instanceof Error) {
-            Output.writeln(`ERROR: ${error.message}`);
-            Output.writeln(`${error.stack}`, true);
-          } else {
-            Output.writeln(`ERROR: Unknown error`);
-          }
-        }
+        this.parseEnter();
         break;
       case CharCode.FF:
         Output.writeln(CharCode.CLEAR_SCREEN);
@@ -138,6 +171,17 @@ export class Input {
     while (this.buffer.length !== 0) {
       this.parse();
     }
-    Output.prompt();
+    if (this.edit === undefined) {
+      Output.prompt();
+    } else {
+      Output.promptEdit();
+    }
+  }
+
+  public static setEdit(edit: CmdLetEdit) {
+    Output.writeln(
+      `Type '${QUIT_CHAR}' to finish, or '${ABORT_CHAR}' to abort`,
+    );
+    this.edit = edit;
   }
 }

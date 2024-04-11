@@ -6,6 +6,8 @@ export class Output {
 
   private static readonly PROMPT: string = '-> ';
 
+  private static readonly EDIT_PROMPT: string = '. ';
+
   private static readonly shell: string[] = [
     '     _.---._         ',
     ' .\'"".\'/|\\\'.""\'.',
@@ -48,10 +50,28 @@ export class Output {
     if (first !== undefined) this.writeln(`\tName: ${this.green(first.name)}`);
   }
 
-  public static prompt(): void {
+  public static clearLine(): void {
     this.write(CharCode.ERASE_LINE);
     this.write(String.fromCharCode(CharCode.CR));
+  }
+
+  public static prompt(): void {
+    this.clearLine();
     this.write(this.bold(this.PROMPT));
+
+    const cmd = History.getCurrent();
+    const line = cmd.toString();
+    this.write(line);
+
+    const remain = cmd.getLength() - cmd.getPos();
+    const backspaces = String.fromCharCode(CharCode.BS).repeat(remain);
+    this.write(backspaces);
+  }
+
+  public static promptEdit(): void {
+    this.write(CharCode.ERASE_LINE);
+    this.write(String.fromCharCode(CharCode.CR));
+    this.write(this.bold(this.EDIT_PROMPT));
 
     const cmd = History.getCurrent();
     const line = cmd.toString();

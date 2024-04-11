@@ -46,15 +46,14 @@ export class History {
       if (this.history.length >= this.MAX_HISTORY) this.history.pop();
     }
 
-    try {
-      Output.writeln();
-      const ret = Command.run(tokens);
-      Output.writeln();
-      return ret;
-    } finally {
-      this.index = -1;
-      this.line = new Line();
-    }
+    Output.writeln();
+    const ret = Command.run(tokens);    
+    return ret;
+  }
+
+  public static clearLine(): void {
+    this.index = -1;
+    this.line = new Line();
   }
 
   public static rerun(idx: number): Var {

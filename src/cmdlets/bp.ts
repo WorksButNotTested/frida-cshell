@@ -1,5 +1,6 @@
 import { Bps } from '../bps.js';
-import { CmdLet } from '../cmdlet.js';
+import { CmdLet, CmdLetEdit } from '../cmdlet.js';
+import { Input } from '../input.js';
 import { Output } from '../output.js';
 import { Token } from '../token.js';
 import { Util } from '../util.js';
@@ -20,7 +21,7 @@ const USAGE: string = `Usage: v
   addr    the address of the breakpoint to delete
 `;
 
-export class BpCmdLet extends CmdLet {
+export class BpCmdLet extends CmdLet implements CmdLetEdit {
   name = '@';
   category = 'breakpoints';
   help = 'breakpoint management';
@@ -42,7 +43,9 @@ export class BpCmdLet extends CmdLet {
     if (literal != DELETE_CHAR) return undefined;
 
     if (Bps.delete(value) === undefined) {
-        throw new Error(`No breakpoint at ${Util.toHexString(value.toPointer())}`);
+      throw new Error(
+        `No breakpoint at ${Util.toHexString(value.toPointer())}`,
+      );
     }
     return value;
   }
@@ -65,9 +68,11 @@ export class BpCmdLet extends CmdLet {
       );
     }
 
+    Output.writeln(
+      `Setting breakpoint at ${Util.toHexString(value.toPointer())} (${literal})`,
+    );
     Bps.add(value, literal);
-
-    /* TODO - Create, display or modify here */
+    Input.setEdit(this);
     return value;
   }
 
@@ -93,5 +98,17 @@ export class BpCmdLet extends CmdLet {
     if (retWithoutParams !== undefined) return retWithoutParams;
 
     return this.usage();
+  }
+
+  addCommandLine(line: string): void {
+    Bps.addCommandLine(line);
+  }
+
+  done(): void {
+    Bps.done();
+  }
+
+  abort(): void {
+    Bps.abort();
   }
 }

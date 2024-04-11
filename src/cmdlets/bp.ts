@@ -1,6 +1,8 @@
+import { Bps } from '../bps.js';
 import { CmdLet } from '../cmdlet.js';
 import { Output } from '../output.js';
 import { Token } from '../token.js';
+import { Util } from '../util.js';
 import { Var } from '../var.js';
 
 const DELETE_CHAR: string = '#';
@@ -46,8 +48,22 @@ export class BpCmdLet extends CmdLet {
   private runWithAddress(tokens: Token[]): Var | undefined {
     if (tokens.length != 1) return undefined;
 
-    const value = tokens[0]?.toVar();
+    const token = tokens[0];
+    if (token === undefined) return undefined;
+
+    const value = token.toVar();
     if (value === undefined) return undefined;
+
+    const literal = token.getLiteral();
+
+    const bp = Bps.get(value);
+    if (bp !== undefined) {
+      Output.writeln(
+        `${Util.toHexString(value.toPointer())}: ${bp.toString()}`,
+      );
+    }
+
+    Bps.add(value, literal);
 
     /* TODO - Create, display or modify here */
     return value;
@@ -57,8 +73,10 @@ export class BpCmdLet extends CmdLet {
     if (tokens.length !== 0) return undefined;
 
     Output.writeln('Breakpoints:');
-    
-    /* TODO: Show breakpoints */
+
+    for (const [v, bp] of Bps.all()) {
+      Output.writeln(`${Util.toHexString(v.toPointer())}: ${bp.toString()}`);
+    }
     return Var.ZERO;
   }
 

@@ -1,6 +1,10 @@
+import { Command } from './command.js';
 import { Output } from './output.js';
+import { Parser } from './parser.js';
+import { Regs } from './regs.js';
 import { Util } from './util.js';
 import { Var } from './var.js';
+import { Vars } from './vars.js';
 
 class Bp {
   private readonly literal: string;
@@ -40,15 +44,24 @@ class Bp {
     this.listener.detach();
   }
 
-  public break(tid: ThreadId, ctx: CpuContext) {
+  public break(threadId: ThreadId, ctx: CpuContext) {
     if (!this.enabled) return;
-    if(this.count == 0) 
-      return;
-    else if (this.count > 0)
-      this.count--;
+    if (this.count == 0) return;
+    else if (this.count > 0) this.count--;
     Output.clearLine();
     Output.writeln(`Break @ ${Util.toHexString(this.addr.toPointer())}`);
     Output.prompt();
+    Regs.setThreadId(threadId);
+    Regs.setContext(ctx);
+
+    for (const line of this.lines) {
+      const parser = new Parser(line.toString());
+      const tokens = parser.tokenize();
+      const ret = Command.run(tokens);
+      Vars.setRet(ret);
+    }
+
+    Regs.clear();
   }
 
   private countString(): string {
@@ -130,12 +143,12 @@ export class Bps {
     return items;
   }
 
-  public static break(addr: Var, tid: ThreadId, ctx: CpuContext) {
+  public static break(addr: Var, threadId: ThreadId, ctx: CpuContext) {
     const bp = this.get(addr);
     if (bp === undefined)
       throw new Error(
         `Hit breakpoint not found at ${Util.toHexString(addr.toPointer())}`,
       );
-    bp.break(tid, ctx);
+    bp.break(threadId, ctx);
   }
 }

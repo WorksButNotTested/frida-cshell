@@ -36,6 +36,7 @@ import { HistoryCmdLet } from './cmdlets/history.js';
 import { HelpCmdLet } from './cmdlets/help.js';
 import { CopyCmdLet } from './cmdlets/copy.js';
 import { BpCmdLet } from './cmdlets/bp.js';
+import { RegCmdLet } from './cmdlets/reg.js';
 
 export class CmdLets {
   public static getByName(name: string): CmdLet | undefined {
@@ -70,6 +71,7 @@ export class CmdLets {
     this.register(ModCmdLet);
     this.register(MulCmdLet);
     this.register(NotCmdLet);
+    this.register(RegCmdLet);
     this.register(ShlCmdLet);
     this.register(ShrCmdLet);
     this.register(SymCmdLet);

@@ -36,6 +36,7 @@ export class RegCmdLet extends CmdLet {
     if (value === undefined) return undefined;
 
     Regs.set(name, value);
+    Output.writeln(`Register ${name}, set to value: ${value.toString()}`);
     return value;
   }
 

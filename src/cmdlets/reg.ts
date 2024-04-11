@@ -54,9 +54,9 @@ export class RegCmdLet extends CmdLet {
   private runWithoutParams(tokens: Token[]): Var | undefined {
     if (tokens.length !== 0) return undefined;
 
-    Output.writeln('Regs:');
+    Output.writeln('Registers:');
     for (const [key, value] of Regs.all()) {
-      Output.writeln(`${key.padEnd(25, ' ')}: ${value.toString()}`);
+      Output.writeln(`${Output.bold(key.padEnd(4, ' '))}: ${value.toString()}`);
     }
     return Vars.getRet();
   }

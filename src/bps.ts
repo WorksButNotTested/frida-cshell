@@ -54,6 +54,7 @@ class Bp {
     else if (this.count > 0) this.count--;
     Output.clearLine();
     Output.writeln(`Break @ ${Util.toHexString(this.addr.toPointer())}`);
+    Output.writeln();
     Regs.setThreadId(threadId);
     Regs.setContext(ctx);
     for (const line of this.lines) {

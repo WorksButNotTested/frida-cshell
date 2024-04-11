@@ -7,9 +7,9 @@ import { Var } from './var.js';
 import { Vars } from './vars.js';
 
 export enum BpType {
-  Instruction = "instruction",
-  FunctionEntry = "function entry",
-  FunctionExit = "function exit",
+  Instruction = 'instruction',
+  FunctionEntry = 'function entry',
+  FunctionExit = 'function exit',
 }
 
 class Bp {
@@ -18,7 +18,7 @@ class Bp {
   private readonly literal: string;
 
   private count: number = 0;
-  
+
   private lines: string[] = [];
   private listener: InvocationListener;
   private enabled: boolean = false;
@@ -36,6 +36,10 @@ class Bp {
       },
     );
     Interceptor.flush();
+  }
+
+  public getType(): BpType {
+    return this.type;
   }
 
   public setCount(count: number) {
@@ -132,9 +136,15 @@ export class Bps {
     if (bp === undefined) {
       bp = new Bp(type, addr, literal, count);
       this.map.set(addr.toString(), bp);
-    } else {
+    } else if (bp.getType() == type) {
+      /* If it is the same type, then we will modify in place */
       bp.disable();
       bp.setCount(count);
+    } else {
+      /* If it is a different type then we will start anew */
+      bp.detach();
+      bp = new Bp(type, addr, literal, count);
+      this.map.set(addr.toString(), bp);
     }
 
     this.last = bp;

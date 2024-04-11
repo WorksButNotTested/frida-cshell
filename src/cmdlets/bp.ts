@@ -60,11 +60,11 @@ export class BpCmdLet extends CmdLet {
 
     const bp = Bps.get(value);
     if (bp === undefined)
-      throw new Error(`No breakpoint found at ${Util.toHexString(value.toPointer())} (${literal})`,)
+      throw new Error(
+        `No breakpoint found at ${Util.toHexString(value.toPointer())} (${literal})`,
+      );
 
-    Output.writeln(
-      `${Util.toHexString(value.toPointer())}: ${bp.toString()}`,
-    );
+    Output.writeln(`${Util.toHexString(value.toPointer())}: ${bp.toString()}`);
 
     return value;
   }
@@ -96,9 +96,9 @@ export class BpCmdLet extends CmdLet {
 
 abstract class TypedBpCmdLet extends CmdLet implements CmdLetEdit {
   public abstract readonly bpType: BpType;
-  
+
   category = 'breakpoints';
-  
+
   public usage(): Var {
     const INSN_BP_USAGE: string = `Usage: ${this.name}
 ${this.name} addr - create, or modify an ${this.bpType} breakpoint

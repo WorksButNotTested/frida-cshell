@@ -1,5 +1,6 @@
 import { CharCode } from './char.js';
 import { History } from './history.js';
+import { Vars } from './vars.js';
 
 export class Output {
   private static readonly VERSION = '@VER@';
@@ -80,6 +81,11 @@ export class Output {
     const remain = cmd.getLength() - cmd.getPos();
     const backspaces = String.fromCharCode(CharCode.BS).repeat(remain);
     this.write(backspaces);
+  }
+
+  public static writeRet(): void {
+    Output.writeln();
+    Output.writeln(`ret: ${Output.bold(Vars.getRet().toString())}`);
   }
 
   public static write(buffer?: string, verbose: boolean = false) {

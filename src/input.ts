@@ -34,32 +34,49 @@ export class Input {
     return false;
   }
 
+  private static parseEnterDefault() {
+    const ret = History.run();
+    Vars.setRet(ret);
+
+    /*
+     * If our command hasn't caused us to enter edit mode print the result,
+     * otherwise we will defer until the edit is complete.
+     */
+    if (this.edit === undefined) {
+      Output.writeRet();
+    }
+  }
+
+  private static parseEnterEdit() {
+    const edit = this.edit as CmdLetEdit;
+
+    /* Display the line */
+    const line = History.getCurrent().toString();
+    Output.clearLine();
+    Output.writeln(`- ${line}`);
+
+    if (line == QUIT_CHAR) {
+      /* Notify the commandlet we are done and exit edit mode */
+      edit.done();
+      this.edit = undefined;
+      Output.writeRet();
+    } else if (line == ABORT_CHAR) {
+      /* Notify the commandlet we aborted and exit edit mode */
+      edit.abort();
+      this.edit = undefined;
+      Output.writeRet();
+    } else {
+      /* Notify the commandlet of the line */
+      edit.addCommandLine(line);
+    }
+  }
+
   private static parseEnter() {
     try {
       if (this.edit === undefined) {
-        const ret = History.run();
-        /* If our command hasn't caused us to enter edit mode */
-        if (this.edit === undefined) {
-          Output.writeln();
-          Output.writeln(`ret: ${Output.bold(ret.toString())}`);
-        }
-        Vars.setRet(ret);
+        this.parseEnterDefault();
       } else {
-        const line = History.getCurrent().toString();
-        this.edit.addCommandLine(line);
-        Output.clearLine();
-        Output.writeln(`- ${line}`);
-        if (line == QUIT_CHAR) {
-          this.edit.done();
-          this.edit = undefined;
-          Output.writeln();
-          Output.writeln(`ret: ${Output.bold(Vars.getRet().toString())}`);
-        } else if(line == ABORT_CHAR) {
-          this.edit.abort();
-          this.edit = undefined;
-          Output.writeln();
-          Output.writeln(`ret: ${Output.bold(Vars.getRet().toString())}`);
-        }
+        this.parseEnterEdit();
       }
     } catch (error) {
       if (error instanceof Error) {

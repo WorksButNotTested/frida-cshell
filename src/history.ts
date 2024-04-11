@@ -47,7 +47,7 @@ export class History {
     }
 
     Output.writeln();
-    const ret = Command.run(tokens);    
+    const ret = Command.run(tokens);
     return ret;
   }
 

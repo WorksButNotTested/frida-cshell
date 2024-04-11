@@ -270,9 +270,12 @@ $ hexdump -C /tmp/test.txt
 Commandlets not yet implemented:
 * `ld` - Load a shared library into the target process.
 * `fd` - Show open file descriptors (for Unix like OS)
-* `b` - Add breakpoints (or at least watchpoints which dump things like register context etc)
-* `ba` - Memory breakpionts (as above)
+* `@` - Add breakpoints (or at least watchpoints which dump things like register context etc)
+* `@r/@w` - Memory breakpionts (as above)
 * `src` - Support loading Javascript from file to augment the set of supported Commandlets.
+
+Others
+* Add support for display exception information in the event of an unhandled signal
 
 # Commands
 In contrast to a conventional shell, commands are not processes to be executed, but rather functions. `C` functions within the target application. For example, we can call `malloc` to provide us some memory as follows:

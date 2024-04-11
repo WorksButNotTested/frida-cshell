@@ -36,6 +36,10 @@ class Bp {
     this.lines = lines;
   }
 
+  public disable() {
+    this.enabled = false;
+  }
+
   public enable() {
     this.enabled = true;
   }
@@ -50,16 +54,16 @@ class Bp {
     else if (this.count > 0) this.count--;
     Output.clearLine();
     Output.writeln(`Break @ ${Util.toHexString(this.addr.toPointer())}`);
-    Output.prompt();
     Regs.setThreadId(threadId);
     Regs.setContext(ctx);
-
     for (const line of this.lines) {
       const parser = new Parser(line.toString());
       const tokens = parser.tokenize();
       const ret = Command.run(tokens);
       Vars.setRet(ret);
     }
+    Output.writeRet();
+    Output.prompt();
 
     Regs.clear();
   }
@@ -102,6 +106,7 @@ export class Bps {
       bp = new Bp(addr, literal, count);
       this.map.set(addr.toString(), bp);
     } else {
+      bp.disable();
       bp.setCount(count);
     }
 

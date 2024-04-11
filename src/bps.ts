@@ -1,10 +1,13 @@
 import { Command } from './command.js';
 import { Output } from './output.js';
+import { Overlay } from './overlay.js';
 import { Parser } from './parser.js';
 import { Regs } from './regs.js';
 import { Util } from './util.js';
 import { Var } from './var.js';
 import { Vars } from './vars.js';
+
+const BP_LENGTH: number = 16;
 
 export enum BpType {
   Instruction = 'instruction',
@@ -18,9 +21,9 @@ export class Bp {
   private readonly literal: string;
 
   private count: number = 0;
-
   private lines: string[] = [];
   private listener: InvocationListener | undefined;
+  private overlay: string | undefined = undefined;
 
   public constructor(type: BpType, addr: Var, literal: string, count: number) {
     this.type = type;
@@ -46,10 +49,14 @@ export class Bp {
     if (this.listener === undefined) return;
     this.listener.detach();
     this.listener = undefined;
+    Interceptor.flush()
+    if (this.overlay === undefined) return;
+    Overlay.remove(this.overlay);
   }
 
   public enable() {
     if (this.listener !== undefined) return;
+    this.overlay = Overlay.add(this.addr.toPointer(), BP_LENGTH);
     const addr = this.addr;
     switch (this.type) {
       case BpType.Instruction:

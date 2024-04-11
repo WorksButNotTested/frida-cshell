@@ -120,4 +120,8 @@ export class Output {
   public static green(input: string): string {
     return `${CharCode.GREEN}${input}${CharCode.RESET}`;
   }
+
+  public static yellow(input: string): string {
+    return `${CharCode.YELLOW}${input}${CharCode.RESET}`;
+  }
 }

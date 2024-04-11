@@ -82,7 +82,9 @@ export class BpCmdLet extends CmdLet implements CmdLetEdit {
     Output.writeln('Breakpoints:');
 
     for (const [v, bp] of Bps.all()) {
-      Output.writeln(`${Util.toHexString(v.toPointer())}: ${bp.toString()}`);
+      Output.writeln(
+        `${Output.bold(Util.toHexString(v.toPointer()))}: ${bp.toString()}`,
+      );
     }
     return Var.ZERO;
   }

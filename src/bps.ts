@@ -1,3 +1,4 @@
+import { Output } from './output.js';
 import { Var } from './var.js';
 
 class Bp {
@@ -8,18 +9,23 @@ class Bp {
     this.literal = literal;
   }
 
-  public addCommandLine(line: string) {
-    this.lines.push(line);
+  public setLines(lines: string[]) {
+    this.lines = lines;
   }
 
   public toString(): string {
-    return `${this.literal}`;
+    return (
+      `${Output.bold(this.literal)}\n` +
+      this.lines.map(l => `  - ${Output.yellow(l)}`).join('\n') +
+      '\n'
+    );
   }
 }
 
 export class Bps {
   private static map: Map<string, Bp> = new Map<string, Bp>();
   private static last: Bp | undefined = undefined;
+  private static lines: string[] = [];
 
   private constructor() {}
 
@@ -31,15 +37,18 @@ export class Bps {
     }
 
     this.last = bp;
+    this.lines = [];
   }
 
-  public static done(): void {}
+  public static done(): void {
+    if (this.last === undefined) throw new Error('No breakpoint to modify');
+    this.last.setLines(this.lines);
+  }
 
   public static abort(): void {}
 
   public static addCommandLine(line: string) {
-    if (this.last === undefined) throw new Error('No breakpoint to modify');
-    this.last.addCommandLine(line);
+    this.lines.push(line);
   }
 
   public static get(addr: Var): Bp | undefined {

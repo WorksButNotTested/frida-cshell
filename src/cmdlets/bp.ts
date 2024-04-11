@@ -1,4 +1,4 @@
-import { BpType, Bps } from '../bps.js';
+import { Bp, BpType, Bps } from '../bps.js';
 import { CmdLet, CmdLetEdit } from '../cmdlet.js';
 import { Input } from '../input.js';
 import { Output } from '../output.js';
@@ -38,8 +38,8 @@ export class BpCmdLet extends CmdLet {
 
     let found = false;
 
-    for (const t in BpType) {
-      const bp = Bps.get(t as BpType, value);
+    for (const t of [BpType.Instruction, BpType.FunctionEntry, BpType.FunctionExit]) {
+      const bp = Bps.get(t, value);
       if (bp === undefined) continue;
       Output.writeln(
         `${Util.toHexString(value.toPointer())}: ${bp.toString()}`,
@@ -58,11 +58,26 @@ export class BpCmdLet extends CmdLet {
   private runWithoutParams(tokens: Token[]): Var | undefined {
     if (tokens.length !== 0) return undefined;
 
-    Output.writeln('Breakpoints:');
+    const groups: Map<BpType, Bp[]> = Bps.all().reduce((result, bp) => {
+      const category = bp.getType();
+      if (!result.has(category)) {
+        result.set(category, []);
+      }
 
-    for (const bp of Bps.all()) {
-      Output.writeln(bp.toString());
-    }
+      result.get(category)?.push(bp);
+      return result;
+    }, new Map<BpType, Bp[]>());
+
+    Array.from(groups.entries()).sort(([k1, _v1], [k2, _v2]) => k1.localeCompare(k2))
+      .forEach(([k, v]) => {
+        Output.writeln(`${Output.blue(k)} ${Output.blue('breakpoints')}:`);
+        Array.from(v)
+          .sort((bp1, bp2) => bp1.compare(bp2))
+          .forEach(bp => {
+            Output.writeln(bp.toString(true));
+          });
+    });
+
     return Var.ZERO;
   }
 
@@ -86,7 +101,7 @@ abstract class TypedBpCmdLet extends CmdLet implements CmdLetEdit {
     const INSN_BP_USAGE: string = `Usage: ${this.name}
 ${this.name} addr ${DELETE_CHAR} - delete a ${this.bpType} breakpoint
   addr    the address of the breakpoint to delete
-  
+
 ${this.name} addr - create, or modify an ${this.bpType} breakpoint
    addr    the address of the breakpoint to manage
 

@@ -12,7 +12,7 @@ export enum BpType {
   FunctionExit = 'function exit',
 }
 
-class Bp {
+export class Bp {
   private readonly type: BpType;
   private readonly addr: Var;
   private readonly literal: string;
@@ -28,6 +28,10 @@ class Bp {
     this.literal = literal;
     this.count = count;
     this.listener = undefined;
+  }
+
+  public getType(): BpType {
+    return this.type;
   }
 
   public setCount(count: number) {
@@ -142,12 +146,12 @@ class Bp {
     return this.addr.compare(other.addr);
   }
 
-  public toString(): string {
+  public toString(short: boolean = false): string {
     const type = this.type.toString();
     const addr = Output.bold(Util.toHexString(this.addr.toPointer()));
     const literal = Output.bold(this.literal);
     const hits = `[hits:${this.countString()}]`;
-    const header = `${type} ${addr}: ${literal} ${hits}`;
+    const header = `${short ? '' : type} ${addr}: ${literal} ${hits}`;
     const lines = this.lines.map(l => `  - ${Output.yellow(l)}`);
     lines.unshift(header);
     return `${lines.join('\n')}\n`;
@@ -172,7 +176,6 @@ export class Bps {
       bp = new Bp(type, addr, literal, count);
       this.map.set(key, bp);
     } else {
-      /* If it is the same type, then we will modify in place */
       bp.disable();
       bp.setCount(count);
     }

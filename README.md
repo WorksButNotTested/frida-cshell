@@ -268,9 +268,7 @@ $ hexdump -C /tmp/test.txt
 ```
 # TODO
 Commandlets not yet implemented:
-* `ld` - Load a shared library into the target process.
 * `fd` - Show open file descriptors (for Unix like OS)
-* `@` - Add breakpoints (or at least watchpoints which dump things like register context etc)
 * `@r/@w` - Memory breakpionts (as above)
 * `src` - Support loading Javascript from file to augment the set of supported Commandlets.
 

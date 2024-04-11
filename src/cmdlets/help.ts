@@ -24,7 +24,7 @@ export class HelpCmdLet extends CmdLet {
     Array.from(groups.entries())
       .sort(([k1, _v1], [k2, _v2]) => k1.localeCompare(k2))
       .forEach(([k, v]) => {
-        Output.writeln(`${k}:`);
+        Output.writeln(`${Output.bold(k)}:`);
         Array.from(v)
           .sort((c1, c2) => c1.name.localeCompare(c2.name))
           .forEach(c => {

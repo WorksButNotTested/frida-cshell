@@ -17,7 +17,7 @@ mod name - show named module
 
 export class ModCmdLet extends CmdLet {
   name = 'mod';
-  category = 'memory';
+  category = 'modules';
   help = 'display module information';
 
   public usage(): Var {

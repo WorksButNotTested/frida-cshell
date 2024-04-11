@@ -3,10 +3,11 @@ import { Output } from '../output.js';
 import { Util } from '../util.js';
 import { Token } from '../token.js';
 import { Var } from '../var.js';
+import { Overlay } from '../overlay.js';
 
 const USAGE: string = `Usage: cp
 
-d dest src bytes - copy data
+cp dest src bytes - copy data
   dest   the address/symbol to write to
   src    the address/symbol to read from  
   bytes    the numer of bytes to read
@@ -38,7 +39,16 @@ export class CopyCmdLet extends CmdLet {
     if (len === undefined) return this.usage();
 
     try {
-      Memory.copy(dst, src, len);
+      const buff = src.readByteArray(len);
+      if (buff === null) {
+        throw new Error(
+          `Failed to read ${Util.toHexString(len)} bytes from ${Util.toHexString(src)}`,
+        );
+      }
+
+      const bytes = new Uint8Array(buff);
+      Overlay.fix(src, bytes);
+      dst.writeByteArray(bytes.buffer as ArrayBuffer);
     } catch (error) {
       throw new Error(
         `Failed to copy ${len} bytes from ${Util.toHexString(src)} to ${Util.toHexString(dst)}, ${error}`,

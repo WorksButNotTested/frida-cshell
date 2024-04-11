@@ -51,7 +51,7 @@ export class History {
     return ret;
   }
 
-  public static clearLine(): void {
+  public static clearLine() {
     this.index = -1;
     this.line = new Line();
   }

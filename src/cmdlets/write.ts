@@ -44,7 +44,7 @@ export class Write1CmdLet extends WriteCmdLet {
   protected MAX_VALUE: UInt64 = uint64(0xff);
   protected SIZE: number = 1;
 
-  protected write(address: NativePointer, val: UInt64): void {
+  protected write(address: NativePointer, val: UInt64) {
     address.writeU8(val.toNumber());
     Output.writeln(
       `Wrote value: 0x${val.toString(16).padStart(2, '0')} = ${val.toString()} to ${Util.toHexString(address)}`,
@@ -59,7 +59,7 @@ export class Write2CmdLet extends WriteCmdLet {
   protected MAX_VALUE: UInt64 = uint64(0xffff);
   protected SIZE: number = 2;
 
-  protected write(address: NativePointer, val: UInt64): void {
+  protected write(address: NativePointer, val: UInt64) {
     address.writeU16(val.toNumber());
     Output.writeln(
       `Wrote value: 0x${val.toString(16).padStart(4, '0')} = ${val.toString()} to ${Util.toHexString(address)}`,
@@ -74,7 +74,7 @@ export class Write4CmdLet extends WriteCmdLet {
   protected MAX_VALUE: UInt64 = uint64(0xffffffff);
   protected SIZE: number = 4;
 
-  protected write(address: NativePointer, val: UInt64): void {
+  protected write(address: NativePointer, val: UInt64) {
     address.writeU32(val.toNumber());
     Output.writeln(
       `Wrote value: 0x${val.toString(16).padStart(8, '0')} = ${val.toString()} to ${Util.toHexString(address)}`,
@@ -89,7 +89,7 @@ export class Write8CmdLet extends WriteCmdLet {
   protected MAX_VALUE: UInt64 = uint64('0xffffffffffffffff');
   protected SIZE: number = 8;
 
-  protected write(address: NativePointer, val: UInt64): void {
+  protected write(address: NativePointer, val: UInt64) {
     address.writeU64(val);
     Output.writeln(
       `Wrote value: ${Util.toHexString(val)} = ${val.toString()} to ${Util.toHexString(address)}`,

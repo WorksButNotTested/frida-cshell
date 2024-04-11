@@ -132,15 +132,15 @@ export class BpCmdLet extends CmdLet implements CmdLetEdit {
     return this.usage();
   }
 
-  addCommandLine(line: string): void {
+  addCommandLine(line: string) {
     Bps.addCommandLine(line);
   }
 
-  done(): void {
+  done() {
     Bps.done();
   }
 
-  abort(): void {
+  abort() {
     Bps.abort();
   }
 }

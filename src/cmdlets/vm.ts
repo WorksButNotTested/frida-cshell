@@ -25,7 +25,7 @@ export class VmCmdLet extends CmdLet {
     return Var.ZERO;
   }
 
-  private printMapping(r: RangeDetails): void {
+  private printMapping(r: RangeDetails) {
     const limit = r.base.add(r.size);
     if (r.file === undefined)
       Output.writeln(

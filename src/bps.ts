@@ -11,11 +11,11 @@ class Bp {
     this.count = count;
   }
 
-  public setCount(count: number): void {
+  public setCount(count: number) {
     this.count = count;
   }
 
-  public setLines(lines: string[]): void {
+  public setLines(lines: string[]) {
     this.lines = lines;
   }
 
@@ -58,12 +58,12 @@ export class Bps {
     this.lines = [];
   }
 
-  public static done(): void {
+  public static done() {
     if (this.last === undefined) throw new Error('No breakpoint to modify');
     this.last.setLines(this.lines);
   }
 
-  public static abort(): void {}
+  public static abort() {}
 
   public static addCommandLine(line: string) {
     this.lines.push(line);

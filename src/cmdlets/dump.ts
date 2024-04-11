@@ -23,7 +23,7 @@ export class DumpCmdLet extends CmdLet {
     return Var.ZERO;
   }
 
-  private dump(address: NativePointer, length: number): void {
+  private dump(address: NativePointer, length: number) {
     try {
       const dump = hexdump(address, {
         length: length,

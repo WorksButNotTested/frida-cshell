@@ -51,12 +51,12 @@ export class Output {
     if (first !== undefined) this.writeln(`\tName: ${this.green(first.name)}`);
   }
 
-  public static clearLine(): void {
+  public static clearLine() {
     this.write(CharCode.ERASE_LINE);
     this.write(String.fromCharCode(CharCode.CR));
   }
 
-  public static prompt(): void {
+  public static prompt() {
     this.clearLine();
     this.write(this.bold(this.PROMPT));
 
@@ -69,7 +69,7 @@ export class Output {
     this.write(backspaces);
   }
 
-  public static promptEdit(): void {
+  public static promptEdit() {
     this.write(CharCode.ERASE_LINE);
     this.write(String.fromCharCode(CharCode.CR));
     this.write(this.bold(this.EDIT_PROMPT));
@@ -83,7 +83,7 @@ export class Output {
     this.write(backspaces);
   }
 
-  public static writeRet(): void {
+  public static writeRet() {
     Output.writeln();
     Output.writeln(`ret: ${Output.bold(Vars.getRet().toString())}`);
   }
@@ -105,7 +105,7 @@ export class Output {
     }
   }
 
-  public static setVerbose(dev: boolean): void {
+  public static setVerbose(dev: boolean) {
     this.verbose = dev;
   }
 

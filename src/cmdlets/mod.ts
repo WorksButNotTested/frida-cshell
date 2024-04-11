@@ -25,7 +25,7 @@ export class ModCmdLet extends CmdLet {
     return Var.ZERO;
   }
 
-  private printModule(m: Module): void {
+  private printModule(m: Module) {
     const limit = m.base.add(m.size);
     Output.writeln(
       `${Util.toHexString(m.base)}-${Util.toHexString(limit)} ${Util.toSize(m.size)} ${m.name.padEnd(30, ' ')} ${m.path}`,

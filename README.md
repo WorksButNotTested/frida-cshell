@@ -1,5 +1,5 @@
 # Overview
-The C-Shell is a command line interpreter embedded as part of the `frida-inject` tool, it takes inspiration from the VxWorks C-Shell and is intended to allow the user to interactively inspect a running process by issuing commands. By setting `frida-inject` to use raw mode, the tool acts as a dumb byte pump sending and receiving raw key-strokes between the TTY and the C-shell. It is implmented purely in about 2k lines of Typescript (which is embedded as a resource) and converts the user's input into calls into the [FRIDA JS API bindings](https://frida.re/docs/javascript-api/).
+The C-Shell is a command line interpreter embedded as part of the `frida-inject` tool, it takes inspiration from the VxWorks C-Shell and is intended to allow the user to interactively inspect a running process by issuing commands. By setting `frida-inject` to use raw mode, the tool acts as a dumb byte pump sending and receiving raw key-strokes between the TTY and the C-shell. It is implmented purely in about 4k lines of Typescript (which is embedded as a resource) and converts the user's input into calls into the [FRIDA JS API bindings](https://frida.re/docs/javascript-api/).
 
 # Getting Started
 The C-Shell can be started by using the `-s` flag provided to the `frida-inject` tool as follows:
@@ -266,13 +266,198 @@ $ hexdump -C /tmp/test.txt
 00000010  41 42 43 44 45 46 47 00  00 00 00 00 00 00 00 00  |ABCDEFG.........|
 00000020
 ```
+## #8 Loading Modules
+We can load a module using the `ld` command. File names must be double-quoted if they contain spaces:
+```
+-> ld /workspaces/frida-cshell/module.so
+Loading: /workspaces/frida-cshell/module.so
+
+ret: 0x00007600`d05dc430 "0x7600c8ed9000"
+-> mod
+0x00000000`00400000-0x00000000`00404070   16 KB target                         /workspaces/frida-cshell/target
+0x00007ffe`4fb2f000-0x00007ffe`4fb300ab    4 KB linux-vdso.so.1                linux-vdso.so.1
+0x00007600`d1f85000-0x00007600`d21ade50    2 MB libc.so.6                      /usr/lib/x86_64-linux-gnu/libc.so.6
+0x00007600`d21b4000-0x00007600`d21ef2d8  236 KB ld-linux-x86-64.so.2           /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+0x00007600`d1778000-0x00007600`d177c028   16 KB libdl.so.2                     /usr/lib/x86_64-linux-gnu/libdl.so.2
+0x00007600`d1773000-0x00007600`d1777038   16 KB librt.so.1                     /usr/lib/x86_64-linux-gnu/librt.so.1
+0x00007600`d168c000-0x00007600`d1772108  920 KB libm.so.6                      /usr/lib/x86_64-linux-gnu/libm.so.6
+0x00007600`d1687000-0x00007600`d168b028   16 KB libpthread.so.0                /usr/lib/x86_64-linux-gnu/libpthread.so.0
+0x00007600`c8ed9000-0x00007600`c8edd030   16 KB module.so                      /workspaces/frida-cshell/module.so
+
+ret: 0x00000000`00000000 0
+-> 
+```
+## #9 Breakpoints
+First we will create a simple target application to make things a bit easier:
+```c
+#include <fcntl.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+__attribute__((noinline)) void my_memcpy(void *dest, const void *src, size_t n)
+{
+  memcpy(dest, src, n);
+}
+
+int main(int argc, char **argv, char **envp)
+{
+  int fd = open("/dev/null", O_RDWR);
+  dup2(fd, STDIN_FILENO);
+  dup2(fd, STDOUT_FILENO);
+  dup2(fd, STDERR_FILENO);
+  close(fd);
+
+  static const char test[] = "TEST_STRING";
+
+  while (true)
+  {
+    char *buf = malloc(sizeof(test));
+
+    if (buf == NULL)
+      break;
+
+    my_memcpy(buf, test, sizeof(test));
+
+    puts(buf);
+
+    free(buf);
+    usleep(500000);
+  }
+}
+```
+
+Let's see how many bytes are being allocated, we will set a function entry break-point to show it. Note here we use the new `r` commandlet and we will append the value `1` to our command so our breakpoint only fires the once:
+```
+-> @f malloc 1
+Setting function entry breakpoint at 0x00007600`d202a0a0 (malloc)
+Type 'q' to finish, or 'x' to abort
+- r rdi
+- q
+
+ret: 0x00007600`d202a0a0 129745895465120
+Break [function entry] @ 0x00007600`d202a0a0
+
+Register rdi, value: 0x00000000`0000000c 12
+
+
+ret: 0x00000000`0000000c 12
+-> 
+```
+
+Now let's see the data in the buffer when it has been allocated, for this we will use a function exit breakpoint:
+```
+-> @F malloc 1
+Setting function exit breakpoint at 0x00007600`d202a0a0 (malloc)
+Type 'q' to finish, or 'x' to abort
+- d $rax
+- q
+
+ret: 0x00007600`d202a0a0 129745895465120
+Break [function exit] @ 0x00007600`d202a0a0
+
+           0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F  0123456789ABCDEF
+00ec5420  c5 0e 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00ec5430  00 00 00 00 00 00 00 00 d1 fb 01 00 00 00 00 00  ................
+
+
+ret: 0x00000000`00ec5420 15488032
+-> 
+```
+Now let's try an instruction breakpoint. We can set those at any address, not just the start of a function. Here we we can see that the 4th instruction copies `rdi` into `rbp`. Lets inspect that shall we?
+```
+-> l malloc
+0x00007600`d202a0a4: endbr64
+0x00007600`d202a0a6: push r12
+0x00007600`d202a0a7: push rbp
+0x00007600`d202a0aa: mov rbp, rdi
+0x00007600`d202a0ab: push rbx
+0x00007600`d202a0af: sub rsp, 0x10
+0x00007600`d202a0b6: cmp byte ptr [rip + 0x17c432], 0
+0x00007600`d202a0bc: je 0x7600c8eed640
+0x00007600`d202a0bf: test rbp, rbp
+0x00007600`d202a0c1: wrmsr
+
+ret: 0x00007600`c8eed433 129745743172659
+-> @i 0x00007600`d202a0ab 1
+Setting instruction breakpoint at 0x00007600`d202a0ab (0x00007600`d202a0ab)
+Type 'q' to finish, or 'x' to abort
+- r
+- q
+
+ret: 0x00007600`d202a0ab 129745895465131
+Break [instruction] @ 0x00007600`d202a0ab
+
+Registers:
+rax : 0x00000000`00000000 0
+rcx : 0x00007600`d206a7f8 129745895729144
+rdx : 0x00000000`00000000 0
+rbx : 0x00000000`00000000 0
+rsp : 0x00007ffe`4fa34b90 140730234522512
+rbp : 0x00000000`0000000c 12
+rsi : 0x00000000`00000000 0
+rdi : 0x00000000`0000000c 12
+r8  : 0x00000000`00000000 0
+r9  : 0x00000000`00ec5420 15488032
+r10 : 0x00000000`00000000 0
+r11 : 0x00000000`00000293 659
+r12 : 0x00007ffe`4fa34cf8 140730234522872
+r13 : 0x00000000`00401248 4198984
+r14 : 0x00000000`00403e18 4210200
+r15 : 0x00007600`d21ee040 129745897316416
+rip : 0x00007600`d202a0ab 129745895465131
+tid : 0x00000000`00024554 148820
+ra  : 0x00007600`d202a0ab 129745895465131
+
+
+ret: 0x00007600`d202a0ab 129745895465131
+-> 
+```
+
+Now let's see the breakpoints we have made so far:
+```
+-> @
+function entry breakpoints:
+ 0x00007600`d202a0a0: malloc [hits:disabled]
+  - r rdi
+
+function exit breakpoints:
+ 0x00007600`d202a0a0: malloc [hits:disabled]
+  - d $rax
+
+instruction breakpoints:
+ 0x00007600`d202a0ab: 0x00007600`d202a0ab [hits:disabled]
+  - r
+```
+
+We can delete our breakpoints like so:
+```
+-> @f malloc #
+
+ret: 0x00007600`d202a0a0 129745895465120
+-> @F malloc #
+
+ret: 0x00007600`d202a0a0 129745895465120
+-> @i 0x00007600`d202a0ab #
+
+ret: 0x00007600`d202a0ab 129745895465131
+-> @
+
+ret: 0x00000000`00000000 0
+-> 
+```
+
 # TODO
 Commandlets not yet implemented:
-* `ld` - Load a shared library into the target process.
 * `fd` - Show open file descriptors (for Unix like OS)
-* `b` - Add breakpoints (or at least watchpoints which dump things like register context etc)
-* `ba` - Memory breakpionts (as above)
+* `@r/@w` - Memory breakpionts (as above)
 * `src` - Support loading Javascript from file to augment the set of supported Commandlets.
+
+Others
+* Support for modifying write protected memory
+* Add support for display exception information in the event of an unhandled signal
 
 # Commands
 In contrast to a conventional shell, commands are not processes to be executed, but rather functions. `C` functions within the target application. For example, we can call `malloc` to provide us some memory as follows:

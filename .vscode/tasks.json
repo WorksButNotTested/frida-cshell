@@ -43,6 +43,16 @@
 		},
 		{
 			"type": "shell",
+			"command": "gcc -Wall -Werror -no-pie -shared -fPIC -o module.so module.c",
+			"problemMatcher": [],
+			"label": "Module",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"type": "shell",
 			"command": "frida-inject -s frida-cshell.js --interactive -f ./target",
 			"problemMatcher": [],
 			"label": "Test",
@@ -61,6 +71,7 @@
 			},
 			"dependsOn": [
 				"Target",
+				"Module",
 				"Build"
 			]
 		},
@@ -84,6 +95,7 @@
 			},
 			"dependsOn": [
 				"Target",
+				"Module",
 				"Build"
 			]
 		},
@@ -107,6 +119,7 @@
 			},
 			"dependsOn": [
 				"Target",
+				"Module",
 				"Build"
 			]
 		}

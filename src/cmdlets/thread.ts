@@ -21,7 +21,7 @@ export class ThreadCmdLet extends CmdLet {
     return Var.ZERO;
   }
 
-  private printThread(t: ThreadDetails): void {
+  private printThread(t: ThreadDetails) {
     Output.writeln(
       `${t.id.toString().padStart(5, ' ')}: ${(t.name ?? '[UNNAMED]').padEnd(15, ' ')} ${t.state} pc: ${t.context.pc} sp: ${t.context.sp}`,
     );

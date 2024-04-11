@@ -9,3 +9,9 @@ export abstract class CmdLet {
   public abstract usage(): Var;
   public abstract run(tokens: Token[]): Var;
 }
+
+export interface CmdLetEdit {
+  addCommandLine(line: string): void;
+  done(): void;
+  abort(): void;
+}

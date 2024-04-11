@@ -48,11 +48,12 @@ export class History {
 
     Output.writeln();
     const ret = Command.run(tokens);
-    Output.writeln();
+    return ret;
+  }
 
+  public static clearLine() {
     this.index = -1;
     this.line = new Line();
-    return ret;
   }
 
   public static rerun(idx: number): Var {

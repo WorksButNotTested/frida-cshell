@@ -1,6 +1,14 @@
 #include <fcntl.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
+
+__attribute__((noinline)) void my_memcpy(void *dest, const void *src, size_t n)
+{
+  memcpy(dest, src, n);
+}
 
 int main(int argc, char **argv, char **envp)
 {
@@ -10,8 +18,20 @@ int main(int argc, char **argv, char **envp)
   dup2(fd, STDERR_FILENO);
   close(fd);
 
+  static const char test[] = "TEST_STRING";
+
   while (true)
   {
-    usleep(500);
+    char *buf = malloc(sizeof(test));
+
+    if (buf == NULL)
+      break;
+
+    my_memcpy(buf, test, sizeof(test));
+
+    puts(buf);
+
+    free(buf);
+    usleep(500000);
   }
 }

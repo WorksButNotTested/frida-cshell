@@ -71,6 +71,16 @@ export class CharCode {
     CharCode.SGR,
   );
 
+  public static readonly YELLOW: string = String.fromCharCode(
+    CharCode.ESC,
+    CharCode.CSI,
+    CharCode.from('0'),
+    CharCode.SEPARATOR,
+    CharCode.from('3'),
+    CharCode.from('3'),
+    CharCode.SGR,
+  );
+
   public static readonly BLUE: string = String.fromCharCode(
     CharCode.ESC,
     CharCode.CSI,

@@ -35,6 +35,14 @@ import {
 import { HistoryCmdLet } from './cmdlets/history.js';
 import { HelpCmdLet } from './cmdlets/help.js';
 import { CopyCmdLet } from './cmdlets/copy.js';
+import {
+  BpCmdLet,
+  FunctionEntryBpCmdLet,
+  FunctionExitBpCmdLet,
+  InsnBpCmdLet,
+} from './cmdlets/bp.js';
+import { RegCmdLet } from './cmdlets/reg.js';
+import { LdCmdLet } from './cmdlets/ld.js';
 
 export class CmdLets {
   public static getByName(name: string): CmdLet | undefined {
@@ -53,13 +61,18 @@ export class CmdLets {
     this.register(AndCmdLet);
     this.register(SubCmdLet);
     this.register(AssemblyCmdLet);
+    this.register(BpCmdLet);
     this.register(BtCmdLet);
     this.register(DivCmdLet);
     this.register(CopyCmdLet);
     this.register(DumpCmdLet);
     this.register(ExitCmdLet);
+    this.register(FunctionEntryBpCmdLet);
+    this.register(FunctionExitBpCmdLet);
     this.register(HelpCmdLet);
     this.register(HistoryCmdLet);
+    this.register(InsnBpCmdLet);
+    this.register(LdCmdLet);
     this.register(OrCmdLet);
     this.register(Read1CmdLet);
     this.register(Read2CmdLet);
@@ -68,6 +81,7 @@ export class CmdLets {
     this.register(ModCmdLet);
     this.register(MulCmdLet);
     this.register(NotCmdLet);
+    this.register(RegCmdLet);
     this.register(ShlCmdLet);
     this.register(ShrCmdLet);
     this.register(SymCmdLet);

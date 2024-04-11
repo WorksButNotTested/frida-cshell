@@ -63,6 +63,7 @@ class Bp {
         const tokens = parser.tokenize();
         const ret = Command.run(tokens);
         Vars.setRet(ret);
+        Output.writeln();
       }
     } catch (error) {
       if (error instanceof Error) {

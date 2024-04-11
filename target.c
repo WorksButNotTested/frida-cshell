@@ -5,6 +5,11 @@
 #include <string.h>
 #include <unistd.h>
 
+__attribute__((noinline)) void my_memcpy(void *dest, const void *src, size_t n)
+{
+  memcpy(dest, src, n);
+}
+
 int main(int argc, char **argv, char **envp)
 {
   int fd = open("/dev/null", O_RDWR);
@@ -22,7 +27,7 @@ int main(int argc, char **argv, char **envp)
     if (buf == NULL)
       break;
 
-    memcpy(buf, test, sizeof(test));
+    my_memcpy(buf, test, sizeof(test));
 
     puts(buf);
 

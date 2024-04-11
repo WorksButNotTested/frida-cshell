@@ -48,6 +48,7 @@ class Bp {
       this.count--;
     Output.clearLine();
     Output.writeln(`Break @ ${Util.toHexString(this.addr.toPointer())}`);
+    Output.prompt();
   }
 
   private countString(): string {

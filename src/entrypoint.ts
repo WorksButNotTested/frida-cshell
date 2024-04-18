@@ -9,6 +9,7 @@
  */
 import { Input } from './input.js';
 import { Output } from './output.js';
+import { Util } from './util.js';
 
 type InitParams = {
   verbose: boolean | undefined;
@@ -20,7 +21,8 @@ rpc.exports = {
     Output.setVerbose(verbose);
     Output.writeln(`init - stage: ${stage}, verbose: ${verbose}`, true);
     Output.banner();
-    Output.prompt();
+    Process.setExceptionHandler(Util.exceptionHandler);
+    Input.prompt();
   },
   /**
    * Support reading from stdin for communications with the injected script.

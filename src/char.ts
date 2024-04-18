@@ -91,6 +91,16 @@ export class CharCode {
     CharCode.SGR,
   );
 
+  public static readonly RED: string = String.fromCharCode(
+    CharCode.ESC,
+    CharCode.CSI,
+    CharCode.from('0'),
+    CharCode.SEPARATOR,
+    CharCode.from('3'),
+    CharCode.from('1'),
+    CharCode.SGR,
+  );
+
   public static from(val: string): number {
     if (val.length != 1) {
       throw new Error(`Invalid escape char ${val}`);

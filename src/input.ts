@@ -14,9 +14,13 @@ const QUIT_CHAR: string = 'q';
 const ABORT_CHAR: string = 'x';
 
 export class Input {
+  private static readonly PROMPT: string = '-> ';
+  private static readonly EDIT_PROMPT: string = '. ';
+
   private static buffer: string = '';
   private static state: InputState = InputState.Default;
   private static edit: CmdLetEdit | undefined = undefined;
+  private static editSuppressed: boolean = false;
 
   private constructor() {}
 
@@ -57,12 +61,19 @@ export class Input {
 
     if (line == QUIT_CHAR) {
       /* Notify the commandlet we are done and exit edit mode */
-      edit.done();
-      this.edit = undefined;
+      try {
+        edit.done();
+      } finally {
+        this.edit = undefined;
+      }
       Output.writeRet();
     } else if (line == ABORT_CHAR) {
       /* Notify the commandlet we aborted and exit edit mode */
-      edit.abort();
+      try {
+        edit.abort();
+      } finally {
+        this.edit = undefined;
+      }
       this.edit = undefined;
       Output.writeRet();
     } else {
@@ -183,22 +194,43 @@ export class Input {
     }
   }
 
+  public static prompt() {
+    Output.clearLine();
+    if (this.edit === undefined) {
+      Output.write(Output.bold(this.PROMPT));
+    } else {
+      Output.write(Output.bold(this.EDIT_PROMPT));
+    }
+
+    const cmd = History.getCurrent();
+    const line = cmd.toString();
+    Output.write(line);
+
+    const remain = cmd.getLength() - cmd.getPos();
+    const backspaces = String.fromCharCode(CharCode.BS).repeat(remain);
+    Output.write(backspaces);
+  }
+
   public static read(buffer: string) {
     this.buffer += buffer;
     while (this.buffer.length !== 0) {
       this.parse();
     }
-    if (this.edit === undefined) {
-      Output.prompt();
-    } else {
-      Output.promptEdit();
-    }
+    this.prompt();
+  }
+
+  public static suppressEdit(value: boolean) {
+    this.editSuppressed = value;
   }
 
   public static setEdit(edit: CmdLetEdit) {
-    Output.writeln(
-      `Type '${QUIT_CHAR}' to finish, or '${ABORT_CHAR}' to abort`,
-    );
-    this.edit = edit;
+    if (this.editSuppressed) {
+      edit.abort();
+    } else {
+      Output.writeln(
+        `Type '${QUIT_CHAR}' to finish, or '${ABORT_CHAR}' to abort`,
+      );
+      this.edit = edit;
+    }
   }
 }

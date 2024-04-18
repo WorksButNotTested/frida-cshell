@@ -10,6 +10,8 @@ __attribute__((noinline)) void my_memcpy(void *dest, const void *src, size_t n)
   memcpy(dest, src, n);
 }
 
+const char test[] = "TEST_STRING";
+
 int main(int argc, char **argv, char **envp)
 {
   int fd = open("/dev/null", O_RDWR);
@@ -17,8 +19,6 @@ int main(int argc, char **argv, char **envp)
   dup2(fd, STDOUT_FILENO);
   dup2(fd, STDERR_FILENO);
   close(fd);
-
-  static const char test[] = "TEST_STRING";
 
   while (true)
   {

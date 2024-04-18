@@ -38,7 +38,10 @@ ${this.name} address value - write ${this.SIZE} bytes to memory
         `Failed to write ${Util.toHexString(this.SIZE)} bytes to ${Util.toHexString(address)} as the address has been modified (check for breakpoints)`,
       );
 
-    this.write(address, val);
+    Util.modifyMemory(address, this.SIZE, ptr => {
+      this.write(ptr, val);
+    });
+
     return t0;
   }
 }

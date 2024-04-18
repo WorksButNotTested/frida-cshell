@@ -2,11 +2,17 @@ import { Var } from './var.js';
 
 const THREAD_ID_NAME: string = 'tid';
 const RETURN_ADDRESS_NAME: string = 'ra';
+const ADDR_NAME: string = 'addr';
+const PC_NAME: string = 'pc';
+const RETVAL_NAME: string = 'ret';
 
 export class Regs {
   private static threadId: ThreadId | undefined = undefined;
   private static ctx: CpuContext | undefined = undefined;
   private static returnAddress: NativePointer | undefined = undefined;
+  private static addr: NativePointer | undefined = undefined;
+  private static pc: NativePointer | undefined = undefined;
+  private static retVal: InvocationReturnValue | undefined = undefined;
 
   private constructor() {}
 
@@ -18,20 +24,78 @@ export class Regs {
     this.ctx = ctx;
   }
 
+  public static getContext(): CpuContext | undefined {
+    return this.ctx;
+  }
+
   public static setReturnAddress(returnAddress: NativePointer) {
     this.returnAddress = returnAddress;
+  }
+
+  public static setAddress(addr: NativePointer) {
+    this.addr = addr;
+  }
+
+  public static setPc(pc: NativePointer) {
+    this.pc = pc;
+  }
+
+  public static setRetVal(retVal: InvocationReturnValue) {
+    this.retVal = retVal;
   }
 
   public static clear() {
     this.threadId = undefined;
     this.ctx = undefined;
+    this.returnAddress = undefined;
+    this.addr = undefined;
+    this.pc = undefined;
+    this.retVal = this.retVal;
+  }
+
+  private static isClear() {
+    if (this.threadId !== undefined) return false;
+
+    if (this.ctx !== undefined) return false;
+
+    if (this.returnAddress !== undefined) return false;
+
+    if (this.addr !== undefined) return false;
+
+    if (this.pc !== undefined) return false;
+
+    if (this.retVal !== undefined) return false;
+
+    return true;
   }
 
   public static set(name: string, value: Var) {
-    const regs = this.getRegs();
-    if (!regs.has(name)) throw new Error(`Register name '${name}' is invalid`);
-    regs.set(name, value);
-    this.setRegs(regs);
+    if (name === THREAD_ID_NAME) {
+      throw new Error('Thread ID cannot be set');
+    } else if (name === RETURN_ADDRESS_NAME) {
+      throw new Error('Return address cannot be set');
+    } else if (name === ADDR_NAME) {
+      throw new Error('Addr cannot be set');
+    } else if (name === RETVAL_NAME) {
+      if (this.retVal === undefined)
+        throw new Error(
+          'Return Value not available outside of a function exit breakpoint',
+        );
+      const ptr = value.toPointer();
+      this.retVal.replace(ptr);
+    } else if (this.ctx === undefined) {
+      if (name === PC_NAME) {
+        throw new Error('Pc cannot be set');
+      } else {
+        throw new Error('Registers not available outside of a breakpoint');
+      }
+    } else {
+      const regs = this.getRegs(this.ctx);
+      if (!regs.has(name))
+        throw new Error(`Register name '${name}' is invalid`);
+      regs.set(name, value);
+      this.setRegs(this.ctx, regs);
+    }
   }
 
   public static get(name: string): Var {
@@ -43,41 +107,75 @@ export class Regs {
       if (this.returnAddress === undefined)
         throw new Error('Return address not available outside of a breakpoint');
       return new Var(uint64(this.returnAddress.toString()));
+    } else if (name === ADDR_NAME) {
+      if (this.addr === undefined)
+        throw new Error('Addr not available outside of a breakpoint');
+      return new Var(uint64(this.addr.toString()));
+    } else if (name === RETVAL_NAME) {
+      if (this.retVal === undefined)
+        throw new Error(
+          'Return Value not available outside of a function exit breakpoint',
+        );
+      return new Var(uint64(this.retVal.toString()));
+    } else if (this.ctx === undefined) {
+      if (name === PC_NAME) {
+        if (this.pc === undefined) {
+          throw new Error('Pc not available outside of a breakpoint');
+        }
+        return new Var(uint64(this.pc.toString()));
+      } else {
+        throw new Error('Registers not available outside of a breakpoint');
+      }
     } else {
-      const regs = this.getRegs();
+      const regs = this.getRegs(this.ctx);
       const val = regs.get(name);
       if (val === undefined)
         throw new Error(`Variable name '${name}' is invalid`);
-
       return val;
     }
   }
 
   public static all(): [string, Var][] {
-    if (this.ctx == undefined)
+    const result: [string, Var][] = [];
+
+    if (this.isClear())
       throw new Error('Registers not available outside of a breakpoint');
 
-    if (this.threadId === undefined)
-      throw new Error('Thread ID not available outside of a breakpoint');
+    if (this.ctx === undefined) {
+      if (this.pc !== undefined) {
+        result.push([PC_NAME, new Var(uint64(this.pc.toString()))]);
+      }
+    } else {
+      const regs = Array.from(this.getRegs(this.ctx).entries());
+      regs.forEach(r => result.push(r));
+    }
 
-    if (this.returnAddress === undefined)
-      throw new Error('Return address not available outside of a breakpoint');
+    if (this.threadId !== undefined) {
+      result.push([THREAD_ID_NAME, new Var(uint64(this.threadId))]);
+    }
 
-    const regs = Array.from(this.getRegs().entries());
-    regs.push([THREAD_ID_NAME, new Var(uint64(this.threadId))]);
-    regs.push([
-      RETURN_ADDRESS_NAME,
-      new Var(uint64(this.returnAddress.toString())),
-    ]);
-    return regs;
+    if (this.returnAddress !== undefined) {
+      result.push([
+        RETURN_ADDRESS_NAME,
+        new Var(uint64(this.returnAddress.toString())),
+      ]);
+    }
+
+    if (this.addr !== undefined) {
+      result.push([ADDR_NAME, new Var(uint64(this.addr.toString()))]);
+    }
+
+    if (this.retVal !== undefined) {
+      result.push([RETVAL_NAME, new Var(uint64(this.retVal.toString()))]);
+    }
+
+    return result;
   }
 
-  private static getRegs(): Map<string, Var> {
-    if (this.ctx === undefined)
-      throw new Error('Registers not available outside of a breakpoint');
+  public static getRegs(cpuContext: CpuContext): Map<string, Var> {
     switch (Process.arch) {
       case 'ia32': {
-        const ctx = this.ctx as Ia32CpuContext;
+        const ctx = cpuContext as Ia32CpuContext;
         return new Map([
           ['eax', new Var(uint64(ctx.eax.toString()))],
           ['ecx', new Var(uint64(ctx.ecx.toString()))],
@@ -91,7 +189,7 @@ export class Regs {
         ]);
       }
       case 'x64': {
-        const ctx = this.ctx as X64CpuContext;
+        const ctx = cpuContext as X64CpuContext;
         return new Map([
           ['rax', new Var(uint64(ctx.rax.toString()))],
           ['rcx', new Var(uint64(ctx.rcx.toString()))],
@@ -113,7 +211,7 @@ export class Regs {
         ]);
       }
       case 'arm': {
-        const ctx = this.ctx as ArmCpuContext;
+        const ctx = cpuContext as ArmCpuContext;
         return new Map([
           ['cpsr', new Var(uint64(ctx.cpsr.toString()))],
           ['r0', new Var(uint64(ctx.r0.toString()))],
@@ -135,7 +233,7 @@ export class Regs {
         ]);
       }
       case 'arm64': {
-        const ctx = this.ctx as Arm64CpuContext;
+        const ctx = cpuContext as Arm64CpuContext;
         return new Map([
           ['nzcv', new Var(uint64(ctx.nzcv.toString()))],
           ['x0', new Var(uint64(ctx.x0.toString()))],
@@ -180,12 +278,10 @@ export class Regs {
     }
   }
 
-  private static setRegs(regs: Map<string, Var>) {
-    if (this.ctx === undefined)
-      throw new Error('Registers not available outside of a breakpoint');
+  public static setRegs(cpuContext: CpuContext, regs: Map<string, Var>) {
     switch (Process.arch) {
       case 'ia32': {
-        const ctx = this.ctx as Ia32CpuContext;
+        const ctx = cpuContext as Ia32CpuContext;
         ctx.eax = regs.get('eax')?.toPointer() as NativePointer;
         ctx.ecx = regs.get('ecx')?.toPointer() as NativePointer;
         ctx.edx = regs.get('edx')?.toPointer() as NativePointer;
@@ -198,7 +294,7 @@ export class Regs {
         break;
       }
       case 'x64': {
-        const ctx = this.ctx as X64CpuContext;
+        const ctx = cpuContext as X64CpuContext;
         ctx.rax = regs.get('rax')?.toPointer() as NativePointer;
         ctx.rcx = regs.get('rcx')?.toPointer() as NativePointer;
         ctx.rdx = regs.get('rdx')?.toPointer() as NativePointer;
@@ -219,7 +315,7 @@ export class Regs {
         break;
       }
       case 'arm': {
-        const ctx = this.ctx as ArmCpuContext;
+        const ctx = cpuContext as ArmCpuContext;
         ctx.cpsr = regs.get('cpsr')?.toU64().toNumber() as number;
         ctx.r0 = regs.get('r0')?.toPointer() as NativePointer;
         ctx.r1 = regs.get('r1')?.toPointer() as NativePointer;
@@ -240,7 +336,7 @@ export class Regs {
         break;
       }
       case 'arm64': {
-        const ctx = this.ctx as Arm64CpuContext;
+        const ctx = cpuContext as Arm64CpuContext;
         ctx.nzcv = regs.get('nzcv')?.toU64().toNumber() as number;
         ctx.x0 = regs.get('x0')?.toPointer() as NativePointer;
         ctx.x1 = regs.get('x1')?.toPointer() as NativePointer;

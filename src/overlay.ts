@@ -16,8 +16,8 @@ export class Overlay {
   }
 
   private overlaps(addr: NativePointer, length: number): boolean {
-    if (this.address.add(this.data.length).compare(addr) < 0) return false;
-    if (this.address.compare(addr.add(length)) > 0) return false;
+    if (this.address.add(this.data.length).compare(addr) <= 0) return false;
+    if (this.address.compare(addr.add(length)) >= 0) return false;
     return true;
   }
 

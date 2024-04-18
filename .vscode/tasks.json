@@ -33,29 +33,107 @@
 		},
 		{
 			"type": "shell",
-			"command": "gcc -Wall -Werror -no-pie -o target target.c",
+			"command": "frida-inject-32 -s frida-cshell.js --interactive -f /usr/bin/target32",
 			"problemMatcher": [],
-			"label": "Target",
+			"label": "Test32",
 			"group": {
 				"kind": "build",
 				"isDefault": true
+			},
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": false,
+				"close": false
+			},
+			"dependsOn": [
+				"Build"
+			]
+		},
+		{
+			"type": "shell",
+			"command": "frida-inject-64 -s frida-cshell.js --interactive -f /usr/bin/target64",
+			"problemMatcher": [],
+			"label": "Test64",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": false,
+				"close": false
+			},
+			"dependsOn": [
+				"Build"
+			]
+		},
+		{
+			"type": "shell",
+			"command": "./frida-cshell -f /usr/bin/target32",
+			"problemMatcher": [],
+			"label": "Wrapper32",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": false,
+				"close": false
+			},
+			"dependsOn": [
+				"Build"
+			],
+			"options": {
+				"env": {
+					"FRIDA_INJECT": "frida-inject-32"
+				}
 			}
 		},
 		{
 			"type": "shell",
-			"command": "gcc -Wall -Werror -no-pie -shared -fPIC -o module.so module.c",
+			"command": "./frida-cshell -f /usr/bin/target64",
 			"problemMatcher": [],
-			"label": "Module",
+			"label": "Wrapper64",
 			"group": {
 				"kind": "build",
 				"isDefault": true
+			},
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": false,
+				"close": false
+			},
+			"dependsOn": [
+				"Build"
+			],
+			"options": {
+				"env": {
+					"FRIDA_INJECT": "frida-inject-64"
+				}
 			}
 		},
 		{
 			"type": "shell",
-			"command": "frida-inject -s frida-cshell.js --interactive -f ./target",
+			"command": "frida-inject-32 -s frida-cshell.js -P '{\"verbose\": true}' --interactive -f /usr/bin/target32",
 			"problemMatcher": [],
-			"label": "Test",
+			"label": "Debug32",
 			"group": {
 				"kind": "build",
 				"isDefault": true
@@ -66,20 +144,40 @@
 				"focus": true,
 				"panel": "shared",
 				"showReuseMessage": false,
-				"clear": true,
-				"close": true
+				"clear": false,
+				"close": false
 			},
 			"dependsOn": [
-				"Target",
-				"Module",
+				"Build"
+			]
+		}
+		{
+			"type": "shell",
+			"command": "frida-inject-64 -s frida-cshell.js -P '{\"verbose\": true}' --interactive -f /usr/bin/target64",
+			"problemMatcher": [],
+			"label": "Debug64",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": false,
+				"close": false
+			},
+			"dependsOn": [
 				"Build"
 			]
 		},
 		{
 			"type": "shell",
-			"command": "./frida-cshell -f ./target",
+			"command": "vm-arm32 sh /home/ws/frida-cshell -f /bin/target32",
 			"problemMatcher": [],
-			"label": "Wrapper",
+			"label": "VM arm32",
 			"group": {
 				"kind": "build",
 				"isDefault": true
@@ -90,20 +188,23 @@
 				"focus": true,
 				"panel": "shared",
 				"showReuseMessage": false,
-				"clear": true,
-				"close": true
+				"clear": false,
+				"close": false
 			},
 			"dependsOn": [
-				"Target",
-				"Module",
 				"Build"
-			]
+			],
+			"options": {
+				"env": {
+					"FRIDA_INJECT": "frida-inject-32"
+				}
+			}
 		},
 		{
 			"type": "shell",
-			"command": "frida-inject -s frida-cshell.js -P '{\"verbose\": true}' --interactive -f ./target",
+			"command": "vm-arm64 sh /home/ws/frida-cshell -f /bin/target64",
 			"problemMatcher": [],
-			"label": "Debug",
+			"label": "VM arm64",
 			"group": {
 				"kind": "build",
 				"isDefault": true
@@ -114,14 +215,71 @@
 				"focus": true,
 				"panel": "shared",
 				"showReuseMessage": false,
-				"clear": true,
-				"close": true
+				"clear": false,
+				"close": false
 			},
 			"dependsOn": [
-				"Target",
-				"Module",
 				"Build"
-			]
+			],
+			"options": {
+				"env": {
+					"FRIDA_INJECT": "frida-inject-64"
+				}
+			}
+		},
+		{
+			"type": "shell",
+			"command": "vm-x86 sh /home/ws/frida-cshell -f /bin/target32",
+			"problemMatcher": [],
+			"label": "VM x86",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": false,
+				"close": false
+			},
+			"dependsOn": [
+				"Build"
+			],
+			"options": {
+				"env": {
+					"FRIDA_INJECT": "frida-inject-32"
+				}
+			}
+		},
+		{
+			"type": "shell",
+			"command": "vm-x64 sh /home/ws/frida-cshell -f /bin/target64",
+			"problemMatcher": [],
+			"label": "VM x64",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": false,
+				"close": false
+			},
+			"dependsOn": [
+				"Build"
+			],
+			"options": {
+				"env": {
+					"FRIDA_INJECT": "frida-inject-64"
+				}
+			}
 		}
 	]
 }

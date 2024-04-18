@@ -5,6 +5,7 @@ import { Parser } from './parser.js';
 import { CmdLets } from './cmdlets.js';
 import { Token } from './token.js';
 import { Var } from './var.js';
+import { Input } from './input.js';
 
 export class History {
   private static readonly MAX_HISTORY: number = 100;
@@ -60,7 +61,7 @@ export class History {
     const str = this.history[idx];
     if (str === undefined) throw new Error(`Invalid history index: ${idx}`);
     this.line = new Line(str);
-    Output.prompt();
+    Input.prompt();
     return this.run();
   }
 

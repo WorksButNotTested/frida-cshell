@@ -1,13 +1,8 @@
 import { CharCode } from './char.js';
-import { History } from './history.js';
 import { Vars } from './vars.js';
 
 export class Output {
   private static readonly VERSION = '@VER@';
-
-  private static readonly PROMPT: string = '-> ';
-
-  private static readonly EDIT_PROMPT: string = '. ';
 
   private static readonly shell: string[] = [
     '     _.---._         ',
@@ -56,33 +51,6 @@ export class Output {
     this.write(String.fromCharCode(CharCode.CR));
   }
 
-  public static prompt() {
-    this.clearLine();
-    this.write(this.bold(this.PROMPT));
-
-    const cmd = History.getCurrent();
-    const line = cmd.toString();
-    this.write(line);
-
-    const remain = cmd.getLength() - cmd.getPos();
-    const backspaces = String.fromCharCode(CharCode.BS).repeat(remain);
-    this.write(backspaces);
-  }
-
-  public static promptEdit() {
-    this.write(CharCode.ERASE_LINE);
-    this.write(String.fromCharCode(CharCode.CR));
-    this.write(this.bold(this.EDIT_PROMPT));
-
-    const cmd = History.getCurrent();
-    const line = cmd.toString();
-    this.write(line);
-
-    const remain = cmd.getLength() - cmd.getPos();
-    const backspaces = String.fromCharCode(CharCode.BS).repeat(remain);
-    this.write(backspaces);
-  }
-
   public static writeRet() {
     Output.writeln();
     Output.writeln(`ret: ${Output.bold(Vars.getRet().toString())}`);
@@ -123,5 +91,9 @@ export class Output {
 
   public static yellow(input: string): string {
     return `${CharCode.YELLOW}${input}${CharCode.RESET}`;
+  }
+
+  public static red(input: string): string {
+    return `${CharCode.RED}${input}${CharCode.RESET}`;
   }
 }

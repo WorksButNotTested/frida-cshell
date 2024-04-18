@@ -9,7 +9,7 @@ const USAGE: string = `Usage: cp
 
 cp dest src bytes - copy data
   dest   the address/symbol to write to
-  src    the address/symbol to read from  
+  src    the address/symbol to read from
   bytes    the numer of bytes to read
 `;
 
@@ -39,6 +39,11 @@ export class CopyCmdLet extends CmdLet {
     if (len === undefined) return this.usage();
 
     try {
+      if (Overlay.overlaps(dst, len))
+        throw new Error(
+          `Failed to write ${Util.toHexString(len)} bytes to ${Util.toHexString(dst)} as the address has been modified (check for breakpoints)`,
+        );
+
       const buff = src.readByteArray(len);
       if (buff === null) {
         throw new Error(
@@ -48,7 +53,9 @@ export class CopyCmdLet extends CmdLet {
 
       const bytes = new Uint8Array(buff);
       Overlay.fix(src, bytes);
-      dst.writeByteArray(bytes.buffer as ArrayBuffer);
+      Util.modifyMemory(dst, bytes.length, ptr => {
+        ptr.writeByteArray(bytes.buffer as ArrayBuffer);
+      });
     } catch (error) {
       throw new Error(
         `Failed to copy ${len} bytes from ${Util.toHexString(src)} to ${Util.toHexString(dst)}, ${error}`,

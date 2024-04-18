@@ -1,9 +1,11 @@
 import { CmdLet } from '../cmdlet.js';
 import { Output } from '../output.js';
+import { Regs } from '../regs.js';
 import { Token } from '../token.js';
 import { Var } from '../var.js';
 
 const USAGE: string = `Usage: bt
+bt - show the backtrace for the current thread in a breakpoint
 
 bt name - show backtrace for thread
   thread   the name of the thread to show backtrace for
@@ -69,12 +71,32 @@ export class BtCmdLet extends CmdLet {
     }
   }
 
+  private runWithoutParams(tokens: Token[]): Var | undefined {
+    if (tokens.length != 0) return undefined;
+
+    const ctx = Regs.getContext();
+    if (ctx === null)
+      throw new Error(
+        `Backtrace requires context, only available in breakpoints`,
+      );
+
+    Output.writeln(
+      Thread.backtrace(ctx, Backtracer.ACCURATE)
+        .map(DebugSymbol.fromAddress)
+        .join('\n'),
+    );
+    return Var.ZERO;
+  }
+
   public run(tokens: Token[]): Var {
     const retWithId = this.runWithId(tokens);
     if (retWithId !== undefined) return retWithId;
 
     const retWithName = this.runWithName(tokens);
     if (retWithName !== undefined) return retWithName;
+
+    const retWithoutParams = this.runWithoutParams(tokens);
+    if (retWithoutParams !== undefined) return retWithoutParams;
 
     return this.usage();
   }

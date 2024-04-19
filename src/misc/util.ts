@@ -1,6 +1,6 @@
-import { MemoryBps } from './bps/memory.js';
-import { Output } from './output.js';
-import { Regs } from './regs.js';
+import { MemoryBps } from '../breakpoints/memory.js';
+import { Output } from '../io/output.js';
+import { Regs } from '../breakpoints/regs.js';
 
 export class Util {
   public static is64bit(): boolean {
@@ -59,62 +59,6 @@ export class Util {
   public static minPtr(a: NativePointer, b: NativePointer): NativePointer {
     if (a.compare(b) < 0) return a;
     else return b;
-  }
-
-  public static pageAlignDown(addr: NativePointer): NativePointer {
-    const pageMask = ptr(Process.pageSize).sub(1).not();
-    return addr.and(pageMask);
-  }
-
-  public static pageAlignUp(addr: NativePointer): NativePointer {
-    return this.pageAlignDown(addr.add(Process.pageSize - 1));
-  }
-
-  public static modifyMemory(
-    address: NativePointer,
-    length: number,
-    callback: (address: NativePointer) => void,
-  ) {
-    const alignStart = this.pageAlignDown(address);
-    const alignEnd = this.pageAlignUp(address.add(length));
-    const pageShift = Math.log2(Process.pageSize);
-    const numPages = alignEnd.sub(alignStart).shr(pageShift).toInt32();
-    const pageAddresses = Array.from({ length: numPages }, (_, i) =>
-      alignStart.add(i * Process.pageSize),
-    );
-    const exitingProtections = pageAddresses.map(a => {
-      return { address: a, protection: Memory.queryProtection(a) };
-    });
-    const hasNonExec = exitingProtections.some(
-      pp => pp.protection.charAt(2) !== 'x',
-    );
-
-    if (hasNonExec) {
-      const newProtections = exitingProtections.map(pp => {
-        const newProtection = `${pp.protection.charAt(0)}w${pp.protection.charAt(2)}`;
-        return {
-          address: pp.address,
-          oldProtection: pp.protection,
-          newProtection: newProtection,
-        };
-      });
-
-      newProtections
-        .filter(np => np.oldProtection !== np.newProtection)
-        .forEach(p => {
-          Memory.protect(p.address, Process.pageSize, p.newProtection);
-        });
-
-      callback(address);
-
-      newProtections
-        .filter(np => np.oldProtection !== np.newProtection)
-        .forEach(p => {
-          Memory.protect(p.address, Process.pageSize, p.oldProtection);
-        });
-    } else {
-      Memory.patchCode(address, length, callback);
-    }
   }
 
   public static exceptionHandler(details: ExceptionDetails) {

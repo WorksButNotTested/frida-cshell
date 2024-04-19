@@ -1,13 +1,13 @@
-import { Command } from '../command.js';
-import { Input } from '../input.js';
+import { Command } from '../commands/command.js';
+import { Input } from '../io/input.js';
 import { MemoryBps } from './memory.js';
-import { Output } from '../output.js';
-import { Overlay } from '../overlay.js';
-import { Parser } from '../parser.js';
-import { Regs } from '../regs.js';
-import { Util } from '../util.js';
-import { Var } from '../var.js';
-import { Vars } from '../vars.js';
+import { Output } from '../io/output.js';
+import { Overlay } from '../memory/overlay.js';
+import { Parser } from '../io/parser.js';
+import { Regs } from './regs.js';
+import { Util } from '../misc/util.js';
+import { Var } from '../vars/var.js';
+import { Vars } from '../vars/vars.js';
 
 const BP_LENGTH: number = 16;
 
@@ -120,7 +120,7 @@ export class Bp {
         this.enableCode();
         break;
       case BpKind.Memory:
-        MemoryBps.enableMemoryBp(this);
+        MemoryBps.enableBp(this);
         break;
     }
   }
@@ -131,7 +131,7 @@ export class Bp {
         this.disableCode();
         break;
       case BpKind.Memory:
-        MemoryBps.disableMemoryBp(this);
+        MemoryBps.disableBp(this);
         break;
     }
   }
@@ -188,6 +188,8 @@ export class Bp {
     Input.suppressEdit(true);
     try {
       for (const line of this._lines) {
+        if (line.length === 0) continue;
+        if (line.charAt(0) === '#') continue;
         const parser = new Parser(line.toString());
         const tokens = parser.tokenize();
         const ret = Command.run(tokens);

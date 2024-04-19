@@ -1,7 +1,7 @@
-import { CmdLet } from '../cmdlet.js';
-import { Output } from '../output.js';
-import { Token } from '../token.js';
-import { Var } from '../var.js';
+import { CmdLet } from '../commands/cmdlet.js';
+import { Output } from '../io/output.js';
+import { Token } from '../io/token.js';
+import { Var } from '../vars/var.js';
 
 const USAGE: string = `Usage: t
 

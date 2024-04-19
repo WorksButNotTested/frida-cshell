@@ -1,5 +1,5 @@
 import { CharCode } from './char.js';
-import { Vars } from './vars.js';
+import { Vars } from '../vars/vars.js';
 
 export class Output {
   private static readonly VERSION = '@VER@';

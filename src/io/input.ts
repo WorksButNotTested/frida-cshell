@@ -1,8 +1,10 @@
 import { Output } from './output.js';
-import { History } from './history.js';
-import { Vars } from './vars.js';
+import { History } from '../terminal/history.js';
+import { Vars } from '../vars/vars.js';
 import { CharCode, Vt } from './char.js';
-import { CmdLetEdit } from './cmdlet.js';
+import { CmdLetEdit } from '../commands/cmdlet.js';
+import { Parser } from './parser.js';
+import { Command } from '../commands/command.js';
 
 enum InputState {
   Default,
@@ -83,6 +85,14 @@ export class Input {
   }
 
   private static parseEnter() {
+    const current = History.getCurrent();
+    if (current.getLength() === 0 || current.peek(1).charAt(0) === '#') {
+      History.clearLine();
+      Output.writeln();
+      Input.prompt();
+      return;
+    }
+
     try {
       if (this.edit === undefined) {
         this.parseEnterDefault();
@@ -232,5 +242,21 @@ export class Input {
       );
       this.edit = edit;
     }
+  }
+
+  public static loadInitScript(): void {
+    try {
+      const initScript = File.readAllText(`${Process.getHomeDir()}/.cshellrc`);
+      const lines = initScript.split('\n');
+      for (const line of lines) {
+        if (line.length === 0) continue;
+        if (line.charAt(0) === '#') continue;
+        const parser = new Parser(line.toString());
+        const tokens = parser.tokenize();
+        const ret = Command.run(tokens);
+        Vars.setRet(ret);
+        Output.writeln();
+      }
+    } catch (_) {}
   }
 }

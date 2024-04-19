@@ -1,9 +1,9 @@
-import { CmdLet } from '../cmdlet.js';
-import { Output } from '../output.js';
-import { Util } from '../util.js';
-import { Token } from '../token.js';
-import { Var } from '../var.js';
-import { Overlay } from '../overlay.js';
+import { CmdLet } from '../commands/cmdlet.js';
+import { Output } from '../io/output.js';
+import { Util } from '../misc/util.js';
+import { Token } from '../io/token.js';
+import { Var } from '../vars/var.js';
+import { Mem } from '../memory/mem.js';
 
 const USAGE: string = `Usage: cp
 
@@ -39,23 +39,8 @@ export class CopyCmdLet extends CmdLet {
     if (len === undefined) return this.usage();
 
     try {
-      if (Overlay.overlaps(dst, len))
-        throw new Error(
-          `Failed to write ${Util.toHexString(len)} bytes to ${Util.toHexString(dst)} as the address has been modified (check for breakpoints)`,
-        );
-
-      const buff = src.readByteArray(len);
-      if (buff === null) {
-        throw new Error(
-          `Failed to read ${Util.toHexString(len)} bytes from ${Util.toHexString(src)}`,
-        );
-      }
-
-      const bytes = new Uint8Array(buff);
-      Overlay.fix(src, bytes);
-      Util.modifyMemory(dst, bytes.length, ptr => {
-        ptr.writeByteArray(bytes.buffer as ArrayBuffer);
-      });
+      const buff = Mem.readBytes(src, len);
+      Mem.writeBytes(dst, buff);
     } catch (error) {
       throw new Error(
         `Failed to copy ${len} bytes from ${Util.toHexString(src)} to ${Util.toHexString(dst)}, ${error}`,

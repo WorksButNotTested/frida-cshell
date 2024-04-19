@@ -400,6 +400,7 @@ COPY assets/initrd/group /root/initramfs/etc/group
 COPY assets/initrd/passwd /root/initramfs/etc/passwd
 COPY assets/initrd/motd /root/initramfs/etc/motd
 COPY assets/initrd/.profile /root/initramfs/.profile
+COPY assets/initrd/.cshellrc /root/initramfs/.cshellrc
 COPY assets/initrd/entropy.c /root/entropy.c
 
 ################################################################################

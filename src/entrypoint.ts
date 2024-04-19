@@ -7,9 +7,9 @@
  * send(['frida:stdout', 'DATA']);
  * send(['frida:stderr', 'DATA']);
  */
-import { Input } from './input.js';
-import { Output } from './output.js';
-import { Util } from './util.js';
+import { Input } from './io/input.js';
+import { Output } from './io/output.js';
+import { Util } from './misc/util.js';
 
 type InitParams = {
   verbose: boolean | undefined;
@@ -22,6 +22,7 @@ rpc.exports = {
     Output.writeln(`init - stage: ${stage}, verbose: ${verbose}`, true);
     Output.banner();
     Process.setExceptionHandler(Util.exceptionHandler);
+    Input.loadInitScript();
     Input.prompt();
   },
   /**

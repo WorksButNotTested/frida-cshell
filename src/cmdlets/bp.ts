@@ -1,10 +1,10 @@
-import { Bp, BpKind, BpType } from '../bps/bp.js';
-import { Bps } from '../bps/bps.js';
-import { CmdLet, CmdLetEdit } from '../cmdlet.js';
-import { Input } from '../input.js';
-import { Output } from '../output.js';
-import { Token } from '../token.js';
-import { Var } from '../var.js';
+import { Bp, BpKind, BpType } from '../breakpoints/bp.js';
+import { Bps } from '../breakpoints/bps.js';
+import { CmdLet, CmdLetEdit } from '../commands/cmdlet.js';
+import { Input } from '../io/input.js';
+import { Output } from '../io/output.js';
+import { Token } from '../io/token.js';
+import { Var } from '../vars/var.js';
 
 const DELETE_CHAR: string = '#';
 const NUM_CHAR: string = '#';

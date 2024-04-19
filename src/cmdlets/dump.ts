@@ -1,9 +1,9 @@
-import { CmdLet } from '../cmdlet.js';
-import { Output } from '../output.js';
-import { Util } from '../util.js';
-import { Token } from '../token.js';
-import { Var } from '../var.js';
-import { Overlay } from '../overlay.js';
+import { CmdLet } from '../commands/cmdlet.js';
+import { Output } from '../io/output.js';
+import { Util } from '../misc/util.js';
+import { Token } from '../io/token.js';
+import { Var } from '../vars/var.js';
+import { Mem } from '../memory/mem.js';
 
 const DEFAULT_LENGTH: number = 32;
 
@@ -26,15 +26,7 @@ export class DumpCmdLet extends CmdLet {
 
   private dump(address: NativePointer, length: number) {
     try {
-      const buff = address.readByteArray(length);
-      if (buff === null) {
-        throw new Error(
-          `Failed to read ${Util.toHexString(length)} bytes from ${Util.toHexString(address)}`,
-        );
-      }
-
-      const bytes = new Uint8Array(buff);
-      Overlay.fix(address, bytes);
+      const bytes = Mem.readBytes(address, length);
 
       const dump = hexdump(bytes.buffer as ArrayBuffer, {
         length: length,

@@ -9,6 +9,55 @@ echo 'EOF'                        >> $TEMPDIR/frida-cshell
 echo ')'                          >> $TEMPDIR/frida-cshell
 
 cat <<EOF                         >> $TEMPDIR/frida-cshell
+verbose=
+file=
+name=
+pid=
+
+while getopts ":f:hn:p:V:" opt; do
+    case \$opt in
+        f)
+            file=\$OPTARG
+            ;;
+        h)
+            help=true
+            ;;
+        n)
+            name=\$OPTARG
+            ;;
+        p)
+            pid=\$OPTARG
+            ;;
+        V)
+            verbose=true
+            ;;
+        :)
+            echo "Option - \$OPTARG requires an argument."
+            exit 1
+            ;;
+        *)
+            echo "Invalid option: - \$OPTARG"
+            exit 1
+            ;;
+    esac
+done
+
+if [ \${help} ]; then
+    echo Usage
+    echo "  \$0 [OPTION?]"
+    echo
+    echo Help Options:
+    echo "  -h,   show help options"
+    echo
+    echo Application Options:
+    echo "  -f    spawn FILE"
+    echo "  -n    attach to NAME"
+    echo "  -p    attach to PID"
+    echo "  -V    enable verbose mode"
+    echo
+    exit 0
+fi
+
 FRIDA_INJECT="\${FRIDA_INJECT:-frida-inject}"
 
 if ! command -v \$FRIDA_INJECT &> /dev/null
@@ -16,58 +65,6 @@ then
     echo "\$FRIDA_INJECT could not be found. Try setting set FRIDA_INJECT environment variable"
     exit 1
 fi
-
-verbose=
-file=
-name=
-pid=
-
-options=\$(getopt -l "file:,help,name:,pid:,verbose,version" -o "f:hn:p:V" -a -- "\$@")
-
-eval set -- "\$options"
-
-while true
-do
-case "\$1" in
--f|--file)
-    shift
-    file="\$1"
-    ;;
--h|--help)
-    echo Usage
-    echo "  \$0 [OPTION?]"
-    echo
-    echo Help Options:
-    echo "  -h, --help         Show help options"
-    echo
-    echo Application Options:
-    echo "  -f, --file=FILE    spawn FILE"
-    echo "  -n, --name=NAME    attach to NAME"
-    echo "  -p, --pid=PID      attach to PID"
-    echo "  -V, --verbose      enable verbose mode"
-    echo
-    exit 0
-    ;;
--n|--name)
-    shift
-    name="\$1"
-    ;;
--p|--pid)
-    shift
-    pid="\$1"
-    ;;
--V|--verbose)
-    verbose=true
-    ;;
---version)
-    verbose=true
-    ;;
---)
-    shift
-    break;;
-esac
-shift
-done
 
 if [ \${verbose} ]; then
     opt="{\"verbose\":true}"

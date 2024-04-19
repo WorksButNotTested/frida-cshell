@@ -1,25 +1,15 @@
 import { CmdLet } from './cmdlet.js';
-import { DumpCmdLet } from './cmdlets/dump.js';
-import { ExitCmdLet } from './cmdlets/exit.js';
-import { SymCmdLet } from './cmdlets/sym.js';
-import {
-  Read1CmdLet,
-  Read2CmdLet,
-  Read4CmdLet,
-  Read8CmdLet,
-} from './cmdlets/read.js';
-import {
-  Write1CmdLet,
-  Write2CmdLet,
-  Write4CmdLet,
-  Write8CmdLet,
-} from './cmdlets/write.js';
-import { AssemblyCmdLet } from './cmdlets/assembly.js';
-import { VarCmdLet } from './cmdlets/var.js';
-import { VmCmdLet } from './cmdlets/vm.js';
-import { ModCmdLet } from './cmdlets/mod.js';
-import { ThreadCmdLet } from './cmdlets/thread.js';
-import { BtCmdLet } from './cmdlets/bt.js';
+import { DumpCmdLet } from '../cmdlets/dump.js';
+import { ExitCmdLet } from '../cmdlets/exit.js';
+import { SymCmdLet } from '../cmdlets/sym.js';
+import { ReadCmdLet } from '../cmdlets/read.js';
+import { WriteCmdLet } from '../cmdlets/write.js';
+import { AssemblyCmdLet } from '../cmdlets/assembly.js';
+import { VarCmdLet } from '../cmdlets/var.js';
+import { VmCmdLet } from '../cmdlets/vm.js';
+import { ModCmdLet } from '../cmdlets/mod.js';
+import { ThreadCmdLet } from '../cmdlets/thread.js';
+import { BtCmdLet } from '../cmdlets/bt.js';
 import {
   AddCmdLet,
   SubCmdLet,
@@ -31,19 +21,21 @@ import {
   ShlCmdLet,
   ShrCmdLet,
   NotCmdLet,
-} from './cmdlets/math.js';
-import { HistoryCmdLet } from './cmdlets/history.js';
-import { HelpCmdLet } from './cmdlets/help.js';
-import { CopyCmdLet } from './cmdlets/copy.js';
+} from '../cmdlets/math.js';
+import { HistoryCmdLet } from '../cmdlets/history.js';
+import { HelpCmdLet } from '../cmdlets/help.js';
+import { CopyCmdLet } from '../cmdlets/copy.js';
 import {
   FunctionEntryBpCmdLet,
   FunctionExitBpCmdLet,
   InsnBpCmdLet,
   ReadBpCmdLet,
   WriteBpCmdLet,
-} from './cmdlets/bp.js';
-import { RegCmdLet } from './cmdlets/reg.js';
-import { LdCmdLet } from './cmdlets/ld.js';
+} from '../cmdlets/bp.js';
+import { RegCmdLet } from '../cmdlets/reg.js';
+import { LdCmdLet } from '../cmdlets/ld.js';
+import { FdCmdLet } from '../cmdlets/fd.js';
+import { SrcCmdLet } from '../cmdlets/src.js';
 
 export class CmdLets {
   public static getByName(name: string): CmdLet | undefined {
@@ -67,6 +59,7 @@ export class CmdLets {
     this.register(CopyCmdLet);
     this.register(DumpCmdLet);
     this.register(ExitCmdLet);
+    this.register(FdCmdLet);
     this.register(FunctionEntryBpCmdLet);
     this.register(FunctionExitBpCmdLet);
     this.register(HelpCmdLet);
@@ -74,10 +67,7 @@ export class CmdLets {
     this.register(InsnBpCmdLet);
     this.register(LdCmdLet);
     this.register(OrCmdLet);
-    this.register(Read1CmdLet);
-    this.register(Read2CmdLet);
-    this.register(Read4CmdLet);
-    this.register(Read8CmdLet);
+    this.register(ReadCmdLet);
     this.register(ModCmdLet);
     this.register(MulCmdLet);
     this.register(NotCmdLet);
@@ -85,20 +75,22 @@ export class CmdLets {
     this.register(RegCmdLet);
     this.register(ShlCmdLet);
     this.register(ShrCmdLet);
+    this.register(SrcCmdLet);
     this.register(SymCmdLet);
     this.register(ThreadCmdLet);
     this.register(VarCmdLet);
     this.register(VmCmdLet);
-    this.register(Write1CmdLet);
-    this.register(Write2CmdLet);
-    this.register(Write4CmdLet);
-    this.register(Write8CmdLet);
+    this.register(WriteCmdLet);
     this.register(WriteBpCmdLet);
     this.register(XorCmdLet);
   }
 
   private static register<T extends CmdLet>(cmdletClass: new () => T) {
     const cmdlet = new cmdletClass();
-    this.byName.set(cmdlet.name, cmdlet);
+    if (cmdlet.isSupported()) this.byName.set(cmdlet.name, cmdlet);
+  }
+
+  public static reg(cmdlet: CmdLet) {
+    if (cmdlet.isSupported()) this.byName.set(cmdlet.name, cmdlet);
   }
 }

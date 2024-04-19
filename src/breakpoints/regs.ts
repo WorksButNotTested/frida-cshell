@@ -1,4 +1,4 @@
-import { Var } from './var.js';
+import { Var } from '../vars/var.js';
 
 const THREAD_ID_NAME: string = 'tid';
 const RETURN_ADDRESS_NAME: string = 'ra';

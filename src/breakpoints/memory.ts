@@ -1,4 +1,4 @@
-import { Util } from '../util.js';
+import { Mem } from '../memory/mem.js';
 import { Bp, BpType } from './bp.js';
 
 class MemoryCallbacks implements MemoryAccessCallbacks {
@@ -9,7 +9,7 @@ class MemoryCallbacks implements MemoryAccessCallbacks {
     if (bp === undefined)
       throw new Error(`Failed to find memory breakpoint idx: ${idx}`);
     bp.breakMemory(details);
-    MemoryBps.refreshMemoryBps();
+    MemoryBps.refresh();
   };
 }
 
@@ -21,16 +21,16 @@ export class MemoryBps {
     return `${type}:${index.toString()}`;
   }
 
-  public static enableMemoryBp(bp: Bp) {
+  public static enableBp(bp: Bp) {
     const key = this.buildKey(bp.type, bp.index);
     this.memoryBps.set(key, bp);
-    this.refreshMemoryBps();
+    this.refresh();
   }
 
-  public static disableMemoryBp(bp: Bp) {
+  public static disableBp(bp: Bp) {
     const key = this.buildKey(bp.type, bp.index);
     this.memoryBps.delete(key);
-    this.refreshMemoryBps();
+    this.refresh();
   }
 
   public static getActiveBps(): Bp[] {
@@ -42,8 +42,11 @@ export class MemoryBps {
       .filter(bp => bp.hits !== 0);
   }
 
-  public static refreshMemoryBps() {
+  public static disable() {
     MemoryAccessMonitor.disable();
+  }
+
+  public static enable() {
     const bps = this.getActiveBps();
 
     const ranges = Array.from(
@@ -59,8 +62,13 @@ export class MemoryBps {
     MemoryAccessMonitor.enable(ranges, this.callbacks);
   }
 
+  public static refresh() {
+    this.disable();
+    this.enable();
+  }
+
   public static containsAddress(address: NativePointer): boolean {
-    const aligned = Util.pageAlignDown(address);
+    const aligned = Mem.pageAlignDown(address);
     const bps = this.getActiveBps();
     return bps.some(b => b.overlaps(aligned, Process.pageSize));
   }

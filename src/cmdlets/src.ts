@@ -1,0 +1,161 @@
+import { Bp } from '../breakpoints/bp.js';
+import { Bps } from '../breakpoints/bps.js';
+import { MemoryBps } from '../breakpoints/memory.js';
+import { Regs } from '../breakpoints/regs.js';
+import { CmdLet } from '../commands/cmdlet.js';
+import { CmdLets } from '../commands/cmdlets.js';
+import { Command } from '../commands/command.js';
+import { CharCode, Vt } from '../io/char.js';
+import { Input } from '../io/input.js';
+import { Output } from '../io/output.js';
+import { Parser } from '../io/parser.js';
+import { Token } from '../io/token.js';
+import { Mem } from '../memory/mem.js';
+import { Overlay } from '../memory/overlay.js';
+import { Base64 } from '../misc/base64.js';
+import { Numeric } from '../misc/numeric.js';
+import { Util } from '../misc/util.js';
+import { History } from '../terminal/history.js';
+import { Line } from '../terminal/line.js';
+import { Var } from '../vars/var.js';
+import { Vars } from '../vars/vars.js';
+import { AssemblyCmdLet } from './assembly.js';
+import {
+  FunctionEntryBpCmdLet,
+  FunctionExitBpCmdLet,
+  InsnBpCmdLet,
+  ReadBpCmdLet,
+  WriteBpCmdLet,
+} from './bp.js';
+import { BtCmdLet } from './bt.js';
+import { CopyCmdLet } from './copy.js';
+import { DumpCmdLet } from './dump.js';
+import { ExitCmdLet } from './exit.js';
+import { FdCmdLet } from './fd.js';
+import { HelpCmdLet } from './help.js';
+import { HistoryCmdLet } from './history.js';
+import { LdCmdLet } from './ld.js';
+import {
+  AddCmdLet,
+  AndCmdLet,
+  DivCmdLet,
+  MulCmdLet,
+  NotCmdLet,
+  OrCmdLet,
+  ShlCmdLet,
+  ShrCmdLet,
+  SubCmdLet,
+  XorCmdLet,
+} from './math.js';
+import { ModCmdLet } from './mod.js';
+import { ReadCmdLet } from './read.js';
+import { RegCmdLet } from './reg.js';
+import { SymCmdLet } from './sym.js';
+import { ThreadCmdLet } from './thread.js';
+import { VarCmdLet } from './var.js';
+import { VmCmdLet } from './vm.js';
+import { WriteCmdLet } from './write.js';
+
+const USAGE: string = `Usage: src
+
+src path - load JS script
+  path      the absolute path of the script to load (note that paths with spaces must be quoted)
+`;
+
+export class SrcCmdLet extends CmdLet {
+  name = 'src';
+  category = 'misc';
+  help = 'load script';
+
+  public usage(): Var {
+    Output.write(USAGE);
+    return Var.ZERO;
+  }
+
+  private runWithName(tokens: Token[]): Var | undefined {
+    if (tokens.length != 1) return undefined;
+
+    let name = tokens[0]?.getLiteral();
+    if (name === undefined) return undefined;
+
+    if (name.length > 1 && name.startsWith('"') && name.endsWith('"'))
+      name = name.slice(1, name.length - 1);
+
+    Output.writeln(`Loading: ${name}`);
+
+    const gThis = {
+      AddCmdLet: AddCmdLet,
+      AndCmdLet: AndCmdLet,
+      AssemblyCmdLet: AssemblyCmdLet,
+      Base64: Base64,
+      Bp: Bp,
+      Bps: Bps,
+      BtCmdLet: BtCmdLet,
+      CharCode: CharCode,
+      CmdLets: CmdLets,
+      Command: Command,
+      CopyCmdLet: CopyCmdLet,
+      DivCmdLet: DivCmdLet,
+      DumpCmdLet: DumpCmdLet,
+      ExitCmdLet: ExitCmdLet,
+      FdCmdLet: FdCmdLet,
+      FunctionEntryBpCmdLet: FunctionEntryBpCmdLet,
+      FunctionExitBpCmdLet: FunctionExitBpCmdLet,
+      HelpCmdLet: HelpCmdLet,
+      History: History,
+      HistoryCmdLet: HistoryCmdLet,
+      Input: Input,
+      InsnBpCmdLet: InsnBpCmdLet,
+      LdCmdLet: LdCmdLet,
+      Line: Line,
+      Mem: Mem,
+      MemoryBps: MemoryBps,
+      ModCmdLet: ModCmdLet,
+      MulCmdLet: MulCmdLet,
+      NotCmdLet: NotCmdLet,
+      Numeric: Numeric,
+      OrCmdLet: OrCmdLet,
+      Output: Output,
+      Overlay: Overlay,
+      Parser: Parser,
+      ReadBpCmdLet: ReadBpCmdLet,
+      ReadCmdLet: ReadCmdLet,
+      RegCmdLet: RegCmdLet,
+      Regs: Regs,
+      ShlCmdLet: ShlCmdLet,
+      ShrCmdLet: ShrCmdLet,
+      SrcCmdLet: SrcCmdLet,
+      SubCmdLet: SubCmdLet,
+      SymCmdLet: SymCmdLet,
+      ThreadCmdLet: ThreadCmdLet,
+      Token: Token,
+      Util: Util,
+      Var: Var,
+      VarCmdLet: VarCmdLet,
+      Vars: Vars,
+      VmCmdLet: VmCmdLet,
+      Vt: Vt,
+      WriteBpCmdLet: WriteBpCmdLet,
+      WriteCmdLet: WriteCmdLet,
+      XorCmdLet: XorCmdLet,
+    };
+
+    const preamble = Object.keys(gThis)
+      .map(k => `${k} = this['${k}'];`)
+      .join('\n');
+    const script = File.readAllText(name);
+    const func = new Function(`${preamble}${script}`);
+    const cmdlet = func.call(gThis);
+    Output.writeln(`Found cmdlet: ${cmdlet.name}`);
+    CmdLets.reg(cmdlet);
+
+    return Var.ZERO;
+  }
+
+  public run(tokens: Token[]): Var {
+    const retWithName = this.runWithName(tokens);
+    if (retWithName !== undefined) return retWithName;
+
+    return this.usage();
+  }
+}

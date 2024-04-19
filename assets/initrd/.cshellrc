@@ -1,0 +1,12 @@
+# allocate some memory, assign a variable and dump it
+malloc 32
+v p ret
+d p
+
+# load a new commandlet from a script file and execute
+src /home/ws/src.js
+test malloc
+
+# show the first instruction of exit
+l exit 1
+

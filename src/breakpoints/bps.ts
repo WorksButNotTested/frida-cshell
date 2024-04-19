@@ -1,5 +1,5 @@
 import { Bp, BpType } from './bp.js';
-import { Var } from '../var.js';
+import { Var } from '../vars/var.js';
 
 export class Bps {
   private static byIndex: Map<string, Bp> = new Map<string, Bp>();

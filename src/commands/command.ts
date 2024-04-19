@@ -1,8 +1,8 @@
 import { CmdLets } from './cmdlets.js';
-import { Output } from './output.js';
-import { Util } from './util.js';
-import { Var } from './var.js';
-import { Token } from './token.js';
+import { Output } from '../io/output.js';
+import { Util } from '../misc/util.js';
+import { Var } from '../vars/var.js';
+import { Token } from '../io/token.js';
 
 export class Command {
   private static executeAddress(address: NativePointer, tokens: Token[]): Var {

@@ -1,5 +1,5 @@
-import { Token } from './token.js';
-import { Var } from './var.js';
+import { Token } from '../io/token.js';
+import { Var } from '../vars/var.js';
 
 export abstract class CmdLet {
   public abstract readonly category: string;
@@ -8,6 +8,9 @@ export abstract class CmdLet {
   public readonly visible: boolean = true;
   public abstract usage(): Var;
   public abstract run(tokens: Token[]): Var;
+  public isSupported(): boolean {
+    return true;
+  }
 }
 
 export interface CmdLetEdit {

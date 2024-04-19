@@ -1,4 +1,4 @@
-import { Util } from './util.js';
+import { Util } from '../misc/util.js';
 
 export class Var {
   private val: string | UInt64;

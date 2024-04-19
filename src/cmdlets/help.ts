@@ -1,8 +1,8 @@
-import { CmdLet } from '../cmdlet.js';
-import { Output } from '../output.js';
-import { CmdLets } from '../cmdlets.js';
-import { Token } from '../token.js';
-import { Var } from '../var.js';
+import { CmdLet } from '../commands/cmdlet.js';
+import { Output } from '../io/output.js';
+import { CmdLets } from '../commands/cmdlets.js';
+import { Token } from '../io/token.js';
+import { Var } from '../vars/var.js';
 
 export class HelpCmdLet extends CmdLet {
   name = 'help';

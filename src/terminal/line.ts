@@ -25,7 +25,7 @@ export class Line {
   }
 
   public peek(len: number): string {
-    return this.line.slice(len);
+    return this.line.slice(0, len);
   }
 
   public push(char: number) {

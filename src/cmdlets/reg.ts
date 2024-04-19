@@ -1,23 +1,23 @@
-import { CmdLet } from '../cmdlet.js';
-import { Output } from '../output.js';
-import { Vars } from '../vars.js';
-import { Token } from '../token.js';
-import { Var } from '../var.js';
-import { Regs } from '../regs.js';
+import { CmdLet } from '../commands/cmdlet.js';
+import { Output } from '../io/output.js';
+import { Vars } from '../vars/vars.js';
+import { Token } from '../io/token.js';
+import { Var } from '../vars/var.js';
+import { Regs } from '../breakpoints/regs.js';
 
-const USAGE: string = `Usage: r
-r - show the values of all registers
+const USAGE: string = `Usage: R
+R - show the values of all registers
 
-r name - display the value of a named register
+R name - display the value of a named register
   name    the name of the register to display
 
-v name value - assign a value to a register
+R name value - assign a value to a register
   name    the name of the register to assign
   value   the value to assign
 `;
 
 export class RegCmdLet extends CmdLet {
-  name = 'r';
+  name = 'R';
   category = 'breakpoints';
   help = 'register management';
 

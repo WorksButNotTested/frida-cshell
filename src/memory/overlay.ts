@@ -1,18 +1,15 @@
-import { Base64 } from './base64.js';
-import { Util } from './util.js';
+import { Base64 } from '../misc/base64.js';
+import { Mem } from './mem.js';
+import { Util } from '../misc/util.js';
 
 export class Overlay {
   private readonly address: NativePointer;
   private readonly data: Uint8Array;
 
   public constructor(address: NativePointer, length: number) {
-    const bytes = address.readByteArray(length);
-    if (bytes === null)
-      throw new Error(
-        `Failed to read: ${Util.toHexString(address)}, length: ${length}`,
-      );
+    const data = Mem.readBytes(address, length);
     this.address = address;
-    this.data = new Uint8Array(bytes);
+    this.data = data;
   }
 
   private overlaps(addr: NativePointer, length: number): boolean {

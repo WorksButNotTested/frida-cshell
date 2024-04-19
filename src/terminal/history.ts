@@ -1,11 +1,11 @@
 import { Line } from './line.js';
-import { Command } from './command.js';
-import { Output } from './output.js';
-import { Parser } from './parser.js';
-import { CmdLets } from './cmdlets.js';
-import { Token } from './token.js';
-import { Var } from './var.js';
-import { Input } from './input.js';
+import { Command } from '../commands/command.js';
+import { Output } from '../io/output.js';
+import { Parser } from '../io/parser.js';
+import { CmdLets } from '../commands/cmdlets.js';
+import { Token } from '../io/token.js';
+import { Var } from '../vars/var.js';
+import { Input } from '../io/input.js';
 
 export class History {
   private static readonly MAX_HISTORY: number = 100;
@@ -32,11 +32,6 @@ export class History {
   }
 
   public static run(): Var {
-    /* If our command is not empty */
-    if (this.line.getLength() == 0 && this.line.peek(1) === ' ') {
-      return Var.ZERO;
-    }
-
     const parser = new Parser(this.line.toString());
     const tokens = parser.tokenize();
     const isHistoryCommand = this.isHistoryCommand(tokens[0]);

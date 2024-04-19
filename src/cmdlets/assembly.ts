@@ -1,9 +1,9 @@
-import { CmdLet } from '../cmdlet.js';
-import { Output } from '../output.js';
-import { Util } from '../util.js';
-import { Token } from '../token.js';
-import { Var } from '../var.js';
-import { Overlay } from '../overlay.js';
+import { CmdLet } from '../commands/cmdlet.js';
+import { Output } from '../io/output.js';
+import { Util } from '../misc/util.js';
+import { Token } from '../io/token.js';
+import { Var } from '../vars/var.js';
+import { Mem } from '../memory/mem.js';
 
 const DEFAULT_LENGTH: number = 10;
 const USAGE: string = `Usage: l
@@ -36,37 +36,43 @@ export class AssemblyCmdLet extends CmdLet {
     }
   }
 
-  private readMaxBytes(ptr: NativePointer, length: number): ArrayBuffer {
+  private readMaxBytes(ptr: NativePointer, length: number): Uint8Array {
     for (let i = length; i > 0; i++) {
       try {
-        const bytes = ptr.readByteArray(i);
-        if (bytes === null) continue;
+        const bytes = Mem.readBytes(ptr, i);
         return bytes;
       } catch {
         continue;
       }
     }
-    return new ArrayBuffer(0);
+    return new Uint8Array(0);
   }
 
-  private concatBuffers(
-    buffer1: ArrayBuffer,
-    buffer2: ArrayBuffer,
-  ): ArrayBuffer {
-    const concatenatedBuffer = new Uint8Array(
-      buffer1.byteLength + buffer2.byteLength,
-    );
-    concatenatedBuffer.set(new Uint8Array(buffer1), 0);
-    concatenatedBuffer.set(new Uint8Array(buffer2), buffer1.byteLength);
-    return concatenatedBuffer.buffer as ArrayBuffer;
+  private concatBuffers(buffer1: Uint8Array, buffer2: Uint8Array): Uint8Array {
+    const concatenatedBuffer = new Uint8Array(buffer1.length + buffer2.length);
+    concatenatedBuffer.set(buffer1, 0);
+    concatenatedBuffer.set(buffer2, buffer1.byteLength);
+    return concatenatedBuffer;
+  }
+
+  private isThumb(address: NativePointer): boolean {
+    if (Process.arch !== 'arm') return false;
+    if (address.and(1) == ptr(0)) return false;
+    return true;
   }
 
   private list(address: NativePointer, length: number): Var {
     let cursor = address;
-    let buffer = new ArrayBuffer(0);
+    const isThumb = this.isThumb(address);
+    if (isThumb) {
+      const mask = ptr(1).not();
+      cursor = cursor.and(mask);
+    }
+    let buffer = new Uint8Array(0);
+
     try {
       const minLength = this.maxInstructionLen();
-      const copy = Memory.alloc(minLength);
+      const copy = Memory.alloc(Process.pageSize);
 
       for (let i = 1; i <= length; i++) {
         if (buffer.byteLength < minLength) {
@@ -77,18 +83,15 @@ export class AssemblyCmdLet extends CmdLet {
           buffer = this.concatBuffers(buffer, newBuff);
         }
 
-        const bytes = new Uint8Array(buffer);
-        Overlay.fix(cursor, bytes);
-
-        copy.writeByteArray(bytes.buffer as ArrayBuffer);
-        const insn = Instruction.parse(copy);
-        if (insn.size > bytes.length)
+        Mem.writeBytes(copy, buffer);
+        const insn = Instruction.parse(copy.add(isThumb ? 1 : 0));
+        if (insn.size > buffer.length)
           throw new Error(
-            `Failed to parse instruction at ${cursor}, not enough bytes: ${bytes.length}`,
+            `Failed to parse instruction at ${cursor}, not enough bytes: ${buffer.length}`,
           );
 
         const idx = `#${i.toString()}`.padStart(4);
-        const insnBytes = new Uint8Array(bytes.slice(0, insn.size));
+        const insnBytes = buffer.slice(0, insn.size);
         const bytesStr = Array.from(insnBytes)
           .map(n => n.toString(16).padStart(2, '0'))
           .join(' ');

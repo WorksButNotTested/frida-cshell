@@ -23,6 +23,46 @@ Attached to:
 ```
 **Important** Be sure to include the `--interactive` command line option, otherwise the terminal will appear non-responsive.
 
+# Wrapper
+Alternatively, included in the release is a wrapper shell script `frida-cshell`:
+```
+# ./frida-cshell -h
+Usage
+  ./frida-cshell [OPTION?]
+
+Help Options:
+  -h,   show help options
+
+Application Options:
+  -f    spawn FILE
+  -n    attach to NAME
+  -p    attach to PID
+  -V    enable verbose mode
+```
+It assumes that `frida-inject` can be found on the path, otherwise an alternative can be provided using the `FRIDA_INJECT` environment variable. As an example, it can be used as follows:
+
+```
+# FRIDA_INJECT=frida-inject-64 ./frida-cshell -f ./target
+     _.---._                   _          _ _
+ .'"".'/|\'.""'.              | |        | | |
+:  .' / | \ '.  :     ____ ___| |__   ___| | |
+'.'  /  |  \  '.'    /  _ / __| '_ \ / _ \ | |
+ `. /   |   \ .'     | (__\__ \ | | | |__/ | |
+   `-.__|__.-'       \____|___/_| |_|\___|_|_|
+
+CSHELL v1.0.6, running in FRIDA 0.0.0 using QJS
+Attached to:
+        PID:  253520
+        Name: target
+
+->
+```
+# Init Scripts
+Commands which should be run on start-up can be provided in a file name `.cshellrc` in the current directory. An example can be found [here](assets/initrd/.cshellrc)
+
+# Development
+For documentation on how to develop `frida-cshell`, or provide additional commandlets via script files, see [here](DEVELOPMENT.md)
+
 # Walkthrough
 Perhaps the easiest way to understand the C-Shell is by an example, let's walk through a fictional sequence of commands to analyse a program
 ## #0 Threads
@@ -172,7 +212,7 @@ ret: 0x00007f14`88000cb0 (139726157778096)
 
 Now let's copy some data in:
 ```
-->w8 p 0xddccbbaa11223344
+->w 8 p 0xddccbbaa11223344
 Wrote value: 0xddccbbaa`11223344 = 15982355516737336132 to 0x00007f14`88000cb0
 
 ret: 0x00007f14`88000cb0 (139726157778096)
@@ -360,7 +400,7 @@ Let's see how many bytes are being allocated, we will set a function entry break
 Created #1  . function entry 0x00007f00`18dbb0a0: malloc [hits:1]
 
 Type 'q' to finish, or 'x' to abort
-- r rdi
+- R rdi
 - q
 
 ret: 0x00007f00`18dbb0a0 139638393778336
@@ -411,7 +451,7 @@ ret: 0x00007fe2`821090c9 140610821460169
 Created #1  . instruction 0x00007fe2`821090ab: 0x00007fe2`821090ab [hits:1]
 
 Type 'q' to finish, or 'x' to abort
-- r
+- R
 - q
 
 ret: 0x00007fe2`821090ab 140610821460139
@@ -496,7 +536,7 @@ ret: 0x00007fe2`68000c90 140610384170128
 Created #1  . function exit 0x00007fe2`821090a0: malloc [hits:1]
 
 Type 'q' to finish, or 'x' to abort
-- r ret p
+- R ret p
 - q
 
 ret: 0x00007fe2`821090a0 140610821460128
@@ -653,16 +693,6 @@ Break #1 [instruction] @ $pc=0x00007f36`fd87ee48, $tid=1163391
 ret: 0x00000000`00000000 0
 ->
 ```
-
-# TODO
-Commandlets not yet implemented:
-* `fd` - Show open file descriptors (for Unix like OS)
-* `src` - Support loading Javascript from file to augment the set of supported Commandlets.
-
-Others
-* Support for modifying write protected memory
-* Add support for display exception information in the event of an unhandled signal
-
 # Commands
 In contrast to a conventional shell, commands are not processes to be executed, but rather functions. `C` functions within the target application. For example, we can call `malloc` to provide us some memory as follows:
 
@@ -690,19 +720,20 @@ ret: 0x00007f58`64000c70 (140017611574384)
 # Commandlets
 As well as being able to directly call functions in `C`, the C-Shell also provides a number of Commandlets, we can see a list of these by running the `help` command:
 ```
-->help
+-> help
+breakpoints:
+        @F        :  function exit breakpoint
+        @f        :  function entry breakpoint
+        @i        :  instruction breakpoint
+        @r        :  memory read breakpoint
+        @w        :  memory write breakpoint
+        R         :  register management
 data:
         cp        :  copy data in memory
         d         :  dump data from memory
         l         :  disassembly listing
-        r1        :  read a byte from memory
-        r2        :  read a half from memory
-        r4        :  read a word from memory
-        r8        :  read a double word from memory
-        w1        :  write a byte to memory
-        w2        :  write a half to memory
-        w4        :  write a word to memory
-        w8        :  write a double word to memory
+        r         :  read data from memory
+        w         :  write data to memory
 math:
         &         :  and two operands
         *         :  multiply two operands
@@ -715,13 +746,15 @@ math:
         |         :  or two operands
         ~         :  bitwise not
 memory:
-        mod       :  display module information
         sym       :  look up a symbol information
         vm        :  display virtual memory ranges
 misc:
         h         :  command history
         help      :  print this message
         v         :  variable management
+modules:
+        ld        :  load modules
+        mod       :  display module information
 thread:
         bt        :  display backtrace information
         t         :  display thread information
@@ -729,7 +762,7 @@ thread:
 For more information about a command use:
         help <cmd>
 
-ret: 0x00000000`00000000 (0)
+ret: 0x00000000 0
 ```
 
 For more details on any command we can run `help <cmd>`, e.g.
@@ -853,7 +886,7 @@ ret: 0x00007fcf`b0000c70 (140529987751024)
 ret: 0x00007fcf`b0000c70 (140529987751024)
 ```
 ```
-->w8 0x00007fcf`b0000c70 0xaabbccdd`11223344
+->w 8 0x00007fcf`b0000c70 0xaabbccdd`11223344
 Wrote value: 0xaabbccdd`11223344 = 12302652056939934532 to 0x00007fcf`b0000c70
 
 ret: 0x00007fcf`b0000c70 (140529987751024)
@@ -896,7 +929,7 @@ ret: 0x00007f14`88000c70 (139726157778032)
 ret: 0x00007f14`88000c70 (139726157778032)
 ```
 ```
-->w8 p 0xaabbccdd11223344
+->w 8 p 0xaabbccdd11223344
 Wrote value: 0xaabbccdd`11223344 = 12302652056939934532 to 0x00007f14`88000c70
 
 ret: 0x00007f14`88000c70 (139726157778032)
@@ -928,7 +961,7 @@ ret: 0x00007f14`88000c90 (139726157778064)
 ret: 0x00007f14`88000c90 (139726157778064)
 ```
 ```
-->w8 ret 0xaabbccdd`11223344
+->w 8 ret 0xaabbccdd`11223344
 Wrote value: 0xaabbccdd`11223344 = 12302652056939934532 to 0x00007f14`88000c90
 
 ret: 0x00007f14`88000c90 (139726157778064)

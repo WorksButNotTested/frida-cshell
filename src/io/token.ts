@@ -1,7 +1,7 @@
-import { Vars } from './vars.js';
-import { Numeric } from './numeric.js';
-import { Var } from './var.js';
-import { Regs } from './regs.js';
+import { Vars } from '../vars/vars.js';
+import { Numeric } from '../misc/numeric.js';
+import { Var } from '../vars/var.js';
+import { Regs } from '../breakpoints/regs.js';
 
 export class Token {
   private readonly value: string;

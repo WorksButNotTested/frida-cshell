@@ -1,8 +1,8 @@
-import { CmdLet } from '../cmdlet.js';
-import { Output } from '../output.js';
-import { Vars } from '../vars.js';
-import { Token } from '../token.js';
-import { Var } from '../var.js';
+import { CmdLet } from '../commands/cmdlet.js';
+import { Output } from '../io/output.js';
+import { Vars } from '../vars/vars.js';
+import { Token } from '../io/token.js';
+import { Var } from '../vars/var.js';
 
 const DELETE_CHAR: string = '#';
 

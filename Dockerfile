@@ -40,7 +40,8 @@ RUN apt-get update && \
     python3-dev \
     python3-pip \
     g++ \
-    g++-multilib
+    g++-multilib \
+    cmake
 
 RUN wget \
   -O /tmp/node.sh \
@@ -326,7 +327,7 @@ RUN aarch64-none-linux-gnu-gcc \
 ################################################################################
 FROM platform as frida-source
 WORKDIR /root/
-ENV TAG=cf590d7
+ENV TAG=aea8e8b1
 RUN git clone \
     -b 32bit-fix \
     https://github.com/WorksButNotTested/frida-core.git

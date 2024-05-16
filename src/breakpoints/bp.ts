@@ -5,7 +5,7 @@ import { Output } from '../io/output.js';
 import { Overlay } from '../memory/overlay.js';
 import { Parser } from '../io/parser.js';
 import { Regs } from './regs.js';
-import { Util } from '../misc/util.js';
+import { Format } from '../misc/format.js';
 import { Var } from '../vars/var.js';
 import { Vars } from '../vars/vars.js';
 
@@ -221,7 +221,7 @@ export class Bp {
     else if (this._hits > 0) this._hits--;
     Output.clearLine();
     Output.writeln(
-      `Break #${this._idx} [${this._type}] @ $pc=${Util.toHexString(ctx.pc)}, $tid=${threadId}`,
+      `Break #${this._idx} [${this._type}] @ $pc=${Format.toHexString(ctx.pc)}, $tid=${threadId}`,
     );
     Output.writeln();
     Regs.setThreadId(threadId);
@@ -250,7 +250,7 @@ export class Bp {
 
     Output.clearLine();
     Output.writeln(
-      `Break #${this._idx} [${this._type}] @ $pc=${Util.toHexString(details.from)}, $addr=${Util.toHexString(details.address)}`,
+      `Break #${this._idx} [${this._type}] @ $pc=${Format.toHexString(details.from)}, $addr=${Format.toHexString(details.address)}`,
     );
     Output.writeln();
     Regs.setAddress(details.address);
@@ -289,7 +289,7 @@ export class Bp {
   private get addrString(): string {
     const p = this._addr?.toPointer();
     if (p !== undefined) {
-      return Util.toHexString(p);
+      return Format.toHexString(p);
     } else {
       return 'unassigned';
     }

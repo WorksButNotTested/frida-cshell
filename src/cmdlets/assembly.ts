@@ -1,6 +1,6 @@
 import { CmdLet } from '../commands/cmdlet.js';
 import { Output } from '../io/output.js';
-import { Util } from '../misc/util.js';
+import { Format } from '../misc/format.js';
 import { Token } from '../io/token.js';
 import { Var } from '../vars/var.js';
 import { Mem } from '../memory/mem.js';
@@ -97,7 +97,7 @@ export class AssemblyCmdLet extends CmdLet {
           .join(' ');
 
         Output.writeln(
-          `${Output.bold(idx)}: ${Output.green(Util.toHexString(cursor))}: ${Output.yellow(insn.toString().padEnd(40))} ${Output.blue(bytesStr)}`,
+          `${Output.bold(idx)}: ${Output.green(Format.toHexString(cursor))}: ${Output.yellow(insn.toString().padEnd(40))} ${Output.blue(bytesStr)}`,
         );
 
         cursor = cursor.add(insn.size);
@@ -107,7 +107,7 @@ export class AssemblyCmdLet extends CmdLet {
       return new Var(uint64(cursor.toString()));
     } catch (error) {
       throw new Error(
-        `failed to parse instruction at ${Util.toHexString(cursor)} (${Util.toHexString(buffer.byteLength)} bytes available), ${error}`,
+        `failed to parse instruction at ${Format.toHexString(cursor)} (${Format.toHexString(buffer.byteLength)} bytes available), ${error}`,
       );
     }
   }

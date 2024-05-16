@@ -1,4 +1,4 @@
-import { Util } from '../misc/util.js';
+import { Format } from '../misc/format.js';
 
 export class Var {
   private val: string | UInt64;
@@ -25,8 +25,8 @@ export class Var {
 
   public toString(): string {
     if (this.val instanceof UInt64)
-      return `${Util.toHexString(this.val)} ${Util.toDecString(this.val)}`;
-    else return `${Util.toHexString(this.p)} "${this.val}"`;
+      return `${Format.toHexString(this.val)} ${Format.toDecString(this.val)}`;
+    else return `${Format.toHexString(this.p)} "${this.val}"`;
   }
 
   public static ZERO: Var = new Var(uint64(0));

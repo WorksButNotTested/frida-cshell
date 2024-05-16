@@ -1,6 +1,6 @@
 import { CmdLet } from '../commands/cmdlet.js';
 import { Output } from '../io/output.js';
-import { Util } from '../misc/util.js';
+import { Format } from '../misc/format.js';
 import { Token } from '../io/token.js';
 import { Var } from '../vars/var.js';
 
@@ -28,7 +28,7 @@ export class ModCmdLet extends CmdLet {
   private printModule(m: Module) {
     const limit = m.base.add(m.size);
     Output.writeln(
-      `${Util.toHexString(m.base)}-${Util.toHexString(limit)} ${Util.toSize(m.size)} ${m.name.padEnd(30, ' ')} ${m.path}`,
+      `${Format.toHexString(m.base)}-${Format.toHexString(limit)} ${Format.toSize(m.size)} ${m.name.padEnd(30, ' ')} ${m.path}`,
     );
   }
 
@@ -46,11 +46,13 @@ export class ModCmdLet extends CmdLet {
     );
     if (matches.length === 1) {
       const m = matches[0] as Module;
-      Output.writeln(`Address: ${Util.toHexString(address)} is within module:`);
+      Output.writeln(
+        `Address: ${Format.toHexString(address)} is within module:`,
+      );
       this.printModule(m);
     } else {
       Output.writeln(
-        `Address: ${Util.toHexString(address)} is not found within a module:`,
+        `Address: ${Format.toHexString(address)} is not found within a module:`,
       );
     }
     return t0;

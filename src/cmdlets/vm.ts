@@ -1,6 +1,6 @@
 import { CmdLet } from '../commands/cmdlet.js';
 import { Output } from '../io/output.js';
-import { Util } from '../misc/util.js';
+import { Format } from '../misc/format.js';
 import { Token } from '../io/token.js';
 import { Var } from '../vars/var.js';
 
@@ -29,11 +29,11 @@ export class VmCmdLet extends CmdLet {
     const limit = r.base.add(r.size);
     if (r.file === undefined)
       Output.writeln(
-        `\t${Util.toHexString(r.base)}-${Util.toHexString(limit)} ${r.protection} ${Util.toSize(r.size)}`,
+        `\t${Format.toHexString(r.base)}-${Format.toHexString(limit)} ${r.protection} ${Format.toSize(r.size)}`,
       );
     else
       Output.writeln(
-        `\t${Util.toHexString(r.base)}-${Util.toHexString(limit)} ${r.protection} ${Util.toSize(r.size)} offset: ${Util.toHexString(r.file.offset)}, name: ${r.file.path}`,
+        `\t${Format.toHexString(r.base)}-${Format.toHexString(limit)} ${r.protection} ${Format.toSize(r.size)} offset: ${Format.toHexString(r.file.offset)}, name: ${r.file.path}`,
       );
   }
 
@@ -52,13 +52,13 @@ export class VmCmdLet extends CmdLet {
     if (matches.length === 1) {
       const r = matches[0] as RangeDetails;
       Output.writeln(
-        `Address: ${Util.toHexString(address)} is within allocation:`,
+        `Address: ${Format.toHexString(address)} is within allocation:`,
       );
       this.printMapping(r);
       return t0;
     } else {
       Output.writeln(
-        `Address: ${Util.toHexString(address)} is not found within an allocation:`,
+        `Address: ${Format.toHexString(address)} is not found within an allocation:`,
       );
       const before = Process.enumerateRanges('---').filter(
         r => r.base <= address,

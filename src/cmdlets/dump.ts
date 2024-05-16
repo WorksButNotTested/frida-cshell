@@ -1,6 +1,6 @@
 import { CmdLet } from '../commands/cmdlet.js';
 import { Output } from '../io/output.js';
-import { Util } from '../misc/util.js';
+import { Format } from '../misc/format.js';
 import { Token } from '../io/token.js';
 import { Var } from '../vars/var.js';
 import { Mem } from '../memory/mem.js';
@@ -37,7 +37,7 @@ export class DumpCmdLet extends CmdLet {
       Output.writeln(dump);
     } catch (error) {
       throw new Error(
-        `failed to read ${Util.toHexString(length)} bytes from ${Util.toHexString(address)}, ${error}`,
+        `failed to read ${Format.toHexString(length)} bytes from ${Format.toHexString(address)}, ${error}`,
       );
     }
   }

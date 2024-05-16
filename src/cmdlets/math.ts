@@ -1,6 +1,6 @@
 import { CmdLet } from '../commands/cmdlet.js';
 import { Output } from '../io/output.js';
-import { Util } from '../misc/util.js';
+import { Format } from '../misc/format.js';
 import { Token } from '../io/token.js';
 import { Var } from '../vars/var.js';
 
@@ -33,7 +33,7 @@ ${this.name} op1 op2 - ${this.OPERATION} two values together
       return new Var(this.op(op0, op1));
     } catch (error) {
       throw new Error(
-        `failed to ${this.OPERATION} ${Util.toHexString(op0)} and ${Util.toHexString(op1)}, ${error}`,
+        `failed to ${this.OPERATION} ${Format.toHexString(op0)} and ${Format.toHexString(op1)}, ${error}`,
       );
     }
   }
@@ -48,10 +48,10 @@ export class AddCmdLet extends MathCmdLet {
   protected op(op0: UInt64, op1: UInt64): UInt64 {
     const val = op0.add(op1);
     Output.writeln(
-      `${Util.toHexString(op0)} + ${Util.toHexString(op1)} = ${Util.toHexString(val)}`,
+      `${Format.toHexString(op0)} + ${Format.toHexString(op1)} = ${Format.toHexString(val)}`,
     );
     Output.writeln(
-      `${Util.toDecString(op0)} + ${Util.toDecString(op1)} = ${Util.toDecString(val)}`,
+      `${Format.toDecString(op0)} + ${Format.toDecString(op1)} = ${Format.toDecString(val)}`,
     );
     return val;
   }
@@ -67,13 +67,13 @@ export class SubCmdLet extends MathCmdLet {
     const val = op0.sub(op1);
     if (val.compare(op0) > 0)
       throw new Error(
-        `numeric underflow performing: ${Util.toHexString(op0)} - ${Util.toHexString(op1)}`,
+        `numeric underflow performing: ${Format.toHexString(op0)} - ${Format.toHexString(op1)}`,
       );
     Output.writeln(
-      `${Util.toHexString(op0)} - ${Util.toHexString(op1)} = ${Util.toHexString(val)}`,
+      `${Format.toHexString(op0)} - ${Format.toHexString(op1)} = ${Format.toHexString(val)}`,
     );
     Output.writeln(
-      `${Util.toDecString(op0)} - ${Util.toDecString(op1)} = ${Util.toDecString(val)}`,
+      `${Format.toDecString(op0)} - ${Format.toDecString(op1)} = ${Format.toDecString(val)}`,
     );
     return val;
   }
@@ -92,14 +92,14 @@ export class MulCmdLet extends MathCmdLet {
     const bim = BigInt('0xffffffffffffffff');
     if (biv > bim)
       throw new Error(
-        `numeric overflow performing: ${Util.toHexString(op0)} * ${Util.toHexString(op1)}`,
+        `numeric overflow performing: ${Format.toHexString(op0)} * ${Format.toHexString(op1)}`,
       );
     const val = uint64(biv.toString());
     Output.writeln(
-      `${Util.toHexString(op0)} * ${Util.toHexString(op1)} = ${Util.toHexString(val)}`,
+      `${Format.toHexString(op0)} * ${Format.toHexString(op1)} = ${Format.toHexString(val)}`,
     );
     Output.writeln(
-      `${Util.toDecString(op0)} * ${Util.toDecString(op1)} = ${Util.toDecString(val)}`,
+      `${Format.toDecString(op0)} * ${Format.toDecString(op1)} = ${Format.toDecString(val)}`,
     );
     return val;
   }
@@ -117,10 +117,10 @@ export class DivCmdLet extends MathCmdLet {
     const biv = bi0 / bi1;
     const val = uint64(biv.toString());
     Output.writeln(
-      `${Util.toHexString(op0)} / ${Util.toHexString(op1)} = ${Util.toHexString(val)}`,
+      `${Format.toHexString(op0)} / ${Format.toHexString(op1)} = ${Format.toHexString(val)}`,
     );
     Output.writeln(
-      `${Util.toDecString(op0)} / ${Util.toDecString(op1)} = ${Util.toDecString(val)}`,
+      `${Format.toDecString(op0)} / ${Format.toDecString(op1)} = ${Format.toDecString(val)}`,
     );
     return val;
   }
@@ -135,10 +135,10 @@ export class OrCmdLet extends MathCmdLet {
   protected op(op0: UInt64, op1: UInt64): UInt64 {
     const val = op0.or(op1);
     Output.writeln(
-      `${Util.toHexString(op0)} | ${Util.toHexString(op1)} = ${Util.toHexString(val)}`,
+      `${Format.toHexString(op0)} | ${Format.toHexString(op1)} = ${Format.toHexString(val)}`,
     );
     Output.writeln(
-      `${Util.toDecString(op0)} | ${Util.toDecString(op1)} = ${Util.toDecString(val)}`,
+      `${Format.toDecString(op0)} | ${Format.toDecString(op1)} = ${Format.toDecString(val)}`,
     );
     return val;
   }
@@ -153,10 +153,10 @@ export class AndCmdLet extends MathCmdLet {
   protected op(op0: UInt64, op1: UInt64): UInt64 {
     const val = op0.and(op1);
     Output.writeln(
-      `${Util.toHexString(op0)} & ${Util.toHexString(op1)} = ${Util.toHexString(val)}`,
+      `${Format.toHexString(op0)} & ${Format.toHexString(op1)} = ${Format.toHexString(val)}`,
     );
     Output.writeln(
-      `${Util.toDecString(op0)} & ${Util.toDecString(op1)} = ${Util.toDecString(val)}`,
+      `${Format.toDecString(op0)} & ${Format.toDecString(op1)} = ${Format.toDecString(val)}`,
     );
     return val;
   }
@@ -171,10 +171,10 @@ export class XorCmdLet extends MathCmdLet {
   protected op(op0: UInt64, op1: UInt64): UInt64 {
     const val = op0.xor(op1);
     Output.writeln(
-      `${Util.toHexString(op0)} ^ ${Util.toHexString(op1)} = ${Util.toHexString(val)}`,
+      `${Format.toHexString(op0)} ^ ${Format.toHexString(op1)} = ${Format.toHexString(val)}`,
     );
     Output.writeln(
-      `${Util.toDecString(op0)} ^ ${Util.toDecString(op1)} = ${Util.toDecString(val)}`,
+      `${Format.toDecString(op0)} ^ ${Format.toDecString(op1)} = ${Format.toDecString(val)}`,
     );
     return val;
   }
@@ -189,10 +189,10 @@ export class ShrCmdLet extends MathCmdLet {
   protected op(op0: UInt64, op1: UInt64): UInt64 {
     const val = op0.shr(op1);
     Output.writeln(
-      `${Util.toHexString(op0)} >> ${Util.toHexString(op1)} = ${Util.toHexString(val)}`,
+      `${Format.toHexString(op0)} >> ${Format.toHexString(op1)} = ${Format.toHexString(val)}`,
     );
     Output.writeln(
-      `${Util.toDecString(op0)} >> ${Util.toDecString(op1)} = ${Util.toDecString(val)}`,
+      `${Format.toDecString(op0)} >> ${Format.toDecString(op1)} = ${Format.toDecString(val)}`,
     );
     return val;
   }
@@ -207,10 +207,10 @@ export class ShlCmdLet extends MathCmdLet {
   protected op(op0: UInt64, op1: UInt64): UInt64 {
     const val = op0.shl(op1);
     Output.writeln(
-      `${Util.toHexString(op0)} << ${Util.toHexString(op1)} = ${Util.toHexString(val)}`,
+      `${Format.toHexString(op0)} << ${Format.toHexString(op1)} = ${Format.toHexString(val)}`,
     );
     Output.writeln(
-      `${Util.toDecString(op0)} << ${Util.toDecString(op1)} = ${Util.toDecString(val)}`,
+      `${Format.toDecString(op0)} << ${Format.toDecString(op1)} = ${Format.toDecString(val)}`,
     );
     return val;
   }
@@ -240,7 +240,7 @@ not op - perform a bitwise not operation on an operand
     try {
       return new Var(op.not());
     } catch (error) {
-      throw new Error(`failed to not ${Util.toHexString(op)}, ${error}`);
+      throw new Error(`failed to not ${Format.toHexString(op)}, ${error}`);
     }
   }
 }

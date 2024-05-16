@@ -1,6 +1,6 @@
 import { CmdLets } from './cmdlets.js';
 import { Output } from '../io/output.js';
-import { Util } from '../misc/util.js';
+import { Format } from '../misc/format.js';
 import { Var } from '../vars/var.js';
 import { Token } from '../io/token.js';
 
@@ -20,7 +20,7 @@ export class Command {
 
     args.forEach((param, index) => {
       Output.writeln(
-        `\t${index}: ${Util.toHexString(param)} ${Util.toDecString(param)}`,
+        `\t${index}: ${Format.toHexString(param)} ${Format.toDecString(param)}`,
         true,
       );
     });

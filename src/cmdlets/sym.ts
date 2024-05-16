@@ -1,7 +1,7 @@
 import { CmdLet } from '../commands/cmdlet.js';
 import { Output } from '../io/output.js';
 import { Token } from '../io/token.js';
-import { Util } from '../misc/util.js';
+import { Format } from '../misc/format.js';
 import { Var } from '../vars/var.js';
 
 const USAGE: string = `Usage: sym
@@ -30,7 +30,7 @@ export class SymCmdLet extends CmdLet {
   private printDebugSymbol(debug: DebugSymbol) {
     const prefix = debug.moduleName === null ? '' : `${debug.moduleName}!`;
     Output.writeln(
-      `Debug Symbol: ${prefix}${debug.name} found at ${Util.toHexString(debug.address)}`,
+      `Debug Symbol: ${prefix}${debug.name} found at ${Format.toHexString(debug.address)}`,
     );
     if (debug.fileName !== null && debug.lineNumber !== null) {
       if (debug.fileName.length !== 0 && debug.lineNumber !== 0) {
@@ -47,7 +47,7 @@ export class SymCmdLet extends CmdLet {
 
     const address = Module.findExportByName(null, name);
     if (address !== null) {
-      Output.writeln(`Export: ${name} found at ${Util.toHexString(address)}`);
+      Output.writeln(`Export: ${name} found at ${Format.toHexString(address)}`);
       return new Var(uint64(address.toString()));
     }
 
@@ -153,7 +153,7 @@ export class SymCmdLet extends CmdLet {
     Array.from(
       all,
       ([key, value], index) =>
-        `${index.toString().padStart(3, ' ')}: ${Output.green(key.padEnd(40, '.'))} ${Output.yellow(Util.toHexString(value.address))} [${Output.blue(value.type)}]`,
+        `${index.toString().padStart(3, ' ')}: ${Output.green(key.padEnd(40, '.'))} ${Output.yellow(Format.toHexString(value.address))} [${Output.blue(value.type)}]`,
     ).forEach(s => Output.writeln(s));
 
     return Var.ZERO;
@@ -174,7 +174,9 @@ export class SymCmdLet extends CmdLet {
       return t0;
     }
 
-    Output.writeln(`No symbol found at address: ${Util.toHexString(address)}`);
+    Output.writeln(
+      `No symbol found at address: ${Format.toHexString(address)}`,
+    );
     return t0;
   }
 

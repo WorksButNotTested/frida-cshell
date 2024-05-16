@@ -1,6 +1,6 @@
 import { MemoryBps } from '../breakpoints/memory.js';
 import { Overlay } from './overlay.js';
-import { Util } from '../misc/util.js';
+import { Format } from '../misc/format.js';
 
 export class Mem {
   public static readBytes(address: NativePointer, length: number): Uint8Array {
@@ -9,7 +9,7 @@ export class Mem {
       const data = address.readByteArray(length);
       if (data === null)
         throw new Error(
-          `failed to read ${Util.toHexString(length)} bytes from ${Util.toHexString(address)}`,
+          `failed to read ${Format.toHexString(length)} bytes from ${Format.toHexString(address)}`,
         );
       const buffer = new Uint8Array(data);
       Overlay.fix(address, buffer);
@@ -24,7 +24,7 @@ export class Mem {
     try {
       if (Overlay.overlaps(address, data.length)) {
         throw new Error(
-          `failed to write ${Util.toHexString(data.length)} bytes to ${Util.toHexString(address)} as the address has been modified (check for breakpoints)`,
+          `failed to write ${Format.toHexString(data.length)} bytes to ${Format.toHexString(address)} as the address has been modified (check for breakpoints)`,
         );
       }
       this.modifyMemory(address, data);

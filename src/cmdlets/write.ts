@@ -1,6 +1,6 @@
 import { CmdLet } from '../commands/cmdlet.js';
 import { Output } from '../io/output.js';
-import { Util } from '../misc/util.js';
+import { Format } from '../misc/format.js';
 import { Token } from '../io/token.js';
 import { Var } from '../vars/var.js';
 import { Mem } from '../memory/mem.js';
@@ -59,27 +59,27 @@ w n address value - write 'n' bytes to memory
       case 1:
         address.writeU8(val.toNumber());
         Output.writeln(
-          `Wrote value: 0x${val.toString(16).padStart(2, '0')} = ${val.toString()} to ${Util.toHexString(address)}`,
+          `Wrote value: 0x${val.toString(16).padStart(2, '0')} = ${val.toString()} to ${Format.toHexString(address)}`,
         );
         break;
 
       case 2:
         address.writeU16(val.toNumber());
         Output.writeln(
-          `Wrote value: 0x${val.toString(16).padStart(4, '0')} = ${val.toString()} to ${Util.toHexString(address)}`,
+          `Wrote value: 0x${val.toString(16).padStart(4, '0')} = ${val.toString()} to ${Format.toHexString(address)}`,
         );
         break;
 
       case 4:
         address.writeU32(val.toNumber());
         Output.writeln(
-          `Wrote value: 0x${val.toString(16).padStart(8, '0')} = ${val.toString()} to ${Util.toHexString(address)}`,
+          `Wrote value: 0x${val.toString(16).padStart(8, '0')} = ${val.toString()} to ${Format.toHexString(address)}`,
         );
         break;
       case 8:
         address.writeU64(val);
         Output.writeln(
-          `Wrote value: ${Util.toHexString(val)} = ${val.toString()} to ${Util.toHexString(address)}`,
+          `Wrote value: ${Format.toHexString(val)} = ${val.toString()} to ${Format.toHexString(address)}`,
         );
         break;
       default:
@@ -105,7 +105,7 @@ w n address value - write 'n' bytes to memory
     const max = this.getMax(length);
     if (val.compare(max) > 0) {
       throw new Error(
-        `value: ${Util.toHexString(val)} larger than maximum ${Util.toHexString(max)}`,
+        `value: ${Format.toHexString(val)} larger than maximum ${Format.toHexString(max)}`,
       );
     }
 

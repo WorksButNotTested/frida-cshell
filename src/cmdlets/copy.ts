@@ -1,6 +1,6 @@
 import { CmdLet } from '../commands/cmdlet.js';
 import { Output } from '../io/output.js';
-import { Util } from '../misc/util.js';
+import { Format } from '../misc/format.js';
 import { Token } from '../io/token.js';
 import { Var } from '../vars/var.js';
 import { Mem } from '../memory/mem.js';
@@ -43,7 +43,7 @@ export class CopyCmdLet extends CmdLet {
       Mem.writeBytes(dst, buff);
     } catch (error) {
       throw new Error(
-        `failed to copy ${len} bytes from ${Util.toHexString(src)} to ${Util.toHexString(dst)}, ${error}`,
+        `failed to copy ${len} bytes from ${Format.toHexString(src)} to ${Format.toHexString(dst)}, ${error}`,
       );
     }
     return t0;

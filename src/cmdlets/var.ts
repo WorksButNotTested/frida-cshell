@@ -42,7 +42,7 @@ export class VarCmdLet extends CmdLet {
     if (value !== DELETE_CHAR) return undefined;
 
     const val = Vars.pop(name);
-    if (val === undefined) {
+    if (val === null) {
       Output.writeln(`Variable ${name} not assigned`);
       return Var.ZERO;
     } else {
@@ -70,7 +70,7 @@ export class VarCmdLet extends CmdLet {
     if (name === undefined) return undefined;
 
     const val = Vars.get(name);
-    if (val === undefined) {
+    if (val === null) {
       Output.writeln(`Variable ${name} not assigned`);
       return Var.ZERO;
     } else {

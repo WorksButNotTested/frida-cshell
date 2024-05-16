@@ -28,7 +28,7 @@ export class Token {
     if (this.value.charAt(0) === '$') return Regs.get(this.value.slice(1));
 
     const v = Vars.get(this.value);
-    if (v !== undefined) return v;
+    if (v !== null) return v;
 
     const address = Module.findExportByName(null, this.value);
     if (address !== null) {

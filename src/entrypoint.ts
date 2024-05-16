@@ -14,11 +14,11 @@ import { Regs } from './breakpoints/regs.js';
 import { Format } from './misc/format.js';
 
 type InitParams = {
-  verbose: boolean | undefined;
+  verbose: boolean;
 };
 
 rpc.exports = {
-  init(stage: string, params: InitParams | undefined) {
+  init(stage: string, params: InitParams | null = null) {
     const verbose = params?.verbose ?? false;
     Output.setVerbose(verbose);
     Output.writeln(`init - stage: ${stage}, verbose: ${verbose}`, true);

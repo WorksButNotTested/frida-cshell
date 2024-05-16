@@ -21,14 +21,14 @@ export class Vars {
     this.map.set(name, val);
   }
 
-  public static get(name: string): Var | undefined {
-    if (!this.isNameValid(name)) return undefined;
-    return this.map.get(name);
+  public static get(name: string): Var | null {
+    if (!this.isNameValid(name)) return null;
+    return this.map.get(name) ?? null;
   }
 
-  public static pop(name: string): Var | undefined {
+  public static pop(name: string): Var | null {
     const val = this.map.get(name);
-    if (val === undefined) return undefined;
+    if (val === undefined) return null;
     this.map.delete(name);
     return val;
   }

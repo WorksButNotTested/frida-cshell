@@ -102,7 +102,7 @@ export class CharCode {
   );
 
   public static from(val: string): number {
-    if (val.length != 1) {
+    if (val.length !== 1) {
       throw new Error(`Invalid escape char ${val}`);
     }
     return val.charCodeAt(0);

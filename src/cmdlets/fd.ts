@@ -201,7 +201,7 @@ export class FdCmdLet extends CmdLet {
   }
 
   private runWithId(tokens: Token[]): Var | undefined {
-    if (tokens.length != 1) return undefined;
+    if (tokens.length !== 1) return undefined;
 
     const fd = tokens[0]?.toVar()?.toU64().toNumber();
     if (fd === undefined) return undefined;
@@ -215,7 +215,7 @@ export class FdCmdLet extends CmdLet {
   }
 
   private runWithoutParams(tokens: Token[]): Var | undefined {
-    if (tokens.length != 0) return undefined;
+    if (tokens.length !== 0) return undefined;
 
     const fds = this.readFds();
     for (const [fd, path] of Object.entries(fds)) {

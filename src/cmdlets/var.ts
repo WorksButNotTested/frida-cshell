@@ -31,7 +31,7 @@ export class VarCmdLet extends CmdLet {
   }
 
   private runWithNameAndHash(tokens: Token[]): Var | undefined {
-    if (tokens.length != 2) return undefined;
+    if (tokens.length !== 2) return undefined;
 
     const name = tokens[0]?.getLiteral();
     if (name === undefined) return undefined;
@@ -39,7 +39,7 @@ export class VarCmdLet extends CmdLet {
     const value = tokens[1]?.getLiteral();
     if (value === undefined) return undefined;
 
-    if (value != DELETE_CHAR) return undefined;
+    if (value !== DELETE_CHAR) return undefined;
 
     const val = Vars.pop(name);
     if (val === undefined) {
@@ -51,7 +51,7 @@ export class VarCmdLet extends CmdLet {
   }
 
   private runWithNameAndPointer(tokens: Token[]): Var | undefined {
-    if (tokens.length != 2) return undefined;
+    if (tokens.length !== 2) return undefined;
 
     const name = tokens[0]?.getLiteral();
     if (name === undefined) return undefined;
@@ -64,7 +64,7 @@ export class VarCmdLet extends CmdLet {
   }
 
   private runWithName(tokens: Token[]): Var | undefined {
-    if (tokens.length != 1) return undefined;
+    if (tokens.length !== 1) return undefined;
 
     const name = tokens[0]?.getLiteral();
     if (name === undefined) return undefined;

@@ -27,7 +27,7 @@ export class RegCmdLet extends CmdLet {
   }
 
   private runWithNameAndPointer(tokens: Token[]): Var | undefined {
-    if (tokens.length != 2) return undefined;
+    if (tokens.length !== 2) return undefined;
 
     const name = tokens[0]?.getLiteral();
     if (name === undefined) return undefined;
@@ -41,7 +41,7 @@ export class RegCmdLet extends CmdLet {
   }
 
   private runWithName(tokens: Token[]): Var | undefined {
-    if (tokens.length != 1) return undefined;
+    if (tokens.length !== 1) return undefined;
 
     const name = tokens[0]?.getLiteral();
     if (name === undefined) return undefined;

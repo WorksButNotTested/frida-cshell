@@ -62,7 +62,7 @@ export class Parser {
             current = '';
           } else {
             inQuoteString = true;
-            if (current.length != 0) {
+            if (current.length !== 0) {
               tokens.push(new Token(current));
               current = '';
             }
@@ -80,7 +80,7 @@ export class Parser {
       throw new Error('Unescaped quotation');
     }
 
-    if (current.length != 0) {
+    if (current.length !== 0) {
       tokens.push(new Token(current));
     }
     return tokens;

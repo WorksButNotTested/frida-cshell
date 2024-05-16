@@ -43,7 +43,7 @@ export class DumpCmdLet extends CmdLet {
   }
 
   private runWithLength(tokens: Token[]): Var | undefined {
-    if (tokens.length != 2) return undefined;
+    if (tokens.length !== 2) return undefined;
 
     const t0 = tokens[0]?.toVar();
     if (t0 === undefined) return undefined;
@@ -59,7 +59,7 @@ export class DumpCmdLet extends CmdLet {
   }
 
   private runWithoutLength(tokens: Token[]): Var | undefined {
-    if (tokens.length != 1) return undefined;
+    if (tokens.length !== 1) return undefined;
 
     const t0 = tokens[0]?.toVar();
     if (t0 === undefined) return undefined;

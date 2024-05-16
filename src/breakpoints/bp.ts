@@ -217,7 +217,7 @@ export class Bp {
     returnAddress: NativePointer,
     retVal: InvocationReturnValue | undefined = undefined,
   ) {
-    if (this._hits == 0) return;
+    if (this._hits === 0) return;
     else if (this._hits > 0) this._hits--;
     Output.clearLine();
     Output.writeln(
@@ -236,16 +236,16 @@ export class Bp {
   public breakMemory(details: MemoryAccessDetails) {
     switch (details.operation) {
       case 'read':
-        if (this._type != BpType.MemoryRead) return;
+        if (this._type !== BpType.MemoryRead) return;
         break;
       case 'write':
-        if (this._type != BpType.MemoryWrite) return;
+        if (this._type !== BpType.MemoryWrite) return;
         break;
       case 'execute':
         return;
     }
 
-    if (this._hits == 0) return;
+    if (this._hits === 0) return;
     else if (this._hits > 0) this._hits--;
 
     Output.clearLine();
@@ -279,7 +279,7 @@ export class Bp {
   private get hitsString(): string {
     if (this._hits < 0) {
       return 'unlimited';
-    } else if (this._hits == 0) {
+    } else if (this._hits === 0) {
       return 'disabled';
     } else {
       return this._hits.toString();
@@ -296,7 +296,7 @@ export class Bp {
   }
 
   private get lengthString(): string {
-    if (this.kind == BpKind.Code) return '';
+    if (this.kind === BpKind.Code) return '';
     else return `[length:${this._length}]`;
   }
 

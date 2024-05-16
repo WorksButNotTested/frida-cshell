@@ -28,19 +28,19 @@ export class SymCmdLet extends CmdLet {
   }
 
   private printDebugSymbol(debug: DebugSymbol) {
-    const prefix = debug.moduleName == null ? '' : `${debug.moduleName}!`;
+    const prefix = debug.moduleName === null ? '' : `${debug.moduleName}!`;
     Output.writeln(
       `Debug Symbol: ${prefix}${debug.name} found at ${Util.toHexString(debug.address)}`,
     );
     if (debug.fileName !== null && debug.lineNumber !== null) {
-      if (debug.fileName.length != 0 && debug.lineNumber != 0) {
+      if (debug.fileName.length !== 0 && debug.lineNumber !== 0) {
         Output.writeln(`\t${debug.fileName}:${debug.lineNumber} `);
       }
     }
   }
 
   private runWithName(tokens: Token[]): Var | undefined {
-    if (tokens.length != 1) return undefined;
+    if (tokens.length !== 1) return undefined;
 
     const name = tokens[0]?.getLiteral();
     if (name === undefined) return undefined;
@@ -77,7 +77,7 @@ export class SymCmdLet extends CmdLet {
   }
 
   private runWithWildcard(tokens: Token[]): Var | undefined {
-    if (tokens.length != 1) return undefined;
+    if (tokens.length !== 1) return undefined;
 
     const name = tokens[0]?.getLiteral();
     if (name === undefined) return undefined;
@@ -160,7 +160,7 @@ export class SymCmdLet extends CmdLet {
   }
 
   private runWithAddress(tokens: Token[]): Var | undefined {
-    if (tokens.length != 1) return undefined;
+    if (tokens.length !== 1) return undefined;
 
     const t0 = tokens[0]?.toVar();
     if (t0 === undefined) return undefined;
@@ -169,7 +169,7 @@ export class SymCmdLet extends CmdLet {
     if (address === undefined) return undefined;
 
     const debug = DebugSymbol.fromAddress(address);
-    if (!debug.address.isNull() && debug.name != null) {
+    if (!debug.address.isNull() && debug.name !== null) {
       this.printDebugSymbol(debug);
       return t0;
     }

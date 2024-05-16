@@ -37,7 +37,7 @@ export class History {
     const isHistoryCommand = this.isHistoryCommand(tokens[0]);
 
     /* If our command isn't already top-most */
-    if (this.line.toString() != this.history[0] && !isHistoryCommand) {
+    if (this.line.toString() !== this.history[0] && !isHistoryCommand) {
       this.history.unshift(this.line.toString());
       if (this.history.length >= this.MAX_HISTORY) this.history.pop();
     }
@@ -67,7 +67,7 @@ export class History {
   }
 
   public static down() {
-    if (this.index == -1) return;
+    if (this.index === -1) return;
     this.index--;
     this.line = new Line(this.history[this.index]);
   }

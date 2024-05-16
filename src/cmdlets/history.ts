@@ -23,7 +23,7 @@ export class HistoryCmdLet extends CmdLet {
   }
 
   private runWithId(tokens: Token[]): Var | undefined {
-    if (tokens.length != 1) return undefined;
+    if (tokens.length !== 1) return undefined;
 
     const id = tokens[0]?.toVar()?.toU64().toNumber();
     if (id === undefined) return undefined;

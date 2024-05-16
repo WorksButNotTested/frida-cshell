@@ -57,7 +57,7 @@ export class AssemblyCmdLet extends CmdLet {
 
   private isThumb(address: NativePointer): boolean {
     if (Process.arch !== 'arm') return false;
-    if (address.and(1) == ptr(0)) return false;
+    if (address.and(1) === ptr(0)) return false;
     return true;
   }
 
@@ -113,7 +113,7 @@ export class AssemblyCmdLet extends CmdLet {
   }
 
   private runWithLength(tokens: Token[]): Var | undefined {
-    if (tokens.length != 2) return undefined;
+    if (tokens.length !== 2) return undefined;
 
     const address = tokens[0]?.toVar()?.toPointer();
     if (address === undefined) return undefined;
@@ -127,7 +127,7 @@ export class AssemblyCmdLet extends CmdLet {
   }
 
   private runWithoutLength(tokens: Token[]): Var | undefined {
-    if (tokens.length != 1) return undefined;
+    if (tokens.length !== 1) return undefined;
 
     const address = tokens[0]?.toVar()?.toPointer();
     if (address === undefined) return undefined;

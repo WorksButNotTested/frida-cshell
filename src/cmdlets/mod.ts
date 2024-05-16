@@ -33,7 +33,7 @@ export class ModCmdLet extends CmdLet {
   }
 
   private runWithAddress(tokens: Token[]): Var | undefined {
-    if (tokens.length != 1) return undefined;
+    if (tokens.length !== 1) return undefined;
 
     const t0 = tokens[0]?.toVar();
     if (t0 === undefined) return undefined;
@@ -57,7 +57,7 @@ export class ModCmdLet extends CmdLet {
   }
 
   private runWithName(tokens: Token[]): Var | undefined {
-    if (tokens.length != 1) return undefined;
+    if (tokens.length !== 1) return undefined;
 
     const name = tokens[0]?.getLiteral();
     if (name === undefined) return undefined;

@@ -61,7 +61,7 @@ export class Input {
     Output.clearLine();
     Output.writeln(`- ${line}`);
 
-    if (line == QUIT_CHAR) {
+    if (line === QUIT_CHAR) {
       /* Notify the commandlet we are done and exit edit mode */
       try {
         edit.done();
@@ -69,7 +69,7 @@ export class Input {
         this.edit = undefined;
       }
       Output.writeRet();
-    } else if (line == ABORT_CHAR) {
+    } else if (line === ABORT_CHAR) {
       /* Notify the commandlet we aborted and exit edit mode */
       try {
         edit.abort();

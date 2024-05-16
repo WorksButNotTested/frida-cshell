@@ -17,9 +17,9 @@ abstract class TypedBpCmdLet extends CmdLet implements CmdLetEdit {
 
   public usage(): Var {
     const kind = Bp.getBpKind(this.bpType);
-    const lenStr: string = kind == BpKind.Memory ? ' len ' : '';
+    const lenStr: string = kind === BpKind.Memory ? ' len ' : '';
     const lenDesc: string =
-      kind == BpKind.Memory
+      kind === BpKind.Memory
         ? 'len     the length of the memory region to watch\n'
         : '';
     const INSN_BP_USAGE: string = `Usage: ${this.name}
@@ -96,7 +96,7 @@ ${Output.bold('NOTE:')} Set hits to '*' for unlimited breakpoint.
   }
 
   private parseLength(token: Token | undefined): number | undefined {
-    if (Bp.getBpKind(this.bpType) == BpKind.Code) return 0;
+    if (Bp.getBpKind(this.bpType) === BpKind.Code) return 0;
     return token?.toVar()?.toU64().toNumber();
   }
 
@@ -113,7 +113,7 @@ ${Output.bold('NOTE:')} Set hits to '*' for unlimited breakpoint.
   }
 
   private runWithHits(tokens: Token[]): Var | undefined {
-    if (tokens.length != 1) return undefined;
+    if (tokens.length !== 1) return undefined;
 
     const hits = this.parseHits(tokens[0]);
     if (hits === undefined) return undefined;
@@ -126,10 +126,10 @@ ${Output.bold('NOTE:')} Set hits to '*' for unlimited breakpoint.
   }
 
   private runWithHitsAndAddr(tokens: Token[]): Var | undefined {
-    if (Bp.getBpKind(this.bpType) == BpKind.Code) {
-      if (tokens.length != 2) return undefined;
+    if (Bp.getBpKind(this.bpType) === BpKind.Code) {
+      if (tokens.length !== 2) return undefined;
     } else {
-      if (tokens.length != 3) return undefined;
+      if (tokens.length !== 3) return undefined;
     }
 
     const hits = this.parseHits(tokens[0]);
@@ -152,7 +152,7 @@ ${Output.bold('NOTE:')} Set hits to '*' for unlimited breakpoint.
   }
 
   private runWithIndex(tokens: Token[]): Var | undefined {
-    if (tokens.length != 1) return undefined;
+    if (tokens.length !== 1) return undefined;
 
     const index = this.parseIndex(tokens[0]);
     if (index === undefined) return undefined;
@@ -165,7 +165,7 @@ ${Output.bold('NOTE:')} Set hits to '*' for unlimited breakpoint.
   }
 
   private runWithIndexAndHash(tokens: Token[]): Var | undefined {
-    if (tokens.length != 2) return undefined;
+    if (tokens.length !== 2) return undefined;
 
     const index = this.parseIndex(tokens[0]);
     if (index === undefined) return undefined;
@@ -179,7 +179,7 @@ ${Output.bold('NOTE:')} Set hits to '*' for unlimited breakpoint.
   }
 
   private runWithIndexAndHits(tokens: Token[]): Var | undefined {
-    if (tokens.length != 2) return undefined;
+    if (tokens.length !== 2) return undefined;
 
     const index = this.parseIndex(tokens[0]);
     if (index === undefined) return undefined;
@@ -195,10 +195,10 @@ ${Output.bold('NOTE:')} Set hits to '*' for unlimited breakpoint.
   }
 
   private runWithIndexHitsAndAddr(tokens: Token[]): Var | undefined {
-    if (Bp.getBpKind(this.bpType) == BpKind.Code) {
-      if (tokens.length != 3) return undefined;
+    if (Bp.getBpKind(this.bpType) === BpKind.Code) {
+      if (tokens.length !== 3) return undefined;
     } else {
-      if (tokens.length != 4) return undefined;
+      if (tokens.length !== 4) return undefined;
     }
 
     const index = this.parseIndex(tokens[0]);

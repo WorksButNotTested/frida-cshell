@@ -79,10 +79,10 @@ export class Line {
   }
 
   public wordLeft() {
-    if (this.pos == 0) return;
+    if (this.pos === 0) return;
 
     this.pos--;
-    while (this.pos != 0) {
+    while (this.pos !== 0) {
       if (!this.isAlpha(this.pos - 1) && this.isAlpha(this.pos)) {
         break;
       }
@@ -91,7 +91,7 @@ export class Line {
   }
 
   public wordRight() {
-    if (this.pos == this.line.length) return;
+    if (this.pos === this.line.length) return;
 
     this.pos++;
     while (this.pos < this.line.length) {

@@ -28,7 +28,7 @@ export class ThreadCmdLet extends CmdLet {
   }
 
   private runWithId(tokens: Token[]): Var | undefined {
-    if (tokens.length != 1) return undefined;
+    if (tokens.length !== 1) return undefined;
 
     const id = tokens[0]?.toVar()?.toU64().toNumber();
     if (id === undefined) return undefined;
@@ -46,7 +46,7 @@ export class ThreadCmdLet extends CmdLet {
   }
 
   private runWithName(tokens: Token[]): Var | undefined {
-    if (tokens.length != 1) return undefined;
+    if (tokens.length !== 1) return undefined;
 
     const name = tokens[0]?.getLiteral();
     if (name === undefined) return undefined;

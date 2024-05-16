@@ -73,7 +73,7 @@ export class SrcCmdLet extends CmdLet {
   }
 
   private runWithName(tokens: Token[]): Var | undefined {
-    if (tokens.length != 1) return undefined;
+    if (tokens.length !== 1) return undefined;
 
     let name = tokens[0]?.getLiteral();
     if (name === undefined) return undefined;

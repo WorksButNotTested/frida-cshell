@@ -88,7 +88,7 @@ w n address value - write 'n' bytes to memory
   }
 
   public run(tokens: Token[]): Var {
-    if (tokens.length != 3) return this.usage();
+    if (tokens.length !== 3) return this.usage();
 
     const length = this.getLength(tokens[0]);
     if (length === undefined) return this.usage();

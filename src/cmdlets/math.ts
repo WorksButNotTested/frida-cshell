@@ -21,7 +21,7 @@ ${this.name} op1 op2 - ${this.OPERATION} two values together
   protected abstract op(op0: UInt64, op1: UInt64): UInt64;
 
   public run(tokens: Token[]): Var {
-    if (tokens.length != 2) return this.usage();
+    if (tokens.length !== 2) return this.usage();
 
     const op0 = tokens[0]?.toVar()?.toU64();
     if (op0 === undefined) return this.usage();
@@ -232,7 +232,7 @@ not op - perform a bitwise not operation on an operand
   }
 
   public run(tokens: Token[]): Var {
-    if (tokens.length != 1) return this.usage();
+    if (tokens.length !== 1) return this.usage();
 
     const op = tokens[0]?.toVar()?.toU64();
     if (op === undefined) return this.usage();

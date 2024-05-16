@@ -74,7 +74,7 @@ r n address - read 'n' bytes from memory
   }
 
   public run(tokens: Token[]): Var {
-    if (tokens.length != 2) return this.usage();
+    if (tokens.length !== 2) return this.usage();
 
     const length = this.getLength(tokens[0]);
     if (length === undefined) return this.usage();

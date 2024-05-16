@@ -24,7 +24,7 @@ export class CopyCmdLet extends CmdLet {
   }
 
   public run(tokens: Token[]): Var {
-    if (tokens.length != 3) return this.usage();
+    if (tokens.length !== 3) return this.usage();
 
     const t0 = tokens[0]?.toVar();
     if (t0 === undefined) return this.usage();

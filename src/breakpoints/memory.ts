@@ -19,14 +19,14 @@ export class MemoryBps {
   private static callbacks = new MemoryCallbacks();
   private static memoryBps: Map<string, Bp> = new Map<string, Bp>();
 
-  private static buildKey(type: BpType, index: number): string {
-    return `${type}:${index.toString()}`;
-  }
-
   public static enableBp(bp: Bp) {
     const key = this.buildKey(bp.type, bp.index);
     this.memoryBps.set(key, bp);
     this.refresh();
+  }
+
+  private static buildKey(type: BpType, index: number): string {
+    return `${type}:${index.toString()}`;
   }
 
   public static disableBp(bp: Bp) {
@@ -35,13 +35,9 @@ export class MemoryBps {
     this.refresh();
   }
 
-  public static getActiveBps(): Bp[] {
-    const bps = Array.from(this.memoryBps.values());
-    return bps
-      .filter(bp => bp.address !== null)
-      .filter(bp => bp.length !== null)
-      .filter(bp => bp.length !== 0)
-      .filter(bp => bp.hits !== 0);
+  public static refresh() {
+    this.disable();
+    this.enable();
   }
 
   public static disable() {
@@ -64,9 +60,13 @@ export class MemoryBps {
     MemoryAccessMonitor.enable(ranges, this.callbacks);
   }
 
-  public static refresh() {
-    this.disable();
-    this.enable();
+  public static getActiveBps(): Bp[] {
+    const bps = Array.from(this.memoryBps.values());
+    return bps
+      .filter(bp => bp.address !== null)
+      .filter(bp => bp.length !== null)
+      .filter(bp => bp.length !== 0)
+      .filter(bp => bp.hits !== 0);
   }
 
   public static containsAddress(address: NativePointer): boolean {

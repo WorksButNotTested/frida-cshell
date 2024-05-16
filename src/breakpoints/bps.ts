@@ -8,19 +8,6 @@ export class Bps {
 
   private constructor() {}
 
-  private static buildKey(type: BpType, index: number): string {
-    return `${type}:${index.toString()}`;
-  }
-
-  private static getNextFreeIndex(type: BpType): number {
-    let idx = 1;
-    while (true) {
-      const key = this.buildKey(type, idx);
-      if (!this.byIndex.has(key)) return idx;
-      idx++;
-    }
-  }
-
   public static create(
     type: BpType,
     hits: number = -1,
@@ -50,9 +37,17 @@ export class Bps {
     return bp;
   }
 
-  public static get(type: BpType, idx: number): Bp | null {
-    const key = this.buildKey(type, idx);
-    return this.byIndex.get(key) ?? null;
+  private static getNextFreeIndex(type: BpType): number {
+    let idx = 1;
+    while (true) {
+      const key = this.buildKey(type, idx);
+      if (!this.byIndex.has(key)) return idx;
+      idx++;
+    }
+  }
+
+  private static buildKey(type: BpType, index: number): string {
+    return `${type}:${index.toString()}`;
   }
 
   public static modify(
@@ -90,6 +85,11 @@ export class Bps {
     this.last = bp;
     this.lines = [];
     return bp;
+  }
+
+  public static get(type: BpType, idx: number): Bp | null {
+    const key = this.buildKey(type, idx);
+    return this.byIndex.get(key) ?? null;
   }
 
   public static delete(type: BpType, idx: number): Bp {

@@ -54,47 +54,19 @@ export class Bp {
     this._listener = null;
   }
 
-  public get type(): BpType {
-    return this._type;
+  public enable() {
+    switch (this.kind) {
+      case BpKind.Code:
+        this.enableCode();
+        break;
+      case BpKind.Memory:
+        MemoryBps.enableBp(this);
+        break;
+    }
   }
 
-  public get index(): number {
-    return this._idx;
-  }
-
-  public get address(): Var | null {
-    return this._addr;
-  }
-
-  public get length(): number | null {
-    return this._length;
-  }
-
-  public get hits(): number {
-    return this._hits;
-  }
-
-  public set address(addr: Var | null) {
-    if (addr === null) return;
-    this._addr = addr;
-  }
-
-  public set literal(literal: string | null) {
-    if (literal === null) return;
-    this._literal = literal;
-  }
-
-  public set length(length: number | null) {
-    if (length === null) return;
-    this._length = length;
-  }
-
-  public set hits(hits: number) {
-    this._hits = hits;
-  }
-
-  public set lines(lines: string[]) {
-    this._lines = lines;
+  private get kind(): BpKind {
+    return Bp.getBpKind(this._type);
   }
 
   public static getBpKind(type: BpType): BpKind {
@@ -108,41 +80,6 @@ export class Bp {
       case BpType.MemoryWrite:
         return BpKind.Memory;
     }
-  }
-
-  private get kind(): BpKind {
-    return Bp.getBpKind(this._type);
-  }
-
-  public enable() {
-    switch (this.kind) {
-      case BpKind.Code:
-        this.enableCode();
-        break;
-      case BpKind.Memory:
-        MemoryBps.enableBp(this);
-        break;
-    }
-  }
-
-  public disable() {
-    switch (this.kind) {
-      case BpKind.Code:
-        this.disableCode();
-        break;
-      case BpKind.Memory:
-        MemoryBps.disableBp(this);
-        break;
-    }
-  }
-
-  public disableCode() {
-    if (this._listener === null) return;
-    this._listener.detach();
-    this._listener = null;
-    Interceptor.flush();
-    if (this._overlay === null) return;
-    Overlay.remove(this._overlay);
   }
 
   private enableCode() {
@@ -184,6 +121,28 @@ export class Bp {
     Interceptor.flush();
   }
 
+  private breakCode(
+    threadId: ThreadId,
+    ctx: CpuContext,
+    returnAddress: NativePointer,
+    retVal: InvocationReturnValue | null = null,
+  ) {
+    if (this._hits === 0) return;
+    else if (this._hits > 0) this._hits--;
+    Output.clearLine();
+    Output.writeln(
+      `Break #${this._idx} [${this._type}] @ $pc=${Format.toHexString(ctx.pc)}, $tid=${threadId}`,
+    );
+    Output.writeln();
+    Regs.setThreadId(threadId);
+    Regs.setContext(ctx);
+    Regs.setReturnAddress(returnAddress);
+
+    if (retVal !== null) Regs.setRetVal(retVal);
+
+    this.runCommands();
+  }
+
   private runCommands() {
     Input.suppressEdit(true);
     try {
@@ -211,26 +170,24 @@ export class Bp {
     }
   }
 
-  private breakCode(
-    threadId: ThreadId,
-    ctx: CpuContext,
-    returnAddress: NativePointer,
-    retVal: InvocationReturnValue | null = null,
-  ) {
-    if (this._hits === 0) return;
-    else if (this._hits > 0) this._hits--;
-    Output.clearLine();
-    Output.writeln(
-      `Break #${this._idx} [${this._type}] @ $pc=${Format.toHexString(ctx.pc)}, $tid=${threadId}`,
-    );
-    Output.writeln();
-    Regs.setThreadId(threadId);
-    Regs.setContext(ctx);
-    Regs.setReturnAddress(returnAddress);
+  public disable() {
+    switch (this.kind) {
+      case BpKind.Code:
+        this.disableCode();
+        break;
+      case BpKind.Memory:
+        MemoryBps.disableBp(this);
+        break;
+    }
+  }
 
-    if (retVal !== null) Regs.setRetVal(retVal);
-
-    this.runCommands();
+  public disableCode() {
+    if (this._listener === null) return;
+    this._listener.detach();
+    this._listener = null;
+    Interceptor.flush();
+    if (this._overlay === null) return;
+    Overlay.remove(this._overlay);
   }
 
   public breakMemory(details: MemoryAccessDetails) {
@@ -275,28 +232,6 @@ export class Bp {
     return true;
   }
 
-  private get hitsString(): string {
-    if (this._hits < 0) {
-      return 'unlimited';
-    } else if (this._hits === 0) {
-      return 'disabled';
-    } else {
-      return this._hits.toString();
-    }
-  }
-
-  private get addrString(): string {
-    if (this._addr === null) return 'unassigned';
-
-    const p = this._addr.toPointer();
-    return Format.toHexString(p);
-  }
-
-  private get lengthString(): string {
-    if (this.kind === BpKind.Code) return '';
-    else return `[length:${this._length}]`;
-  }
-
   public compare(other: Bp): number {
     return this._idx - other._idx;
   }
@@ -310,5 +245,70 @@ export class Bp {
     const lines = this._lines.map(l => `  - ${Output.yellow(l)}`);
     lines.unshift(header);
     return `${lines.join('\n')}\n`;
+  }
+
+  private get addrString(): string {
+    if (this._addr === null) return 'unassigned';
+
+    const p = this._addr.toPointer();
+    return Format.toHexString(p);
+  }
+
+  private get hitsString(): string {
+    if (this._hits < 0) {
+      return 'unlimited';
+    } else if (this._hits === 0) {
+      return 'disabled';
+    } else {
+      return this._hits.toString();
+    }
+  }
+
+  private get lengthString(): string {
+    if (this.kind === BpKind.Code) return '';
+    else return `[length:${this._length}]`;
+  }
+
+  public get type(): BpType {
+    return this._type;
+  }
+
+  public get index(): number {
+    return this._idx;
+  }
+
+  public get address(): Var | null {
+    return this._addr;
+  }
+
+  public get length(): number | null {
+    return this._length;
+  }
+
+  public get hits(): number {
+    return this._hits;
+  }
+
+  public set address(addr: Var | null) {
+    if (addr === null) return;
+    this._addr = addr;
+  }
+
+  public set literal(literal: string | null) {
+    if (literal === null) return;
+    this._literal = literal;
+  }
+
+  public set length(length: number | null) {
+    if (length === null) return;
+    this._length = length;
+  }
+
+  public set hits(hits: number) {
+    this._hits = hits;
+  }
+
+  public set lines(lines: string[]) {
+    this._lines = lines;
   }
 }

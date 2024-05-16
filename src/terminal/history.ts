@@ -24,7 +24,7 @@ export class History {
     if (token === null) return false;
 
     const cmdlet = CmdLets.getByName(token.getLiteral());
-    if (cmdlet === undefined) return false;
+    if (cmdlet === null) return false;
 
     if (cmdlet.name !== 'h') return false;
 
@@ -53,8 +53,9 @@ export class History {
   }
 
   public static rerun(idx: number): Var {
-    const str = this.history[idx];
-    if (str === undefined) throw new Error(`invalid history index: ${idx}`);
+    if (idx >= this.history.length)
+      throw new Error(`invalid history index: ${idx}`);
+    const str = this.history[idx] as string;
     this.line = new Line(str);
     Input.prompt();
     return this.run();

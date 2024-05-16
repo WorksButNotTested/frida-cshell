@@ -5,9 +5,11 @@ class MemoryCallbacks implements MemoryAccessCallbacks {
   onAccess = function (details: MemoryAccessDetails) {
     const idx = details.rangeIndex;
     const bps = MemoryBps.getActiveBps();
-    const bp = bps[idx];
-    if (bp === undefined)
+
+    if (idx >= bps.length)
       throw new Error(`failed to find memory breakpoint idx: ${idx}`);
+
+    const bp = bps[idx] as Bp;
     bp.breakMemory(details);
     MemoryBps.refresh();
   };
@@ -36,8 +38,8 @@ export class MemoryBps {
   public static getActiveBps(): Bp[] {
     const bps = Array.from(this.memoryBps.values());
     return bps
-      .filter(bp => bp.address?.toPointer() !== undefined)
-      .filter(bp => bp.length !== undefined)
+      .filter(bp => bp.address !== null)
+      .filter(bp => bp.length !== null)
       .filter(bp => bp.length !== 0)
       .filter(bp => bp.hits !== 0);
   }

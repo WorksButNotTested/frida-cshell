@@ -38,9 +38,9 @@ import { FdCmdLet } from '../cmdlets/fd.js';
 import { SrcCmdLet } from '../cmdlets/src.js';
 
 export class CmdLets {
-  public static getByName(name: string): CmdLet | undefined {
+  public static getByName(name: string): CmdLet | null {
     const cmdlet = this.byName.get(name);
-    return cmdlet;
+    return cmdlet ?? null;
   }
 
   public static all(): CmdLet[] {

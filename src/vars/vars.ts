@@ -27,8 +27,8 @@ export class Vars {
   }
 
   public static pop(name: string): Var | null {
-    const val = this.map.get(name);
-    if (val === undefined) return null;
+    if (!this.map.has(name)) return null;
+    const val = this.map.get(name) as Var;
     this.map.delete(name);
     return val;
   }

@@ -3,7 +3,7 @@ import { Var } from '../vars/var.js';
 
 export class Bps {
   private static byIndex: Map<string, Bp> = new Map<string, Bp>();
-  private static last: Bp | undefined = undefined;
+  private static last: Bp | null = null;
   private static lines: string[] = [];
 
   private constructor() {}
@@ -32,14 +32,15 @@ export class Bps {
     const key = this.buildKey(type, idx);
 
     if (addr !== null) {
-      const overlapping = Array.from(this.byIndex.values()).find(bp =>
+      const overlapping = Array.from(this.byIndex.values()).some(bp =>
         bp.overlaps(addr.toPointer(), length),
       );
 
-      if (overlapping !== undefined)
+      if (overlapping) {
         throw new Error(
           `breakpoint overlaps existing breakpoint:\n\t${overlapping}`,
         );
+      }
     }
 
     const bp = new Bp(type, idx, hits, addr, literal, length);
@@ -49,9 +50,9 @@ export class Bps {
     return bp;
   }
 
-  public static get(type: BpType, idx: number): Bp | undefined {
+  public static get(type: BpType, idx: number): Bp | null {
     const key = this.buildKey(type, idx);
-    return this.byIndex.get(key);
+    return this.byIndex.get(key) ?? null;
   }
 
   public static modify(
@@ -63,18 +64,22 @@ export class Bps {
     length: number = 0,
   ): Bp {
     const key = this.buildKey(type, idx);
-    const bp = this.byIndex.get(key);
-    if (bp === undefined) throw new Error(`breakpoint #${idx} doesn't exist`);
+
+    if (!this.byIndex.has(key))
+      throw new Error(`breakpoint #${idx} doesn't exist`);
+
+    const bp = this.byIndex.get(key) as Bp;
 
     if (addr !== null) {
       const overlapping = Array.from(this.byIndex.values())
         .filter(b => b !== bp)
-        .find(b => b.overlaps(addr.toPointer(), length));
+        .some(b => b.overlaps(addr.toPointer(), length));
 
-      if (overlapping !== undefined)
+      if (overlapping) {
         throw new Error(
           `breakpoint overlaps existing breakpoint:\n\t${overlapping}`,
         );
+      }
     }
 
     bp.disable();
@@ -89,8 +94,11 @@ export class Bps {
 
   public static delete(type: BpType, idx: number): Bp {
     const key = this.buildKey(type, idx);
-    const bp = this.byIndex.get(key);
-    if (bp === undefined) throw new Error(`breakpoint #${idx} doesn't exist`);
+
+    if (!this.byIndex.has(key))
+      throw new Error(`breakpoint #${idx} doesn't exist`);
+    
+    const bp = this.byIndex.get(key) as Bp;
     this.byIndex.delete(key);
     bp.disable();
     return bp;
@@ -101,16 +109,16 @@ export class Bps {
   }
 
   public static done() {
-    if (this.last === undefined) throw new Error('no breakpoint to modify');
+    if (this.last === null) throw new Error('no breakpoint to modify');
     this.last.lines = this.lines;
     this.last.enable();
-    this.last = undefined;
+    this.last = null;
   }
 
   public static abort() {
-    if (this.last === undefined) throw new Error('no breakpoint to modify');
+    if (this.last === null) throw new Error('no breakpoint to modify');
     this.last.enable();
-    this.last = undefined;
+    this.last = null;
   }
 
   public static all(): Bp[] {

@@ -128,9 +128,9 @@ export class Regs {
       }
     } else {
       const regs = this.getRegs(this.ctx);
-      const val = regs.get(name);
-      if (val === undefined)
+      if (!regs.has(name))
         throw new Error(`variable name '${name}' is invalid`);
+      const val = regs.get(name) as Var;
       return val;
     }
   }

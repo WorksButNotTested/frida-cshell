@@ -42,8 +42,12 @@ export class Output {
 
     this.writeln('Attached to:');
     this.writeln(`\tPID:  ${this.green(Process.id.toString())}`);
-    const first = Process.enumerateModules()[0];
-    if (first !== undefined) this.writeln(`\tName: ${this.green(first.name)}`);
+
+    const modules = Process.enumerateModules();
+    if (modules.length === 0) return;
+
+    const first = modules[0] as Module;
+    this.writeln(`\tName: ${this.green(first.name)}`);
   }
 
   public static clearLine() {

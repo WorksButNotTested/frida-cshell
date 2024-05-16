@@ -45,7 +45,7 @@ export class HelpCmdLet extends CmdLet {
     if (name === undefined) return undefined;
 
     const cmdlet = CmdLets.getByName(name);
-    if (cmdlet === undefined) {
+    if (cmdlet === null) {
       return undefined;
     }
 

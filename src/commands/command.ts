@@ -53,7 +53,7 @@ export class Command {
   public static run(tokens: Token[]): Var {
     for (const [index, token] of tokens.entries()) {
       const p = token.toVar();
-      if (p === undefined) {
+      if (p === null) {
         Output.writeln(
           `${index.toString().padStart(3, ' ')}: ${token.getLiteral().padStart(20)} - literal`,
           true,
@@ -66,17 +66,18 @@ export class Command {
       }
     }
 
-    const t0 = tokens[0];
-    if (t0 === undefined) throw new Error('failed to tokenize command');
+    if (tokens.length === 0) throw new Error('failed to tokenize command');
+    const t0 = tokens[0] as Token;
 
     const cmdlet = CmdLets.getByName(t0.getLiteral());
-    if (cmdlet === undefined) {
-      const addr = t0.toVar()?.toPointer();
-      if (addr === undefined) {
+    if (cmdlet === null) {
+      const v0 = t0.toVar();
+      if (v0 === null) {
         throw new Error(
           'request was not understood as an internal command or a detected symbol',
         );
       }
+      const addr = v0.toPointer();
       return this.executeAddress(addr, tokens.slice(1));
     } else {
       return cmdlet.run(tokens.slice(1));

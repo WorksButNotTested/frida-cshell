@@ -73,8 +73,8 @@ export class Line {
   }
 
   private isAlpha(idx: number): boolean {
-    const line = this.line[idx];
-    if (line === undefined) return false;
+    if (idx >= this.line.length) return false;
+    const line = this.line[idx] as string;
     return /^[a-zA-Z0-9]$/.test(line);
   }
 

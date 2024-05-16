@@ -7,12 +7,12 @@ const PC_NAME: string = 'pc';
 const RETVAL_NAME: string = 'ret';
 
 export class Regs {
-  private static threadId: ThreadId | undefined = undefined;
-  private static ctx: CpuContext | undefined = undefined;
-  private static returnAddress: NativePointer | undefined = undefined;
-  private static addr: NativePointer | undefined = undefined;
-  private static pc: NativePointer | undefined = undefined;
-  private static retVal: InvocationReturnValue | undefined = undefined;
+  private static threadId: ThreadId | null = null;
+  private static ctx: CpuContext | null = null;
+  private static returnAddress: NativePointer | null = null;
+  private static addr: NativePointer | null = null;
+  private static pc: NativePointer | null = null;
+  private static retVal: InvocationReturnValue | null = null;
 
   private constructor() {}
 
@@ -24,7 +24,7 @@ export class Regs {
     this.ctx = ctx;
   }
 
-  public static getContext(): CpuContext | undefined {
+  public static getContext(): CpuContext | null {
     return this.ctx;
   }
 
@@ -45,26 +45,26 @@ export class Regs {
   }
 
   public static clear() {
-    this.threadId = undefined;
-    this.ctx = undefined;
-    this.returnAddress = undefined;
-    this.addr = undefined;
-    this.pc = undefined;
+    this.threadId = null;
+    this.ctx = null;
+    this.returnAddress = null;
+    this.addr = null;
+    this.pc = null;
     this.retVal = this.retVal;
   }
 
   private static isClear() {
-    if (this.threadId !== undefined) return false;
+    if (this.threadId !== null) return false;
 
-    if (this.ctx !== undefined) return false;
+    if (this.ctx !== null) return false;
 
-    if (this.returnAddress !== undefined) return false;
+    if (this.returnAddress !== null) return false;
 
-    if (this.addr !== undefined) return false;
+    if (this.addr !== null) return false;
 
-    if (this.pc !== undefined) return false;
+    if (this.pc !== null) return false;
 
-    if (this.retVal !== undefined) return false;
+    if (this.retVal !== null) return false;
 
     return true;
   }
@@ -77,13 +77,13 @@ export class Regs {
     } else if (name === ADDR_NAME) {
       throw new Error('addr cannot be set');
     } else if (name === RETVAL_NAME) {
-      if (this.retVal === undefined)
+      if (this.retVal === null)
         throw new Error(
           'return Value not available outside of a function exit breakpoint',
         );
       const ptr = value.toPointer();
       this.retVal.replace(ptr);
-    } else if (this.ctx === undefined) {
+    } else if (this.ctx === null) {
       if (name === PC_NAME) {
         throw new Error('pc cannot be set');
       } else {
@@ -100,26 +100,26 @@ export class Regs {
 
   public static get(name: string): Var {
     if (name === THREAD_ID_NAME) {
-      if (this.threadId === undefined)
+      if (this.threadId === null)
         throw new Error('thread ID not available outside of a breakpoint');
       return new Var(uint64(this.threadId));
     } else if (name === RETURN_ADDRESS_NAME) {
-      if (this.returnAddress === undefined)
+      if (this.returnAddress === null)
         throw new Error('return address not available outside of a breakpoint');
       return new Var(uint64(this.returnAddress.toString()));
     } else if (name === ADDR_NAME) {
-      if (this.addr === undefined)
+      if (this.addr === null)
         throw new Error('addr not available outside of a breakpoint');
       return new Var(uint64(this.addr.toString()));
     } else if (name === RETVAL_NAME) {
-      if (this.retVal === undefined)
+      if (this.retVal === null)
         throw new Error(
           'return Value not available outside of a function exit breakpoint',
         );
       return new Var(uint64(this.retVal.toString()));
-    } else if (this.ctx === undefined) {
+    } else if (this.ctx === null) {
       if (name === PC_NAME) {
-        if (this.pc === undefined) {
+        if (this.pc === null) {
           throw new Error('pc not available outside of a breakpoint');
         }
         return new Var(uint64(this.pc.toString()));
@@ -141,8 +141,8 @@ export class Regs {
     if (this.isClear())
       throw new Error('registers not available outside of a breakpoint');
 
-    if (this.ctx === undefined) {
-      if (this.pc !== undefined) {
+    if (this.ctx === null) {
+      if (this.pc !== null) {
         result.push([PC_NAME, new Var(uint64(this.pc.toString()))]);
       }
     } else {
@@ -150,22 +150,22 @@ export class Regs {
       regs.forEach(r => result.push(r));
     }
 
-    if (this.threadId !== undefined) {
+    if (this.threadId !== null) {
       result.push([THREAD_ID_NAME, new Var(uint64(this.threadId))]);
     }
 
-    if (this.returnAddress !== undefined) {
+    if (this.returnAddress !== null) {
       result.push([
         RETURN_ADDRESS_NAME,
         new Var(uint64(this.returnAddress.toString())),
       ]);
     }
 
-    if (this.addr !== undefined) {
+    if (this.addr !== null) {
       result.push([ADDR_NAME, new Var(uint64(this.addr.toString()))]);
     }
 
-    if (this.retVal !== undefined) {
+    if (this.retVal !== null) {
       result.push([RETVAL_NAME, new Var(uint64(this.retVal.toString()))]);
     }
 

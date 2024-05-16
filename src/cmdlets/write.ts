@@ -10,16 +10,35 @@ export class WriteCmdLet extends CmdLet {
   category = 'data';
   help = 'write data to memory';
 
-  public usage(): Var {
-    const usage: string = `Usage: w
+  public run(tokens: Token[]): Var {
+    if (tokens.length !== 3) return this.usage();
 
-w n address value - write 'n' bytes to memory
-    n        the number of bytes to read (1, 2, 4 or 8).
-    address  the address/symbol to write to
-    value    the value to write
-        `;
-    Output.write(usage);
-    return Var.ZERO;
+    const [a0, a1, a2] = tokens;
+    const [t0, t1, t2] = [a0 as Token, a1 as Token, a2 as Token];
+    const [v1, v2] = [t1.toVar(), t2.toVar()];
+
+    if (v1 === null) return this.usage();
+    if (v2 === null) return this.usage();
+
+    const length = this.getLength(t0);
+    if (length === null) return this.usage();
+
+    const address = v1.toPointer();
+    const val = v2.toU64();
+
+    const max = this.getMax(length);
+    if (val.compare(max) > 0) {
+      throw new Error(
+        `value: ${Format.toHexString(val)} larger than maximum ${Format.toHexString(max)}`,
+      );
+    }
+
+    const copy = Memory.alloc(Process.pageSize);
+    this.write(copy, val, length);
+    const buff = Mem.readBytes(copy, length);
+    Mem.writeBytes(address, buff);
+
+    return v1;
   }
 
   private getLength(token: Token): number | null {
@@ -86,34 +105,15 @@ w n address value - write 'n' bytes to memory
     }
   }
 
-  public run(tokens: Token[]): Var {
-    if (tokens.length !== 3) return this.usage();
+  public usage(): Var {
+    const usage: string = `Usage: w
 
-    const [a0, a1, a2] = tokens;
-    const [t0, t1, t2] = [a0 as Token, a1 as Token, a2 as Token];
-    const [v1, v2] = [t1.toVar(), t2.toVar()];
-
-    if (v1 === null) return this.usage();
-    if (v2 === null) return this.usage();
-
-    const length = this.getLength(t0);
-    if (length === null) return this.usage();
-
-    const address = v1.toPointer();
-    const val = v2.toU64();
-
-    const max = this.getMax(length);
-    if (val.compare(max) > 0) {
-      throw new Error(
-        `value: ${Format.toHexString(val)} larger than maximum ${Format.toHexString(max)}`,
-      );
-    }
-
-    const copy = Memory.alloc(Process.pageSize);
-    this.write(copy, val, length);
-    const buff = Mem.readBytes(copy, length);
-    Mem.writeBytes(address, buff);
-
-    return v1;
+w n address value - write 'n' bytes to memory
+    n        the number of bytes to read (1, 2, 4 or 8).
+    address  the address/symbol to write to
+    value    the value to write
+        `;
+    Output.write(usage);
+    return Var.ZERO;
   }
 }

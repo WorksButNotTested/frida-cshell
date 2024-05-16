@@ -25,9 +25,20 @@ export class VarCmdLet extends CmdLet {
   category = 'misc';
   help = 'variable management';
 
-  public usage(): Var {
-    Output.write(USAGE);
-    return Var.ZERO;
+  public run(tokens: Token[]): Var {
+    const retWithNameAndHash = this.runWithNameAndHash(tokens);
+    if (retWithNameAndHash !== null) return retWithNameAndHash;
+
+    const retWithNameAndPointer = this.runWithNameAndPointer(tokens);
+    if (retWithNameAndPointer !== null) return retWithNameAndPointer;
+
+    const retWithName = this.runWithName(tokens);
+    if (retWithName !== null) return retWithName;
+
+    const retWithoutParams = this.runWithoutParams(tokens);
+    if (retWithoutParams !== null) return retWithoutParams;
+
+    return this.usage();
   }
 
   private runWithNameAndHash(tokens: Token[]): Var | null {
@@ -90,19 +101,8 @@ export class VarCmdLet extends CmdLet {
     return Vars.getRet();
   }
 
-  public run(tokens: Token[]): Var {
-    const retWithNameAndHash = this.runWithNameAndHash(tokens);
-    if (retWithNameAndHash !== null) return retWithNameAndHash;
-
-    const retWithNameAndPointer = this.runWithNameAndPointer(tokens);
-    if (retWithNameAndPointer !== null) return retWithNameAndPointer;
-
-    const retWithName = this.runWithName(tokens);
-    if (retWithName !== null) return retWithName;
-
-    const retWithoutParams = this.runWithoutParams(tokens);
-    if (retWithoutParams !== null) return retWithoutParams;
-
-    return this.usage();
+  public usage(): Var {
+    Output.write(USAGE);
+    return Var.ZERO;
   }
 }

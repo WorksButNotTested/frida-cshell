@@ -16,15 +16,17 @@ export class ThreadCmdLet extends CmdLet {
   category = 'thread';
   help = 'display thread information';
 
-  public usage(): Var {
-    Output.write(USAGE);
-    return Var.ZERO;
-  }
+  public run(tokens: Token[]): Var {
+    const retWithId = this.runWithId(tokens);
+    if (retWithId !== null) return retWithId;
 
-  private printThread(t: ThreadDetails) {
-    Output.writeln(
-      `${t.id.toString().padStart(5, ' ')}: ${(t.name ?? '[UNNAMED]').padEnd(15, ' ')} ${t.state} pc: ${t.context.pc} sp: ${t.context.sp}`,
-    );
+    const retWithName = this.runWithName(tokens);
+    if (retWithName !== null) return retWithName;
+
+    const retWithoutParams = this.runWithoutParams(tokens);
+    if (retWithoutParams !== null) return retWithoutParams;
+
+    return this.usage();
   }
 
   private runWithId(tokens: Token[]): Var | null {
@@ -46,6 +48,12 @@ export class ThreadCmdLet extends CmdLet {
       });
       return new Var(uint64(id));
     }
+  }
+
+  private printThread(t: ThreadDetails) {
+    Output.writeln(
+      `${t.id.toString().padStart(5, ' ')}: ${(t.name ?? '[UNNAMED]').padEnd(15, ' ')} ${t.state} pc: ${t.context.pc} sp: ${t.context.sp}`,
+    );
   }
 
   private runWithName(tokens: Token[]): Var | null {
@@ -95,16 +103,8 @@ export class ThreadCmdLet extends CmdLet {
     }
   }
 
-  public run(tokens: Token[]): Var {
-    const retWithId = this.runWithId(tokens);
-    if (retWithId !== null) return retWithId;
-
-    const retWithName = this.runWithName(tokens);
-    if (retWithName !== null) return retWithName;
-
-    const retWithoutParams = this.runWithoutParams(tokens);
-    if (retWithoutParams !== null) return retWithoutParams;
-
-    return this.usage();
+  public usage(): Var {
+    Output.write(USAGE);
+    return Var.ZERO;
   }
 }

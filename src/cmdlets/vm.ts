@@ -20,21 +20,17 @@ export class VmCmdLet extends CmdLet {
   category = 'memory';
   help = 'display virtual memory ranges';
 
-  public usage(): Var {
-    Output.write(USAGE);
-    return Var.ZERO;
-  }
+  public run(tokens: Token[]): Var {
+    const retWithAddress = this.runWithAddress(tokens);
+    if (retWithAddress !== null) return retWithAddress;
 
-  private printMapping(r: RangeDetails) {
-    const limit = r.base.add(r.size);
-    if (r.file === undefined)
-      Output.writeln(
-        `\t${Format.toHexString(r.base)}-${Format.toHexString(limit)} ${r.protection} ${Format.toSize(r.size)}`,
-      );
-    else
-      Output.writeln(
-        `\t${Format.toHexString(r.base)}-${Format.toHexString(limit)} ${r.protection} ${Format.toSize(r.size)} offset: ${Format.toHexString(r.file.offset)}, name: ${r.file.path}`,
-      );
+    const retWithName = this.runWithName(tokens);
+    if (retWithName !== null) return retWithName;
+
+    const retWithoutParams = this.runWithoutParams(tokens);
+    if (retWithoutParams !== null) return retWithoutParams;
+
+    return this.usage();
   }
 
   private runWithAddress(tokens: Token[]): Var | null {
@@ -84,6 +80,18 @@ export class VmCmdLet extends CmdLet {
     return v0;
   }
 
+  private printMapping(r: RangeDetails) {
+    const limit = r.base.add(r.size);
+    if (r.file === undefined)
+      Output.writeln(
+        `\t${Format.toHexString(r.base)}-${Format.toHexString(limit)} ${r.protection} ${Format.toSize(r.size)}`,
+      );
+    else
+      Output.writeln(
+        `\t${Format.toHexString(r.base)}-${Format.toHexString(limit)} ${r.protection} ${Format.toSize(r.size)} offset: ${Format.toHexString(r.file.offset)}, name: ${r.file.path}`,
+      );
+  }
+
   private runWithName(tokens: Token[]): Var | null {
     if (tokens.length !== 1) return null;
 
@@ -111,16 +119,8 @@ export class VmCmdLet extends CmdLet {
     return Var.ZERO;
   }
 
-  public run(tokens: Token[]): Var {
-    const retWithAddress = this.runWithAddress(tokens);
-    if (retWithAddress !== null) return retWithAddress;
-
-    const retWithName = this.runWithName(tokens);
-    if (retWithName !== null) return retWithName;
-
-    const retWithoutParams = this.runWithoutParams(tokens);
-    if (retWithoutParams !== null) return retWithoutParams;
-
-    return this.usage();
+  public usage(): Var {
+    Output.write(USAGE);
+    return Var.ZERO;
   }
 }

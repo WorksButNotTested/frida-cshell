@@ -20,8 +20,8 @@ export class History {
     return History.line;
   }
 
-  private static isHistoryCommand(token: Token | undefined): boolean {
-    if (token === undefined) return false;
+  private static isHistoryCommand(token: Token | null): boolean {
+    if (token === null) return false;
 
     const cmdlet = CmdLets.getByName(token.getLiteral());
     if (cmdlet === undefined) return false;
@@ -34,7 +34,7 @@ export class History {
   public static run(): Var {
     const parser = new Parser(this.line.toString());
     const tokens = parser.tokenize();
-    const isHistoryCommand = this.isHistoryCommand(tokens[0]);
+    const isHistoryCommand = this.isHistoryCommand(tokens[0] ?? null);
 
     /* If our command isn't already top-most */
     if (this.line.toString() !== this.history[0] && !isHistoryCommand) {

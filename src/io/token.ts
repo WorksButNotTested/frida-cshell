@@ -23,7 +23,7 @@ export class Token {
       return new Var(this.value.slice(1, this.value.length - 1));
 
     const num = Numeric.parse(this.value);
-    if (num !== undefined) return new Var(num);
+    if (num !== null) return new Var(num);
 
     if (this.value.charAt(0) === '$') return Regs.get(this.value.slice(1));
 

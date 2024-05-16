@@ -10,9 +10,9 @@ export class Format {
   }
 
   public static toHexString(
-    ptr: NativePointer | UInt64 | number | undefined,
+    ptr: NativePointer | UInt64 | number | null,
   ): string {
-    if (ptr === undefined) return '[UNDEFINED]';
+    if (ptr === null) return '[UNDEFINED]';
     let hex = ptr.toString(16).padStart(this.is64bit() ? 16 : 8, '0');
     if (this.is64bit()) {
       hex = [hex.slice(0, 8), '`', hex.slice(8)].join('');
@@ -21,16 +21,14 @@ export class Format {
   }
 
   public static toDecString(
-    ptr: NativePointer | UInt64 | number | undefined,
+    ptr: NativePointer | UInt64 | number | null,
   ): string {
-    if (ptr === undefined) return '[UNDEFINED]';
+    if (ptr === null) return '[UNDEFINED]';
     return ptr.toString(10);
   }
 
-  public static toSize(
-    ptr: NativePointer | UInt64 | number | undefined,
-  ): string {
-    if (ptr === undefined) return '[UNDEFINED]';
+  public static toSize(ptr: NativePointer | UInt64 | number | null): string {
+    if (ptr === null) return '[UNDEFINED]';
     const val = uint64(ptr.toString());
     const gb = uint64(1).shl(30);
     const mb = uint64(1).shl(20);

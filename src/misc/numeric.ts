@@ -31,29 +31,29 @@ export class Numeric {
     }
   }
 
-  public static parse(val: string): UInt64 | undefined {
+  public static parse(val: string): UInt64 | null {
     const stripped = val.split('`').join('');
     const bare = this.getBareString(stripped);
 
     const base = this.getBase(stripped);
     switch (base) {
       case Base.Octal:
-        if (isNaN(parseInt(bare, 8))) return undefined;
+        if (isNaN(parseInt(bare, 8))) return null;
         break;
       case Base.Decimal:
-        if (isNaN(parseInt(bare, 10))) return undefined;
+        if (isNaN(parseInt(bare, 10))) return null;
         break;
       case Base.Hexadecimal:
-        if (isNaN(parseInt(bare, 16))) return undefined;
+        if (isNaN(parseInt(bare, 16))) return null;
         break;
       case Base.Invalid:
-        return undefined;
+        return null;
     }
 
     switch (base) {
       case Base.Octal: {
         const num = parseInt(bare, 8);
-        if (!Number.isSafeInteger(num)) return undefined;
+        if (!Number.isSafeInteger(num)) return null;
         return uint64(num);
       }
       case Base.Decimal:
@@ -62,6 +62,6 @@ export class Numeric {
         return uint64(`0x${bare}`);
     }
 
-    return undefined;
+    return null;
   }
 }

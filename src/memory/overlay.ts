@@ -1,6 +1,5 @@
 import { Base64 } from '../misc/base64.js';
 import { Mem } from './mem.js';
-import { Util } from '../misc/util.js';
 
 export class Overlay {
   private readonly address: NativePointer;
@@ -24,8 +23,8 @@ export class Overlay {
     const thisEnd = this.address.add(this.data.length);
     const otherEnd = addr.add(data.length);
 
-    const overlapStart = Util.maxPtr(addr, this.address);
-    const overlapEnd = Util.minPtr(otherEnd, thisEnd);
+    const overlapStart = Overlay.maxPtr(addr, this.address);
+    const overlapEnd = Overlay.minPtr(otherEnd, thisEnd);
 
     const thisOverlapOffset = overlapStart.sub(this.address).toUInt32();
     const otherOverlapOffset = overlapStart.sub(addr).toUInt32();
@@ -37,6 +36,16 @@ export class Overlay {
     );
 
     data.set(thisOverlapData, otherOverlapOffset);
+  }
+
+  public static maxPtr(a: NativePointer, b: NativePointer): NativePointer {
+    if (a.compare(b) > 0) return a;
+    else return b;
+  }
+
+  public static minPtr(a: NativePointer, b: NativePointer): NativePointer {
+    if (a.compare(b) < 0) return a;
+    else return b;
   }
 
   public static overlays: [string, Overlay][] = [];

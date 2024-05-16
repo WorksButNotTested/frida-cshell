@@ -13,8 +13,8 @@ import { Token } from '../io/token.js';
 import { Mem } from '../memory/mem.js';
 import { Overlay } from '../memory/overlay.js';
 import { Base64 } from '../misc/base64.js';
+import { Format } from '../misc/format.js';
 import { Numeric } from '../misc/numeric.js';
-import { Util } from '../misc/util.js';
 import { History } from '../terminal/history.js';
 import { Line } from '../terminal/line.js';
 import { Var } from '../vars/var.js';
@@ -99,6 +99,7 @@ export class SrcCmdLet extends CmdLet {
       DumpCmdLet: DumpCmdLet,
       ExitCmdLet: ExitCmdLet,
       FdCmdLet: FdCmdLet,
+      Format: Format,
       FunctionEntryBpCmdLet: FunctionEntryBpCmdLet,
       FunctionExitBpCmdLet: FunctionExitBpCmdLet,
       HelpCmdLet: HelpCmdLet,
@@ -129,7 +130,6 @@ export class SrcCmdLet extends CmdLet {
       SymCmdLet: SymCmdLet,
       ThreadCmdLet: ThreadCmdLet,
       Token: Token,
-      Util: Util,
       Var: Var,
       VarCmdLet: VarCmdLet,
       Vars: Vars,

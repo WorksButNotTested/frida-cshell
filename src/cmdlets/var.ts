@@ -30,16 +30,15 @@ export class VarCmdLet extends CmdLet {
     return Var.ZERO;
   }
 
-  private runWithNameAndHash(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 2) return undefined;
+  private runWithNameAndHash(tokens: Token[]): Var | null {
+    if (tokens.length !== 2) return null;
 
-    const name = tokens[0]?.getLiteral();
-    if (name === undefined) return undefined;
+    const [a0, a1] = tokens;
+    const [t0, t1] = [a0 as Token, a1 as Token];
 
-    const value = tokens[1]?.getLiteral();
-    if (value === undefined) return undefined;
-
-    if (value !== DELETE_CHAR) return undefined;
+    const name = t0.getLiteral();
+    const value = t1.getLiteral();
+    if (value !== DELETE_CHAR) return null;
 
     const val = Vars.pop(name);
     if (val === null) {
@@ -50,8 +49,8 @@ export class VarCmdLet extends CmdLet {
     }
   }
 
-  private runWithNameAndPointer(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 2) return undefined;
+  private runWithNameAndPointer(tokens: Token[]): Var | null {
+    if (tokens.length !== 2) return null;
 
     const [a0, a1] = tokens;
     const [t0, t1] = [a0 as Token, a1 as Token];
@@ -59,17 +58,17 @@ export class VarCmdLet extends CmdLet {
     const name = t0.getLiteral();
 
     const value = t1.toVar();
-    if (value === null) return undefined;
+    if (value === null) return null;
 
     Vars.push(name, value);
     return value;
   }
 
-  private runWithName(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 1) return undefined;
+  private runWithName(tokens: Token[]): Var | null {
+    if (tokens.length !== 1) return null;
 
-    const name = tokens[0]?.getLiteral();
-    if (name === undefined) return undefined;
+    const t0 = tokens[0] as Token;
+    const name = t0.getLiteral();
 
     const val = Vars.get(name);
     if (val === null) {
@@ -81,8 +80,8 @@ export class VarCmdLet extends CmdLet {
     }
   }
 
-  private runWithoutParams(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 0) return undefined;
+  private runWithoutParams(tokens: Token[]): Var | null {
+    if (tokens.length !== 0) return null;
 
     Output.writeln('Vars:');
     for (const [key, value] of Vars.all()) {
@@ -93,16 +92,16 @@ export class VarCmdLet extends CmdLet {
 
   public run(tokens: Token[]): Var {
     const retWithNameAndHash = this.runWithNameAndHash(tokens);
-    if (retWithNameAndHash !== undefined) return retWithNameAndHash;
+    if (retWithNameAndHash !== null) return retWithNameAndHash;
 
     const retWithNameAndPointer = this.runWithNameAndPointer(tokens);
-    if (retWithNameAndPointer !== undefined) return retWithNameAndPointer;
+    if (retWithNameAndPointer !== null) return retWithNameAndPointer;
 
     const retWithName = this.runWithName(tokens);
-    if (retWithName !== undefined) return retWithName;
+    if (retWithName !== null) return retWithName;
 
     const retWithoutParams = this.runWithoutParams(tokens);
-    if (retWithoutParams !== undefined) return retWithoutParams;
+    if (retWithoutParams !== null) return retWithoutParams;
 
     return this.usage();
   }

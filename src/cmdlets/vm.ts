@@ -37,16 +37,14 @@ export class VmCmdLet extends CmdLet {
       );
   }
 
-  private runWithAddress(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 1) return undefined;
+  private runWithAddress(tokens: Token[]): Var | null {
+    if (tokens.length !== 1) return null;
 
     const t0 = tokens[0] as Token;
-
     const v0 = t0.toVar();
-    if (v0 === null) return undefined;
+    if (v0 === null) return null;
 
     const address = v0.toPointer();
-    if (address === undefined) return undefined;
 
     const matches = Process.enumerateRanges('---').filter(
       r => r.base <= address && r.base.add(r.size) > address,
@@ -86,11 +84,11 @@ export class VmCmdLet extends CmdLet {
     return v0;
   }
 
-  private runWithName(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 1) return undefined;
+  private runWithName(tokens: Token[]): Var | null {
+    if (tokens.length !== 1) return null;
 
-    const name = tokens[0]?.getLiteral();
-    if (name === undefined) return undefined;
+    const t0 = tokens[0] as Token;
+    const name = t0.getLiteral();
 
     const mod = Process.findModuleByName(name);
     if (mod === null) {
@@ -104,8 +102,8 @@ export class VmCmdLet extends CmdLet {
     return Var.ZERO;
   }
 
-  private runWithoutParams(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 0) return undefined;
+  private runWithoutParams(tokens: Token[]): Var | null {
+    if (tokens.length !== 0) return null;
 
     Process.enumerateRanges('---').forEach(r => {
       this.printMapping(r);
@@ -115,13 +113,13 @@ export class VmCmdLet extends CmdLet {
 
   public run(tokens: Token[]): Var {
     const retWithAddress = this.runWithAddress(tokens);
-    if (retWithAddress !== undefined) return retWithAddress;
+    if (retWithAddress !== null) return retWithAddress;
 
     const retWithName = this.runWithName(tokens);
-    if (retWithName !== undefined) return retWithName;
+    if (retWithName !== null) return retWithName;
 
     const retWithoutParams = this.runWithoutParams(tokens);
-    if (retWithoutParams !== undefined) return retWithoutParams;
+    if (retWithoutParams !== null) return retWithoutParams;
 
     return this.usage();
   }

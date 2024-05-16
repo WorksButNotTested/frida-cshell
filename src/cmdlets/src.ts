@@ -149,7 +149,7 @@ export class SrcCmdLet extends CmdLet {
     const func = new Function(`${preamble}${script}`);
     const cmdlet = func.call(gThis);
     Output.writeln(`Found cmdlet: ${cmdlet.name}`);
-    CmdLets.reg(cmdlet);
+    CmdLets.registerCmdlet(cmdlet);
 
     return Var.ZERO;
   }

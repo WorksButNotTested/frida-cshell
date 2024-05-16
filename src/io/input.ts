@@ -26,18 +26,102 @@ export class Input {
 
   private constructor() {}
 
+  public static read(buffer: string) {
+    this.buffer += buffer;
+    while (this.buffer.length !== 0) {
+      this.parse();
+    }
+    this.prompt();
+  }
+
+  private static parse() {
+    switch (this.state) {
+      case InputState.Default:
+        this.parseDefault();
+        break;
+      case InputState.Esc:
+        this.ParseEsc();
+        break;
+      case InputState.Csi:
+        this.parseCsi();
+        break;
+    }
+  }
+
+  private static parseDefault() {
+    const c = this.pop();
+    switch (c) {
+      case CharCode.ESC:
+        this.state = InputState.Esc;
+        break;
+      case CharCode.DEL:
+        History.getCurrent().backspace();
+        break;
+      case CharCode.TAB:
+        /* TODO - Command Completion */
+        break;
+      case CharCode.CR:
+        this.parseEnter();
+        break;
+      case CharCode.FF:
+        Output.writeln(CharCode.CLEAR_SCREEN);
+        Output.writeln(CharCode.CURSOR_TOP_LEFT);
+        Output.banner();
+        break;
+      default:
+        History.getCurrent().push(c);
+        break;
+    }
+  }
+
   private static pop(): number {
     const c = this.buffer.charCodeAt(0);
     this.buffer = this.buffer.slice(1);
     return c;
   }
 
-  private static popIf(buf: string): boolean {
-    if (this.buffer.slice(0, buf.length) === buf) {
-      this.buffer = this.buffer.slice(buf.length);
-      return true;
+  private static parseEnter() {
+    const current = History.getCurrent();
+    if (current.getLength() === 0 || current.peek(1).charAt(0) === '#') {
+      History.clearLine();
+      Output.writeln();
+      Input.prompt();
+      return;
     }
-    return false;
+
+    try {
+      if (this.edit === null) {
+        this.parseEnterDefault();
+      } else {
+        this.parseEnterEdit();
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        Output.writeln(`ERROR: ${error.message}`);
+        Output.writeln(`${error.stack}`, true);
+      } else {
+        Output.writeln(`ERROR: Unknown error`);
+      }
+    } finally {
+      History.clearLine();
+    }
+  }
+
+  public static prompt() {
+    Output.clearLine();
+    if (this.edit === null) {
+      Output.write(Output.bold(this.PROMPT));
+    } else {
+      Output.write(Output.bold(this.EDIT_PROMPT));
+    }
+
+    const cmd = History.getCurrent();
+    const line = cmd.toString();
+    Output.write(line);
+
+    const remain = cmd.getLength() - cmd.getPos();
+    const backspaces = String.fromCharCode(CharCode.BS).repeat(remain);
+    Output.write(backspaces);
   }
 
   private static parseEnterDefault() {
@@ -81,59 +165,6 @@ export class Input {
     } else {
       /* Notify the commandlet of the line */
       edit.addCommandLine(line);
-    }
-  }
-
-  private static parseEnter() {
-    const current = History.getCurrent();
-    if (current.getLength() === 0 || current.peek(1).charAt(0) === '#') {
-      History.clearLine();
-      Output.writeln();
-      Input.prompt();
-      return;
-    }
-
-    try {
-      if (this.edit === null) {
-        this.parseEnterDefault();
-      } else {
-        this.parseEnterEdit();
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        Output.writeln(`ERROR: ${error.message}`);
-        Output.writeln(`${error.stack}`, true);
-      } else {
-        Output.writeln(`ERROR: Unknown error`);
-      }
-    } finally {
-      History.clearLine();
-    }
-  }
-
-  private static parseDefault() {
-    const c = this.pop();
-    switch (c) {
-      case CharCode.ESC:
-        this.state = InputState.Esc;
-        break;
-      case CharCode.DEL:
-        History.getCurrent().backspace();
-        break;
-      case CharCode.TAB:
-        /* TODO - Command Completion */
-        break;
-      case CharCode.CR:
-        this.parseEnter();
-        break;
-      case CharCode.FF:
-        Output.writeln(CharCode.CLEAR_SCREEN);
-        Output.writeln(CharCode.CURSOR_TOP_LEFT);
-        Output.banner();
-        break;
-      default:
-        History.getCurrent().push(c);
-        break;
     }
   }
 
@@ -190,43 +221,12 @@ export class Input {
     this.state = InputState.Default;
   }
 
-  private static parse() {
-    switch (this.state) {
-      case InputState.Default:
-        this.parseDefault();
-        break;
-      case InputState.Esc:
-        this.ParseEsc();
-        break;
-      case InputState.Csi:
-        this.parseCsi();
-        break;
+  private static popIf(buf: string): boolean {
+    if (this.buffer.slice(0, buf.length) === buf) {
+      this.buffer = this.buffer.slice(buf.length);
+      return true;
     }
-  }
-
-  public static prompt() {
-    Output.clearLine();
-    if (this.edit === null) {
-      Output.write(Output.bold(this.PROMPT));
-    } else {
-      Output.write(Output.bold(this.EDIT_PROMPT));
-    }
-
-    const cmd = History.getCurrent();
-    const line = cmd.toString();
-    Output.write(line);
-
-    const remain = cmd.getLength() - cmd.getPos();
-    const backspaces = String.fromCharCode(CharCode.BS).repeat(remain);
-    Output.write(backspaces);
-  }
-
-  public static read(buffer: string) {
-    this.buffer += buffer;
-    while (this.buffer.length !== 0) {
-      this.parse();
-    }
-    this.prompt();
+    return false;
   }
 
   public static suppressEdit(value: boolean) {

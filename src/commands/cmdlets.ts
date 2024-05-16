@@ -38,59 +38,61 @@ import { FdCmdLet } from '../cmdlets/fd.js';
 import { SrcCmdLet } from '../cmdlets/src.js';
 
 export class CmdLets {
-  public static getByName(name: string): CmdLet | null {
-    const cmdlet = this.byName.get(name);
-    return cmdlet ?? null;
+  private static byName: Map<string, CmdLet> = new Map<string, CmdLet>();
+
+  static {
+    this.registerCmdletType(AddCmdLet);
+    this.registerCmdletType(AndCmdLet);
+    this.registerCmdletType(SubCmdLet);
+    this.registerCmdletType(AssemblyCmdLet);
+    this.registerCmdletType(BtCmdLet);
+    this.registerCmdletType(DivCmdLet);
+    this.registerCmdletType(CopyCmdLet);
+    this.registerCmdletType(DumpCmdLet);
+    this.registerCmdletType(ExitCmdLet);
+    this.registerCmdletType(FdCmdLet);
+    this.registerCmdletType(FunctionEntryBpCmdLet);
+    this.registerCmdletType(FunctionExitBpCmdLet);
+    this.registerCmdletType(HelpCmdLet);
+    this.registerCmdletType(HistoryCmdLet);
+    this.registerCmdletType(InsnBpCmdLet);
+    this.registerCmdletType(LdCmdLet);
+    this.registerCmdletType(OrCmdLet);
+    this.registerCmdletType(ReadCmdLet);
+    this.registerCmdletType(ModCmdLet);
+    this.registerCmdletType(MulCmdLet);
+    this.registerCmdletType(NotCmdLet);
+    this.registerCmdletType(ReadBpCmdLet);
+    this.registerCmdletType(RegCmdLet);
+    this.registerCmdletType(ShlCmdLet);
+    this.registerCmdletType(ShrCmdLet);
+    this.registerCmdletType(SrcCmdLet);
+    this.registerCmdletType(SymCmdLet);
+    this.registerCmdletType(ThreadCmdLet);
+    this.registerCmdletType(VarCmdLet);
+    this.registerCmdletType(VmCmdLet);
+    this.registerCmdletType(WriteCmdLet);
+    this.registerCmdletType(WriteBpCmdLet);
+    this.registerCmdletType(XorCmdLet);
+  }
+
+  private static registerCmdletType<T extends CmdLet>(
+    cmdletClass: new () => T,
+  ) {
+    const cmdlet = new cmdletClass();
+    if (cmdlet.isSupported()) this.byName.set(cmdlet.name, cmdlet);
   }
 
   public static all(): CmdLet[] {
     return Array.from(this.byName.values());
   }
 
-  private static byName: Map<string, CmdLet> = new Map<string, CmdLet>();
-
-  static {
-    this.register(AddCmdLet);
-    this.register(AndCmdLet);
-    this.register(SubCmdLet);
-    this.register(AssemblyCmdLet);
-    this.register(BtCmdLet);
-    this.register(DivCmdLet);
-    this.register(CopyCmdLet);
-    this.register(DumpCmdLet);
-    this.register(ExitCmdLet);
-    this.register(FdCmdLet);
-    this.register(FunctionEntryBpCmdLet);
-    this.register(FunctionExitBpCmdLet);
-    this.register(HelpCmdLet);
-    this.register(HistoryCmdLet);
-    this.register(InsnBpCmdLet);
-    this.register(LdCmdLet);
-    this.register(OrCmdLet);
-    this.register(ReadCmdLet);
-    this.register(ModCmdLet);
-    this.register(MulCmdLet);
-    this.register(NotCmdLet);
-    this.register(ReadBpCmdLet);
-    this.register(RegCmdLet);
-    this.register(ShlCmdLet);
-    this.register(ShrCmdLet);
-    this.register(SrcCmdLet);
-    this.register(SymCmdLet);
-    this.register(ThreadCmdLet);
-    this.register(VarCmdLet);
-    this.register(VmCmdLet);
-    this.register(WriteCmdLet);
-    this.register(WriteBpCmdLet);
-    this.register(XorCmdLet);
+  public static getByName(name: string): CmdLet | null {
+    const cmdlet = this.byName.get(name);
+    return cmdlet ?? null;
   }
 
-  private static register<T extends CmdLet>(cmdletClass: new () => T) {
-    const cmdlet = new cmdletClass();
-    if (cmdlet.isSupported()) this.byName.set(cmdlet.name, cmdlet);
-  }
-
-  public static reg(cmdlet: CmdLet) {
+  public static registerCmdlet(cmdlet: CmdLet) {
     if (cmdlet.isSupported()) this.byName.set(cmdlet.name, cmdlet);
   }
 }

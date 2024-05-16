@@ -42,10 +42,10 @@ export class Output {
 
     this.writeln('Attached to:');
     this.writeln(`\tPID:  ${this.green(Process.id.toString())}`);
-
+    
     const modules = Process.enumerateModules();
     if (modules.length === 0) return;
-
+    
     const first = modules[0] as Module;
     this.writeln(`\tName: ${this.green(first.name)}`);
   }

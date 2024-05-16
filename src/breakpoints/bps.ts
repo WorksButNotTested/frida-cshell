@@ -97,7 +97,7 @@ export class Bps {
 
     if (!this.byIndex.has(key))
       throw new Error(`breakpoint #${idx} doesn't exist`);
-    
+
     const bp = this.byIndex.get(key) as Bp;
     this.byIndex.delete(key);
     bp.disable();

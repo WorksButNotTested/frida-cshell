@@ -112,35 +112,42 @@ export class AssemblyCmdLet extends CmdLet {
     }
   }
 
-  private runWithLength(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 2) return undefined;
+  private runWithLength(tokens: Token[]): Var | null {
+    if (tokens.length !== 2) return null;
 
-    const address = tokens[0]?.toVar()?.toPointer();
-    if (address === undefined) return undefined;
+    const [a0, a1] = tokens;
+    const [t0, t1] = [a0 as Token, a1 as Token];
+    const [v0, v1] = [t0.toVar(), t1.toVar()];
 
-    const length = tokens[1]?.toVar()?.toU64().toNumber();
-    if (length === undefined) return undefined;
+    if (v0 === null) return null;
+    if (v1 === null) return null;
+
+    const address = v0.toPointer();
+    const length = v1.toU64().toNumber();
 
     if (length > 100) throw new Error(`too many instructions: ${length}`);
 
     return this.list(address, length);
   }
 
-  private runWithoutLength(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 1) return undefined;
+  private runWithoutLength(tokens: Token[]): Var | null {
+    if (tokens.length !== 1) return null;
 
-    const address = tokens[0]?.toVar()?.toPointer();
-    if (address === undefined) return undefined;
+    const t0 = tokens[0] as Token;
+    const v0 = t0.toVar();
+    if (v0 === null) return null;
+
+    const address = v0.toPointer();
 
     return this.list(address, DEFAULT_LENGTH);
   }
 
   public run(tokens: Token[]): Var {
     const retWithLength = this.runWithLength(tokens);
-    if (retWithLength !== undefined) return retWithLength;
+    if (retWithLength !== null) return retWithLength;
 
     const retWithoutLength = this.runWithoutLength(tokens);
-    if (retWithoutLength !== undefined) return retWithoutLength;
+    if (retWithoutLength !== null) return retWithoutLength;
 
     return this.usage();
   }

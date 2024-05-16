@@ -93,7 +93,7 @@ w n address value - write 'n' bytes to memory
     const [a0, a1, a2] = tokens;
     const [t0, t1, t2] = [a0 as Token, a1 as Token, a2 as Token];
     const [v1, v2] = [t1.toVar(), t2.toVar()];
-    
+
     if (v1 === null) return this.usage();
     if (v2 === null) return this.usage();
 

@@ -8,14 +8,14 @@ export class Parser {
     this.line = line;
   }
 
-  private pop(): string | undefined {
-    if (this.line.length === 0) return undefined;
-    const c = this.line[0];
+  private pop(): string | null {
+    if (this.line.length === 0) return null;
+    const c = this.line[0] as string;
     this.line = this.line.slice(1);
     return c;
   }
 
-  private popEscaped(): string | undefined {
+  private popEscaped(): string | null {
     const c = this.pop();
     if (!this.inEscape) {
       return c;
@@ -38,7 +38,7 @@ export class Parser {
 
     while (true) {
       const c = this.popEscaped();
-      if (c === undefined) break;
+      if (c === null) break;
 
       switch (c) {
         case '\\':

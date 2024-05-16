@@ -54,7 +54,7 @@ export class VarCmdLet extends CmdLet {
     if (tokens.length !== 2) return undefined;
 
     const [a0, a1] = tokens;
-    const [t0, t1] = [a0 as Token, a1 as Token];    
+    const [t0, t1] = [a0 as Token, a1 as Token];
 
     const name = t0.getLiteral();
 

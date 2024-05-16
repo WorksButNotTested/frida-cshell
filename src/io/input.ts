@@ -21,7 +21,7 @@ export class Input {
 
   private static buffer: string = '';
   private static state: InputState = InputState.Default;
-  private static edit: CmdLetEdit | undefined = undefined;
+  private static edit: CmdLetEdit | null = null;
   private static editSuppressed: boolean = false;
 
   private constructor() {}
@@ -48,7 +48,7 @@ export class Input {
      * If our command hasn't caused us to enter edit mode print the result,
      * otherwise we will defer until the edit is complete.
      */
-    if (this.edit === undefined) {
+    if (this.edit === null) {
       Output.writeRet();
     }
   }
@@ -66,7 +66,7 @@ export class Input {
       try {
         edit.done();
       } finally {
-        this.edit = undefined;
+        this.edit = null;
       }
       Output.writeRet();
     } else if (line === ABORT_CHAR) {
@@ -74,9 +74,9 @@ export class Input {
       try {
         edit.abort();
       } finally {
-        this.edit = undefined;
+        this.edit = null;
       }
-      this.edit = undefined;
+      this.edit = null;
       Output.writeRet();
     } else {
       /* Notify the commandlet of the line */
@@ -94,7 +94,7 @@ export class Input {
     }
 
     try {
-      if (this.edit === undefined) {
+      if (this.edit === null) {
         this.parseEnterDefault();
       } else {
         this.parseEnterEdit();
@@ -206,7 +206,7 @@ export class Input {
 
   public static prompt() {
     Output.clearLine();
-    if (this.edit === undefined) {
+    if (this.edit === null) {
       Output.write(Output.bold(this.PROMPT));
     } else {
       Output.write(Output.bold(this.EDIT_PROMPT));

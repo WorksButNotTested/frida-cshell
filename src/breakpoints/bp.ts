@@ -29,20 +29,20 @@ export class Bp {
   private readonly _idx: number;
 
   private _hits: number;
-  private _addr: Var | undefined;
-  private _literal: string | undefined;
+  private _addr: Var | null;
+  private _literal: string | null;
   private _length: number;
 
   private _lines: string[] = [];
-  private _listener: InvocationListener | undefined;
-  private _overlay: string | undefined = undefined;
+  private _listener: InvocationListener | null;
+  private _overlay: string | null = null;
 
   public constructor(
     type: BpType,
     idx: number,
     hits: number,
-    addr: Var | undefined,
-    literal: string | undefined,
+    addr: Var | null,
+    literal: string | null,
     length: number = 0,
   ) {
     this._type = type;
@@ -51,7 +51,7 @@ export class Bp {
     this._addr = addr;
     this._literal = literal;
     this._length = length;
-    this._listener = undefined;
+    this._listener = null;
   }
 
   public get type(): BpType {
@@ -62,11 +62,11 @@ export class Bp {
     return this._idx;
   }
 
-  public get address(): Var | undefined {
+  public get address(): Var | null {
     return this._addr;
   }
 
-  public get length(): number | undefined {
+  public get length(): number | null {
     return this._length;
   }
 
@@ -74,18 +74,18 @@ export class Bp {
     return this._hits;
   }
 
-  public set address(addr: Var | undefined) {
-    if (addr === undefined) return;
+  public set address(addr: Var | null) {
+    if (addr === null) return;
     this._addr = addr;
   }
 
-  public set literal(literal: string | undefined) {
-    if (literal === undefined) return;
+  public set literal(literal: string | null) {
+    if (literal === null) return;
     this._literal = literal;
   }
 
-  public set length(length: number | undefined) {
-    if (length === undefined) return;
+  public set length(length: number | null) {
+    if (length === null) return;
     this._length = length;
   }
 
@@ -137,17 +137,17 @@ export class Bp {
   }
 
   public disableCode() {
-    if (this._listener === undefined) return;
+    if (this._listener === null) return;
     this._listener.detach();
-    this._listener = undefined;
+    this._listener = null;
     Interceptor.flush();
-    if (this._overlay === undefined) return;
+    if (this._overlay === null) return;
     Overlay.remove(this._overlay);
   }
 
   private enableCode() {
-    if (this._addr === undefined) return;
-    if (this._listener !== undefined) return;
+    if (this._addr === null) return;
+    if (this._listener !== null) return;
     this._overlay = Overlay.add(this._addr.toPointer(), BP_LENGTH);
     const addr = this._addr;
     const bp = this;
@@ -215,7 +215,7 @@ export class Bp {
     threadId: ThreadId,
     ctx: CpuContext,
     returnAddress: NativePointer,
-    retVal: InvocationReturnValue | undefined = undefined,
+    retVal: InvocationReturnValue | null = null,
   ) {
     if (this._hits === 0) return;
     else if (this._hits > 0) this._hits--;
@@ -228,7 +228,7 @@ export class Bp {
     Regs.setContext(ctx);
     Regs.setReturnAddress(returnAddress);
 
-    if (retVal !== undefined) Regs.setRetVal(retVal);
+    if (retVal !== null) Regs.setRetVal(retVal);
 
     this.runCommands();
   }
@@ -260,16 +260,15 @@ export class Bp {
   }
 
   public overlaps(
-    address: NativePointer | undefined,
-    length: number | undefined,
+    address: NativePointer | null,
+    length: number | null,
   ): boolean {
-    if (address === undefined) return false;
-    if (length === undefined) return false;
-
-    const start = this._addr?.toPointer();
-    if (start === undefined) return false;
-
+    if (address === null) return false;
+    if (length === null) return false;
+    if (this._addr === null) return false;
     if (this._length === 0) return false;
+
+    const start = this._addr.toPointer();
 
     if (start.add(this._length).compare(address) <= 0) return false;
     if (start.compare(address.add(length)) >= 0) return false;
@@ -287,12 +286,10 @@ export class Bp {
   }
 
   private get addrString(): string {
-    const p = this._addr?.toPointer();
-    if (p !== undefined) {
-      return Format.toHexString(p);
-    } else {
-      return 'unassigned';
-    }
+    if (this._addr === null) return 'unassigned';
+
+    const p = this._addr.toPointer();
+    return Format.toHexString(p);
   }
 
   private get lengthString(): string {

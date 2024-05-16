@@ -75,7 +75,7 @@ The token class represents each token the user has entered on the command line (
 export class Token {
   ...
   public getLiteral(): string;
-  public toVar(): Var | undefined;
+  public toVar(): Var | null;
   ...
 }
 ```
@@ -111,25 +111,25 @@ Similarly, the `run` method of each commandlet is expected to return a `Var` typ
 # Parsing
 Below is snippet of the `dump` commandlet showing how it parses it's two arguments. The first is the address which to dump and the second is the length. Note that the first argument is also used as the return value for this commandlet. Note also that the second argument is also converted from a `UInt64` to a `number` type, since this is what is reqired by the `hexdump` function called by `this.dump`. This is used in many commands where the parameter is likely to be a small number and therefore loss of precision is not a concern.
 ```js
-  private runWithLength(tokens: Token[]): Var | undefined {
-    if (tokens.length != 2) return undefined;
+  private runWithLength(tokens: Token[]): Var | null {
+    if (tokens.length !== 2) return null;
 
-    const t0 = tokens[0]?.toVar();
-    if (t0 === undefined) return undefined;
+    const [a0, a1] = tokens;
+    const [t0, t1] = [a0 as Token, a1 as Token];
+    const [v0, v1] = [t0.toVar(), t1.toVar()];
 
-    const address = t0.toPointer();
-    if (address === undefined) return undefined;
+    if (v0 === null) return null;
+    if (v1 === null) return null;
 
-    const length = tokens[1]?.toVar()?.toU64().toNumber();
-    if (length === undefined) return undefined;
-
+    const address = v0.toPointer();
+    const length = v1.toU64().toNumber();
     this.dump(address, length);
-    return t0;
+    return v0;
   }
 
   public run(tokens: Token[]): Var {
     const retWithLength = this.runWithLength(tokens);
-    if (retWithLength !== undefined) return retWithLength;
+    if (retWithLength !== null) return retWithLength;
 
     ...
 

@@ -56,17 +56,20 @@ export class Output {
     Output.writeln(`ret: ${Output.bold(Vars.getRet().toString())}`);
   }
 
-  public static write(buffer?: string, verbose: boolean = false) {
+  public static write(buffer: string | null = null, verbose: boolean = false) {
     if (verbose && !this.verbose) return;
 
-    if (buffer !== undefined) {
+    if (buffer !== null) {
       const fixed = buffer.replace(new RegExp('\n', 'g'), '\r\n');
       send(['frida:stderr', fixed]);
     }
   }
 
-  public static writeln(buffer?: string, verbose: boolean = false) {
-    if (buffer !== undefined) {
+  public static writeln(
+    buffer: string | null = null,
+    verbose: boolean = false,
+  ) {
+    if (buffer !== null) {
       this.write(`${buffer}\n`, verbose);
     } else {
       this.write('\n', verbose);

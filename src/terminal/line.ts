@@ -2,8 +2,8 @@ export class Line {
   private line: string;
   private pos: number;
 
-  public constructor(val?: string) {
-    if (val === undefined) {
+  public constructor(val: string | null = null) {
+    if (val === null) {
       this.line = '';
       this.pos = 0;
     } else {

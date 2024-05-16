@@ -162,22 +162,22 @@ export class SymCmdLet extends CmdLet {
   private runWithAddress(tokens: Token[]): Var | undefined {
     if (tokens.length !== 1) return undefined;
 
-    const t0 = tokens[0]?.toVar();
-    if (t0 === undefined) return undefined;
+    const t0 = tokens[0] as Token;
+    const v0 = t0.toVar();
+    if (v0 === null) return undefined;
 
-    const address = t0.toPointer();
-    if (address === undefined) return undefined;
+    const address = v0.toPointer();
 
     const debug = DebugSymbol.fromAddress(address);
     if (!debug.address.isNull() && debug.name !== null) {
       this.printDebugSymbol(debug);
-      return t0;
+      return v0;
     }
 
     Output.writeln(
       `No symbol found at address: ${Format.toHexString(address)}`,
     );
-    return t0;
+    return v0;
   }
 
   public run(tokens: Token[]): Var {

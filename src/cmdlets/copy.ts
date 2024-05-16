@@ -26,17 +26,17 @@ export class CopyCmdLet extends CmdLet {
   public run(tokens: Token[]): Var {
     if (tokens.length !== 3) return this.usage();
 
-    const t0 = tokens[0]?.toVar();
-    if (t0 === undefined) return this.usage();
+    const [a0, a1, a2] = tokens;
+    const [t0, t1, t2] = [a0 as Token, a1 as Token, a2 as Token];
+    const [v0, v1, v2] = [t0.toVar(), t1.toVar(), t2.toVar()];
 
-    const dst = t0.toPointer();
-    if (dst === undefined) return this.usage();
+    if (v0 === null) return this.usage();
+    if (v1 === null) return this.usage();
+    if (v2 === null) return this.usage();
 
-    const src = tokens[1]?.toVar()?.toPointer();
-    if (src === undefined) return this.usage();
-
-    const len = tokens[2]?.toVar()?.toU64().toNumber();
-    if (len === undefined) return this.usage();
+    const dst = v0.toPointer();
+    const src = v1.toPointer();
+    const len = v2.toU64().toNumber();
 
     try {
       const buff = Mem.readBytes(src, len);
@@ -46,6 +46,6 @@ export class CopyCmdLet extends CmdLet {
         `failed to copy ${len} bytes from ${Format.toHexString(src)} to ${Format.toHexString(dst)}, ${error}`,
       );
     }
-    return t0;
+    return v0;
   }
 }

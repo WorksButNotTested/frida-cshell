@@ -10,7 +10,7 @@ export class Command {
     const args: NativePointer[] = [];
     for (const token of tokens) {
       const p = token.toVar();
-      if (p === undefined) {
+      if (p === null) {
         throw new Error(`failed to parse token: ${token.getLiteral()}`);
       }
 

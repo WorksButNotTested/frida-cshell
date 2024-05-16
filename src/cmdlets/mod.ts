@@ -35,11 +35,11 @@ export class ModCmdLet extends CmdLet {
   private runWithAddress(tokens: Token[]): Var | undefined {
     if (tokens.length !== 1) return undefined;
 
-    const t0 = tokens[0]?.toVar();
-    if (t0 === undefined) return undefined;
+    const t0 = tokens[0] as Token;
+    const v0 = t0.toVar();
+    if (v0 === null) return undefined;
 
-    const address = t0.toPointer();
-    if (address === undefined) return undefined;
+    const address = v0.toPointer();
 
     const matches = Process.enumerateModules().filter(
       m => m.base <= address && m.base.add(m.size) > address,
@@ -55,7 +55,7 @@ export class ModCmdLet extends CmdLet {
         `Address: ${Format.toHexString(address)} is not found within a module:`,
       );
     }
-    return t0;
+    return v0;
   }
 
   private runWithName(tokens: Token[]): Var | undefined {

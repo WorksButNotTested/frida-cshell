@@ -45,30 +45,31 @@ export class DumpCmdLet extends CmdLet {
   private runWithLength(tokens: Token[]): Var | undefined {
     if (tokens.length !== 2) return undefined;
 
-    const t0 = tokens[0]?.toVar();
-    if (t0 === undefined) return undefined;
+    const [a0, a1] = tokens;
+    const [t0, t1] = [a0 as Token, a1 as Token];
+    const [v0, v1] = [t0.toVar(), t1.toVar()];
 
-    const address = t0.toPointer();
-    if (address === undefined) return undefined;
+    if (v0 === null) return undefined;
+    if (v1 === null) return undefined;
 
-    const length = tokens[1]?.toVar()?.toU64().toNumber();
-    if (length === undefined) return undefined;
-
+    const address = v0.toPointer();
+    const length = v1.toU64().toNumber();
     this.dump(address, length);
-    return t0;
+    return v0;
   }
 
   private runWithoutLength(tokens: Token[]): Var | undefined {
     if (tokens.length !== 1) return undefined;
 
-    const t0 = tokens[0]?.toVar();
-    if (t0 === undefined) return undefined;
+    const t0 = tokens[0] as Token;
+    const v0 = t0.toVar();
+    if (v0 === null) return undefined;
 
-    const address = t0.toPointer();
+    const address = v0.toPointer();
     if (address === undefined) return undefined;
 
     this.dump(address, DEFAULT_LENGTH);
-    return t0;
+    return v0;
   }
 
   public run(tokens: Token[]): Var {

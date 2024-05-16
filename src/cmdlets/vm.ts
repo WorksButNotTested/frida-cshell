@@ -40,10 +40,12 @@ export class VmCmdLet extends CmdLet {
   private runWithAddress(tokens: Token[]): Var | undefined {
     if (tokens.length !== 1) return undefined;
 
-    const t0 = tokens[0]?.toVar();
-    if (t0 === undefined) return undefined;
+    const t0 = tokens[0] as Token;
 
-    const address = t0.toPointer();
+    const v0 = t0.toVar();
+    if (v0 === null) return undefined;
+
+    const address = v0.toPointer();
     if (address === undefined) return undefined;
 
     const matches = Process.enumerateRanges('---').filter(
@@ -55,7 +57,7 @@ export class VmCmdLet extends CmdLet {
         `Address: ${Format.toHexString(address)} is within allocation:`,
       );
       this.printMapping(r);
-      return t0;
+      return v0;
     } else {
       Output.writeln(
         `Address: ${Format.toHexString(address)} is not found within an allocation:`,
@@ -81,7 +83,7 @@ export class VmCmdLet extends CmdLet {
         this.printMapping(r);
       }
     }
-    return t0;
+    return v0;
   }
 
   private runWithName(tokens: Token[]): Var | undefined {

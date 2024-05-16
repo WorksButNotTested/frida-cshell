@@ -139,7 +139,7 @@ ${Output.bold('NOTE:')} Set hits to '*' for unlimited breakpoint.
     if (literal === undefined) return undefined;
 
     const addr = tokens[1]?.toVar();
-    if (addr === undefined) return undefined;
+    if (addr === null) return undefined;
 
     const length = this.parseLength(tokens[2]);
     if (length === undefined) return undefined;
@@ -211,7 +211,7 @@ ${Output.bold('NOTE:')} Set hits to '*' for unlimited breakpoint.
     if (literal === undefined) return undefined;
 
     const addr = tokens[2]?.toVar();
-    if (addr === undefined) return undefined;
+    if (addr === null) return undefined;
 
     const length = this.parseLength(tokens[3]);
     if (length === undefined) return length;

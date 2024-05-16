@@ -22,7 +22,7 @@ w n address value - write 'n' bytes to memory
     return Var.ZERO;
   }
 
-  private getLength(token: Token | undefined): number | undefined {
+  private getLength(token: Token): number | undefined {
     if (token === undefined) return undefined;
     const literal = token.getLiteral();
     switch (literal) {
@@ -90,16 +90,20 @@ w n address value - write 'n' bytes to memory
   public run(tokens: Token[]): Var {
     if (tokens.length !== 3) return this.usage();
 
-    const length = this.getLength(tokens[0]);
+    const [a0, a1, a2] = tokens;
+    const [t0, t1, t2] = [a0 as Token, a1 as Token, a2 as Token];
+    const [v1, v2] = [t1.toVar(), t2.toVar()];
+    
+    if (v1 === null) return this.usage();
+    if (v2 === null) return this.usage();
+
+    const length = this.getLength(t0);
     if (length === undefined) return this.usage();
 
-    const t1 = tokens[1]?.toVar();
-    if (t1 === undefined) return this.usage();
-
-    const address = t1.toPointer();
+    const address = v1.toPointer();
     if (address === undefined) return this.usage();
 
-    const val = tokens[2]?.toVar()?.toU64();
+    const val = v2.toU64();
     if (val === undefined) return this.usage();
 
     const max = this.getMax(length);
@@ -114,6 +118,6 @@ w n address value - write 'n' bytes to memory
     const buff = Mem.readBytes(copy, length);
     Mem.writeBytes(address, buff);
 
-    return t1;
+    return v1;
   }
 }

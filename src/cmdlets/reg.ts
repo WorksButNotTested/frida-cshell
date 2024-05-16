@@ -29,11 +29,14 @@ export class RegCmdLet extends CmdLet {
   private runWithNameAndPointer(tokens: Token[]): Var | undefined {
     if (tokens.length !== 2) return undefined;
 
-    const name = tokens[0]?.getLiteral();
+    const [a0, a1] = tokens;
+    const [t0, t1] = [a0 as Token, a1 as Token];
+
+    const name = t0.getLiteral();
     if (name === undefined) return undefined;
 
-    const value = tokens[1]?.toVar();
-    if (value === undefined) return undefined;
+    const value = t1.toVar();
+    if (value === null) return undefined;
 
     Regs.set(name, value);
     Output.writeln(`Register ${name}, set to value: ${value.toString()}`);

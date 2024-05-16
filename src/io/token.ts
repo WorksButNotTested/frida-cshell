@@ -14,7 +14,7 @@ export class Token {
     return this.value;
   }
 
-  public toVar(): Var | undefined {
+  public toVar(): Var | null {
     if (
       this.value.length > 1 &&
       this.value.startsWith('"') &&
@@ -39,6 +39,6 @@ export class Token {
     if (!param.address.isNull())
       return new Var(uint64(param.address.toString()));
 
-    return undefined;
+    return null;
   }
 }

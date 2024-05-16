@@ -7,7 +7,7 @@ class MemoryCallbacks implements MemoryAccessCallbacks {
     const bps = MemoryBps.getActiveBps();
     const bp = bps[idx];
     if (bp === undefined)
-      throw new Error(`Failed to find memory breakpoint idx: ${idx}`);
+      throw new Error(`failed to find memory breakpoint idx: ${idx}`);
     bp.breakMemory(details);
     MemoryBps.refresh();
   };

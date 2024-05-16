@@ -17,7 +17,7 @@ export class Vars {
 
   public static push(name: string, val: Var) {
     if (!this.isNameValid(name))
-      throw new Error(`Variable name '${name}' is invalid`);
+      throw new Error(`variable name '${name}' is invalid`);
     this.map.set(name, val);
   }
 

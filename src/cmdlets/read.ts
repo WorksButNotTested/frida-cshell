@@ -69,7 +69,7 @@ r n address - read 'n' bytes from memory
         return val;
       }
       default:
-        throw new Error(`Unsupported length: ${length}`);
+        throw new Error(`unsupported length: ${length}`);
     }
   }
 

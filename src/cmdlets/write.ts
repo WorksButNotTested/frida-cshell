@@ -50,7 +50,7 @@ w n address value - write 'n' bytes to memory
       case 8:
         return uint64('0xffffffffffffffff');
       default:
-        throw new Error(`Unsupported length: ${length}`);
+        throw new Error(`unsupported length: ${length}`);
     }
   }
 
@@ -83,7 +83,7 @@ w n address value - write 'n' bytes to memory
         );
         break;
       default:
-        throw new Error(`Unsupported length: ${length}`);
+        throw new Error(`unsupported length: ${length}`);
     }
   }
 
@@ -105,7 +105,7 @@ w n address value - write 'n' bytes to memory
     const max = this.getMax(length);
     if (val.compare(max) > 0) {
       throw new Error(
-        `Value: ${Util.toHexString(val)} larger than maximum ${Util.toHexString(max)}`,
+        `value: ${Util.toHexString(val)} larger than maximum ${Util.toHexString(max)}`,
       );
     }
 

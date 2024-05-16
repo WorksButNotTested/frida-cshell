@@ -59,7 +59,7 @@ export class Overlay {
 
   public static remove(key: string) {
     const index = this.overlays.findIndex(([k, _v]) => k === key);
-    if (index === -1) throw new Error(`Failed to find overlay key: ${key}`);
+    if (index === -1) throw new Error(`failed to find overlay key: ${key}`);
     this.overlays.splice(index, 1);
   }
 

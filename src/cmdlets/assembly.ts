@@ -32,7 +32,7 @@ export class AssemblyCmdLet extends CmdLet {
       case 'x64':
         return 15;
       default:
-        throw new Error(`Unsupported architecutre: ${Process.arch}`);
+        throw new Error(`unsupported architecutre: ${Process.arch}`);
     }
   }
 
@@ -87,7 +87,7 @@ export class AssemblyCmdLet extends CmdLet {
         const insn = Instruction.parse(copy.add(isThumb ? 1 : 0));
         if (insn.size > buffer.length)
           throw new Error(
-            `Failed to parse instruction at ${cursor}, not enough bytes: ${buffer.length}`,
+            `failed to parse instruction at ${cursor}, not enough bytes: ${buffer.length}`,
           );
 
         const idx = `#${i.toString()}`.padStart(4);
@@ -107,7 +107,7 @@ export class AssemblyCmdLet extends CmdLet {
       return new Var(uint64(cursor.toString()));
     } catch (error) {
       throw new Error(
-        `Failed to parse instruction at ${Util.toHexString(cursor)} (${Util.toHexString(buffer.byteLength)} bytes available), ${error}`,
+        `failed to parse instruction at ${Util.toHexString(cursor)} (${Util.toHexString(buffer.byteLength)} bytes available), ${error}`,
       );
     }
   }
@@ -121,7 +121,7 @@ export class AssemblyCmdLet extends CmdLet {
     const length = tokens[1]?.toVar()?.toU64().toNumber();
     if (length === undefined) return undefined;
 
-    if (length > 100) throw new Error(`Too many instructions: ${length}`);
+    if (length > 100) throw new Error(`too many instructions: ${length}`);
 
     return this.list(address, length);
   }

@@ -9,7 +9,7 @@ export class Mem {
       const data = address.readByteArray(length);
       if (data === null)
         throw new Error(
-          `Failed to read ${Util.toHexString(length)} bytes from ${Util.toHexString(address)}`,
+          `failed to read ${Util.toHexString(length)} bytes from ${Util.toHexString(address)}`,
         );
       const buffer = new Uint8Array(data);
       Overlay.fix(address, buffer);
@@ -24,7 +24,7 @@ export class Mem {
     try {
       if (Overlay.overlaps(address, data.length)) {
         throw new Error(
-          `Failed to write ${Util.toHexString(data.length)} bytes to ${Util.toHexString(address)} as the address has been modified (check for breakpoints)`,
+          `failed to write ${Util.toHexString(data.length)} bytes to ${Util.toHexString(address)} as the address has been modified (check for breakpoints)`,
         );
       }
       this.modifyMemory(address, data);

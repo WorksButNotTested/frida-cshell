@@ -37,7 +37,7 @@ export class Bps {
 
     if (overlapping !== undefined)
       throw new Error(
-        `Breakpoint overlaps existing breakpoint:\n\t${overlapping}`,
+        `breakpoint overlaps existing breakpoint:\n\t${overlapping}`,
       );
 
     const bp = new Bp(type, idx, hits, addr, literal, length);
@@ -62,7 +62,7 @@ export class Bps {
   ): Bp {
     const key = this.buildKey(type, idx);
     const bp = this.byIndex.get(key);
-    if (bp === undefined) throw new Error(`Breakpoint #${idx} doesn't exist`);
+    if (bp === undefined) throw new Error(`breakpoint #${idx} doesn't exist`);
 
     const overlapping = Array.from(this.byIndex.values())
       .filter(b => b !== bp)
@@ -70,7 +70,7 @@ export class Bps {
 
     if (overlapping !== undefined)
       throw new Error(
-        `Breakpoint overlaps existing breakpoint:\n\t${overlapping}`,
+        `breakpoint overlaps existing breakpoint:\n\t${overlapping}`,
       );
 
     bp.disable();
@@ -86,7 +86,7 @@ export class Bps {
   public static delete(type: BpType, idx: number): Bp {
     const key = this.buildKey(type, idx);
     const bp = this.byIndex.get(key);
-    if (bp === undefined) throw new Error(`Breakpoint #${idx} doesn't exist`);
+    if (bp === undefined) throw new Error(`breakpoint #${idx} doesn't exist`);
     this.byIndex.delete(key);
     bp.disable();
     return bp;
@@ -97,14 +97,14 @@ export class Bps {
   }
 
   public static done() {
-    if (this.last === undefined) throw new Error('No breakpoint to modify');
+    if (this.last === undefined) throw new Error('no breakpoint to modify');
     this.last.lines = this.lines;
     this.last.enable();
     this.last = undefined;
   }
 
   public static abort() {
-    if (this.last === undefined) throw new Error('No breakpoint to modify');
+    if (this.last === undefined) throw new Error('no breakpoint to modify');
     this.last.enable();
     this.last = undefined;
   }

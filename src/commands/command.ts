@@ -11,7 +11,7 @@ export class Command {
     for (const token of tokens) {
       const p = token.toVar();
       if (p === undefined) {
-        throw new Error(`Failed to parse token: ${token.getLiteral()}`);
+        throw new Error(`failed to parse token: ${token.getLiteral()}`);
       }
 
       ptrs.push(p);
@@ -67,14 +67,14 @@ export class Command {
     }
 
     const t0 = tokens[0];
-    if (t0 === undefined) throw new Error('Failed to tokenize command');
+    if (t0 === undefined) throw new Error('failed to tokenize command');
 
     const cmdlet = CmdLets.getByName(t0.getLiteral());
     if (cmdlet === undefined) {
       const addr = t0.toVar()?.toPointer();
       if (addr === undefined) {
         throw new Error(
-          'Request was not understood as an internal command or a detected symbol',
+          'request was not understood as an internal command or a detected symbol',
         );
       }
       return this.executeAddress(addr, tokens.slice(1));

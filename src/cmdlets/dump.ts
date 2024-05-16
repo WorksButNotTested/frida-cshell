@@ -37,7 +37,7 @@ export class DumpCmdLet extends CmdLet {
       Output.writeln(dump);
     } catch (error) {
       throw new Error(
-        `Failed to read ${Util.toHexString(length)} bytes from ${Util.toHexString(address)}, ${error}`,
+        `failed to read ${Util.toHexString(length)} bytes from ${Util.toHexString(address)}, ${error}`,
       );
     }
   }

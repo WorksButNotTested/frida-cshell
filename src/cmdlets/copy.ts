@@ -43,7 +43,7 @@ export class CopyCmdLet extends CmdLet {
       Mem.writeBytes(dst, buff);
     } catch (error) {
       throw new Error(
-        `Failed to copy ${len} bytes from ${Util.toHexString(src)} to ${Util.toHexString(dst)}, ${error}`,
+        `failed to copy ${len} bytes from ${Util.toHexString(src)} to ${Util.toHexString(dst)}, ${error}`,
       );
     }
     return t0;

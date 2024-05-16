@@ -77,7 +77,7 @@ export class Parser {
       }
     }
     if (inQuoteString) {
-      throw new Error('Unescaped quotation');
+      throw new Error('unescaped quotation');
     }
 
     if (current.length !== 0) {

@@ -77,7 +77,7 @@ export class BtCmdLet extends CmdLet {
     const ctx = Regs.getContext();
     if (ctx === null)
       throw new Error(
-        `Backtrace requires context, only available in breakpoints`,
+        `backtrace requires context, only available in breakpoints`,
       );
 
     Output.writeln(

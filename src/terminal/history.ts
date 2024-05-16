@@ -54,7 +54,7 @@ export class History {
 
   public static rerun(idx: number): Var {
     const str = this.history[idx];
-    if (str === undefined) throw new Error(`Invalid history index: ${idx}`);
+    if (str === undefined) throw new Error(`invalid history index: ${idx}`);
     this.line = new Line(str);
     Input.prompt();
     return this.run();

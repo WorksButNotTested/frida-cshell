@@ -158,7 +158,7 @@ ${Output.bold('NOTE:')} Set hits to '*' for unlimited breakpoint.
     if (index === undefined) return undefined;
 
     const bp = Bps.get(this.bpType, index);
-    if (bp === undefined) throw new Error(`Breakpoint #${index} not found`);
+    if (bp === undefined) throw new Error(`breakpoint #${index} not found`);
 
     Output.writeln(bp.toString());
     return bp.address ?? Var.ZERO;

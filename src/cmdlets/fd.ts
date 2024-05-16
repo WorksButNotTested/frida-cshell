@@ -57,7 +57,7 @@ export class FdCmdLet extends CmdLet {
       this.pReadDir === null ||
       this.pReadLink === null
     )
-      throw new Error('Failed to find necessary native functions');
+      throw new Error('failed to find necessary native functions');
 
     // DIR *opendir(const char *name);
     const fnOpenDir = new SystemFunction(this.pOpenDir, 'pointer', ['pointer']);
@@ -79,7 +79,7 @@ export class FdCmdLet extends CmdLet {
       path,
     ) as UnixSystemFunctionResult<NativePointer>;
     if (dir.equals(ptr(0)))
-      throw new Error(`Failed to opendir /proc/self/fd, errno: ${openErrno}`);
+      throw new Error(`failed to opendir /proc/self/fd, errno: ${openErrno}`);
 
     while (true) {
       const { value: dirent, errno: readDirErrno } = fnReadDir(
@@ -89,7 +89,7 @@ export class FdCmdLet extends CmdLet {
         if (readDirErrno === 0) break;
         else
           throw new Error(
-            `Failed to readdir /proc/self/fd, errno: ${readDirErrno}`,
+            `failed to readdir /proc/self/fd, errno: ${readDirErrno}`,
           );
       }
 
@@ -114,10 +114,10 @@ export class FdCmdLet extends CmdLet {
         .add(2)
         .add(1);
       const name = pName.readUtf8String();
-      if (name === null) throw new Error('Failed to read link name');
+      if (name === null) throw new Error('failed to read link name');
 
       const fd = parseInt(name);
-      if (isNaN(fd)) throw new Error(`Failed to parse fd: ${name}`);
+      if (isNaN(fd)) throw new Error(`failed to parse fd: ${name}`);
 
       const srcBuff = Memory.allocUtf8String(`/proc/self/fd/${name}`);
 
@@ -129,11 +129,11 @@ export class FdCmdLet extends CmdLet {
       ) as UnixSystemFunctionResult<number>;
       if (ssize < 0 || ssize >= FdCmdLet.PATH_MAX)
         throw new Error(
-          `Failed to readlink: ${srcBuff}, errno: ${readLinkErrno}`,
+          `failed to readlink: ${srcBuff}, errno: ${readLinkErrno}`,
         );
 
       const dest = destBuff.readUtf8String();
-      if (dest === null) throw new Error('Failed to read link target');
+      if (dest === null) throw new Error('failed to read link target');
 
       result[fd] = dest;
     }
@@ -142,7 +142,7 @@ export class FdCmdLet extends CmdLet {
       dir,
     ) as UnixSystemFunctionResult<number>;
     if (ret !== 0)
-      throw new Error(`Failed to closedir /proc/self/fd, errno: ${closeErrno}`);
+      throw new Error(`failed to closedir /proc/self/fd, errno: ${closeErrno}`);
 
     return result;
   }
@@ -151,7 +151,7 @@ export class FdCmdLet extends CmdLet {
     const result: Fds = {};
 
     if (this.pGetDTableSize === null || this.pFcntl === null)
-      throw new Error('Failed to find necessary native functions');
+      throw new Error('failed to find necessary native functions');
 
     // int getdtablesize(void);
     const fnGetDtableSize = new SystemFunction(this.pGetDTableSize, 'int', []);
@@ -166,7 +166,7 @@ export class FdCmdLet extends CmdLet {
     const { value: maxFd, errno: getDtableErrno } =
       fnGetDtableSize() as UnixSystemFunctionResult<number>;
     if (maxFd === -1)
-      throw new Error(`Failed to getdtablesize, errno: ${getDtableErrno}`);
+      throw new Error(`failed to getdtablesize, errno: ${getDtableErrno}`);
 
     for (let fd = 0; fd <= maxFd; fd++) {
       const getFdRet = fnFcntl(fd, FdCmdLet.F_GETFD, ptr(0));
@@ -178,7 +178,7 @@ export class FdCmdLet extends CmdLet {
       if (getPathRet === -1) continue;
 
       const dest = destBuff.readUtf8String();
-      if (dest === null) throw new Error(`Failed to read dest for fd: ${fd}`);
+      if (dest === null) throw new Error(`failed to read dest for fd: ${fd}`);
       result[fd] = dest;
     }
 
@@ -196,7 +196,7 @@ export class FdCmdLet extends CmdLet {
       case 'windows':
       case 'barebone':
       default:
-        throw new Error(`Platform: ${Process.platform} unsupported`);
+        throw new Error(`platform: ${Process.platform} unsupported`);
     }
   }
 

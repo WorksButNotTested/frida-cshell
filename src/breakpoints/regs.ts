@@ -71,28 +71,28 @@ export class Regs {
 
   public static set(name: string, value: Var) {
     if (name === THREAD_ID_NAME) {
-      throw new Error('Thread ID cannot be set');
+      throw new Error('thread ID cannot be set');
     } else if (name === RETURN_ADDRESS_NAME) {
-      throw new Error('Return address cannot be set');
+      throw new Error('return address cannot be set');
     } else if (name === ADDR_NAME) {
-      throw new Error('Addr cannot be set');
+      throw new Error('addr cannot be set');
     } else if (name === RETVAL_NAME) {
       if (this.retVal === undefined)
         throw new Error(
-          'Return Value not available outside of a function exit breakpoint',
+          'return Value not available outside of a function exit breakpoint',
         );
       const ptr = value.toPointer();
       this.retVal.replace(ptr);
     } else if (this.ctx === undefined) {
       if (name === PC_NAME) {
-        throw new Error('Pc cannot be set');
+        throw new Error('pc cannot be set');
       } else {
-        throw new Error('Registers not available outside of a breakpoint');
+        throw new Error('registers not available outside of a breakpoint');
       }
     } else {
       const regs = this.getRegs(this.ctx);
       if (!regs.has(name))
-        throw new Error(`Register name '${name}' is invalid`);
+        throw new Error(`register name '${name}' is invalid`);
       regs.set(name, value);
       this.setRegs(this.ctx, regs);
     }
@@ -101,36 +101,36 @@ export class Regs {
   public static get(name: string): Var {
     if (name === THREAD_ID_NAME) {
       if (this.threadId === undefined)
-        throw new Error('Thread ID not available outside of a breakpoint');
+        throw new Error('thread ID not available outside of a breakpoint');
       return new Var(uint64(this.threadId));
     } else if (name === RETURN_ADDRESS_NAME) {
       if (this.returnAddress === undefined)
-        throw new Error('Return address not available outside of a breakpoint');
+        throw new Error('return address not available outside of a breakpoint');
       return new Var(uint64(this.returnAddress.toString()));
     } else if (name === ADDR_NAME) {
       if (this.addr === undefined)
-        throw new Error('Addr not available outside of a breakpoint');
+        throw new Error('addr not available outside of a breakpoint');
       return new Var(uint64(this.addr.toString()));
     } else if (name === RETVAL_NAME) {
       if (this.retVal === undefined)
         throw new Error(
-          'Return Value not available outside of a function exit breakpoint',
+          'return Value not available outside of a function exit breakpoint',
         );
       return new Var(uint64(this.retVal.toString()));
     } else if (this.ctx === undefined) {
       if (name === PC_NAME) {
         if (this.pc === undefined) {
-          throw new Error('Pc not available outside of a breakpoint');
+          throw new Error('pc not available outside of a breakpoint');
         }
         return new Var(uint64(this.pc.toString()));
       } else {
-        throw new Error('Registers not available outside of a breakpoint');
+        throw new Error('registers not available outside of a breakpoint');
       }
     } else {
       const regs = this.getRegs(this.ctx);
       const val = regs.get(name);
       if (val === undefined)
-        throw new Error(`Variable name '${name}' is invalid`);
+        throw new Error(`variable name '${name}' is invalid`);
       return val;
     }
   }
@@ -139,7 +139,7 @@ export class Regs {
     const result: [string, Var][] = [];
 
     if (this.isClear())
-      throw new Error('Registers not available outside of a breakpoint');
+      throw new Error('registers not available outside of a breakpoint');
 
     if (this.ctx === undefined) {
       if (this.pc !== undefined) {
@@ -273,7 +273,7 @@ export class Regs {
       }
       case 'mips':
       default:
-        throw new Error(`Unknown or unsupported architecture: ${Process.arch}`);
+        throw new Error(`unknown or unsupported architecture: ${Process.arch}`);
         break;
     }
   }
@@ -375,7 +375,7 @@ export class Regs {
       }
       case 'mips':
       default:
-        throw new Error(`Unknown or unsupported architecture: ${Process.arch}`);
+        throw new Error(`unknown or unsupported architecture: ${Process.arch}`);
     }
   }
 }

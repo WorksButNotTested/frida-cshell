@@ -22,17 +22,20 @@ export class HistoryCmdLet extends CmdLet {
     return Var.ZERO;
   }
 
-  private runWithId(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 1) return undefined;
+  private runWithId(tokens: Token[]): Var | null {
+    if (tokens.length !== 1) return null;
 
-    const id = tokens[0]?.toVar()?.toU64().toNumber();
-    if (id === undefined) return undefined;
+    const t0 = tokens[0] as Token;
+    const v0 = t0.toVar();
+    if (v0 === null) return null;
+
+    const id = v0.toU64().toNumber();
 
     return History.rerun(id);
   }
 
-  private runWithoutId(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 0) return undefined;
+  private runWithoutId(tokens: Token[]): Var | null {
+    if (tokens.length !== 0) return null;
 
     const history = Array.from(History.all());
     for (const [i, value] of history.entries()) {
@@ -43,10 +46,10 @@ export class HistoryCmdLet extends CmdLet {
 
   public run(tokens: Token[]): Var {
     const retWithId = this.runWithId(tokens);
-    if (retWithId !== undefined) return retWithId;
+    if (retWithId !== null) return retWithId;
 
     const retWithoutId = this.runWithoutId(tokens);
-    if (retWithoutId !== undefined) return retWithoutId;
+    if (retWithoutId !== null) return retWithoutId;
 
     return this.usage();
   }

@@ -23,12 +23,15 @@ ${this.name} op1 op2 - ${this.OPERATION} two values together
   public run(tokens: Token[]): Var {
     if (tokens.length !== 2) return this.usage();
 
-    const op0 = tokens[0]?.toVar()?.toU64();
-    if (op0 === undefined) return this.usage();
+    const [a0, a1] = tokens;
+    const [t0, t1] = [a0 as Token, a1 as Token];
+    const [v0, v1] = [t0.toVar(), t1.toVar()];
 
-    const op1 = tokens[1]?.toVar()?.toU64();
-    if (op1 === undefined) return this.usage();
+    if (v0 === null) return this.usage();
+    if (v1 === null) return this.usage();
 
+    const op0 = v0.toU64();
+    const op1 = v1.toU64();
     try {
       return new Var(this.op(op0, op1));
     } catch (error) {
@@ -234,8 +237,11 @@ not op - perform a bitwise not operation on an operand
   public run(tokens: Token[]): Var {
     if (tokens.length !== 1) return this.usage();
 
-    const op = tokens[0]?.toVar()?.toU64();
-    if (op === undefined) return this.usage();
+    const t0 = tokens[0] as Token;
+    const v0 = t0.toVar();
+    if (v0 === null) return this.usage();
+
+    const op = v0.toU64();
 
     try {
       return new Var(op.not());

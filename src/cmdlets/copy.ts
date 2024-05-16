@@ -18,11 +18,6 @@ export class CopyCmdLet extends CmdLet {
   category = 'data';
   help = 'copy data in memory';
 
-  public usage(): Var {
-    Output.write(USAGE);
-    return Var.ZERO;
-  }
-
   public run(tokens: Token[]): Var {
     if (tokens.length !== 3) return this.usage();
 
@@ -47,5 +42,10 @@ export class CopyCmdLet extends CmdLet {
       );
     }
     return v0;
+  }
+
+  public usage(): Var {
+    Output.write(USAGE);
+    return Var.ZERO;
   }
 }

@@ -22,9 +22,38 @@ export class SymCmdLet extends CmdLet {
   category = 'memory';
   help = 'look up a symbol information';
 
-  public usage(): Var {
-    Output.write(USAGE);
-    return Var.ZERO;
+  public run(tokens: Token[]): Var {
+    const retWithAddress = this.runWithAddress(tokens);
+    if (retWithAddress !== null) return retWithAddress;
+
+    const retWithWildCard = this.runWithWildcard(tokens);
+    if (retWithWildCard !== null) return retWithWildCard;
+
+    const retWithName = this.runWithName(tokens);
+    if (retWithName !== null) return retWithName;
+
+    return this.usage();
+  }
+
+  private runWithAddress(tokens: Token[]): Var | null {
+    if (tokens.length !== 1) return null;
+
+    const t0 = tokens[0] as Token;
+    const v0 = t0.toVar();
+    if (v0 === null) return null;
+
+    const address = v0.toPointer();
+
+    const debug = DebugSymbol.fromAddress(address);
+    if (!debug.address.isNull() && debug.name !== null) {
+      this.printDebugSymbol(debug);
+      return v0;
+    }
+
+    Output.writeln(
+      `No symbol found at address: ${Format.toHexString(address)}`,
+    );
+    return v0;
   }
 
   private printDebugSymbol(debug: DebugSymbol) {
@@ -37,43 +66,6 @@ export class SymCmdLet extends CmdLet {
         Output.writeln(`\t${debug.fileName}:${debug.lineNumber} `);
       }
     }
-  }
-
-  private runWithName(tokens: Token[]): Var | null {
-    if (tokens.length !== 1) return null;
-
-    const t0 = tokens[0] as Token;
-    const name = t0.getLiteral();
-
-    const address = Module.findExportByName(null, name);
-    if (address !== null) {
-      Output.writeln(`Export: ${name} found at ${Format.toHexString(address)}`);
-      return new Var(uint64(address.toString()));
-    }
-
-    const debug = DebugSymbol.fromName(name);
-    if (!debug.address.isNull()) {
-      this.printDebugSymbol(debug);
-      return new Var(uint64(debug.address.toString()));
-    }
-
-    Output.writeln(`Symbol ${name} not found`);
-    return Var.ZERO;
-  }
-
-  private globToRegex(glob: string | null): RegExp {
-    if (glob === null) return /^.*$/;
-
-    const escaped = glob.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = escaped
-      .replace(/\\\*/g, '.*')
-      .replace(/\\\?/g, '.')
-      .replace(/\\\[/g, '[')
-      .replace(/\\\]/g, ']')
-      .replace(/\[!(.*?)]/g, (match, chars) => {
-        return '[^' + chars + ']';
-      });
-    return new RegExp(`^${regex}$`);
   }
 
   private runWithWildcard(tokens: Token[]): Var | null {
@@ -159,37 +151,45 @@ export class SymCmdLet extends CmdLet {
     return Var.ZERO;
   }
 
-  private runWithAddress(tokens: Token[]): Var | null {
+  private globToRegex(glob: string | null): RegExp {
+    if (glob === null) return /^.*$/;
+
+    const escaped = glob.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = escaped
+      .replace(/\\\*/g, '.*')
+      .replace(/\\\?/g, '.')
+      .replace(/\\\[/g, '[')
+      .replace(/\\\]/g, ']')
+      .replace(/\[!(.*?)]/g, (match, chars) => {
+        return '[^' + chars + ']';
+      });
+    return new RegExp(`^${regex}$`);
+  }
+
+  private runWithName(tokens: Token[]): Var | null {
     if (tokens.length !== 1) return null;
 
     const t0 = tokens[0] as Token;
-    const v0 = t0.toVar();
-    if (v0 === null) return null;
+    const name = t0.getLiteral();
 
-    const address = v0.toPointer();
-
-    const debug = DebugSymbol.fromAddress(address);
-    if (!debug.address.isNull() && debug.name !== null) {
-      this.printDebugSymbol(debug);
-      return v0;
+    const address = Module.findExportByName(null, name);
+    if (address !== null) {
+      Output.writeln(`Export: ${name} found at ${Format.toHexString(address)}`);
+      return new Var(uint64(address.toString()));
     }
 
-    Output.writeln(
-      `No symbol found at address: ${Format.toHexString(address)}`,
-    );
-    return v0;
+    const debug = DebugSymbol.fromName(name);
+    if (!debug.address.isNull()) {
+      this.printDebugSymbol(debug);
+      return new Var(uint64(debug.address.toString()));
+    }
+
+    Output.writeln(`Symbol ${name} not found`);
+    return Var.ZERO;
   }
 
-  public run(tokens: Token[]): Var {
-    const retWithAddress = this.runWithAddress(tokens);
-    if (retWithAddress !== null) return retWithAddress;
-
-    const retWithWildCard = this.runWithWildcard(tokens);
-    if (retWithWildCard !== null) return retWithWildCard;
-
-    const retWithName = this.runWithName(tokens);
-    if (retWithName !== null) return retWithName;
-
-    return this.usage();
+  public usage(): Var {
+    Output.write(USAGE);
+    return Var.ZERO;
   }
 }

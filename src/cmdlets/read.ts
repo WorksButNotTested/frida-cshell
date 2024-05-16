@@ -10,15 +10,24 @@ export class ReadCmdLet extends CmdLet {
   category = 'data';
   help = 'read data from memory';
 
-  public usage(): Var {
-    const usage: string = `Usage: r
+  public run(tokens: Token[]): Var {
+    if (tokens.length !== 2) return this.usage();
 
-r n address - read 'n' bytes from memory
-  n         the number of bytes to read (1, 2, 4 or 8).
-  address   the address/symbol to read from`;
+    const [a0, a1] = tokens;
+    const [t0, t1] = [a0 as Token, a1 as Token];
 
-    Output.write(usage);
-    return Var.ZERO;
+    const length = this.getLength(t0);
+    if (length === null) return this.usage();
+
+    const v1 = t1.toVar();
+    if (v1 == null) return this.usage();
+    const address = v1.toPointer();
+
+    const buff = Mem.readBytes(address, length);
+    const copy = Memory.alloc(Process.pageSize);
+    Mem.writeBytes(copy, buff);
+
+    return new Var(this.read(copy, length));
   }
 
   private getLength(token: Token): number | null {
@@ -72,23 +81,14 @@ r n address - read 'n' bytes from memory
     }
   }
 
-  public run(tokens: Token[]): Var {
-    if (tokens.length !== 2) return this.usage();
+  public usage(): Var {
+    const usage: string = `Usage: r
 
-    const [a0, a1] = tokens;
-    const [t0, t1] = [a0 as Token, a1 as Token];
+r n address - read 'n' bytes from memory
+  n         the number of bytes to read (1, 2, 4 or 8).
+  address   the address/symbol to read from`;
 
-    const length = this.getLength(t0);
-    if (length === null) return this.usage();
-
-    const v1 = t1.toVar();
-    if (v1 == null) return this.usage();
-    const address = v1.toPointer();
-
-    const buff = Mem.readBytes(address, length);
-    const copy = Memory.alloc(Process.pageSize);
-    Mem.writeBytes(copy, buff);
-
-    return new Var(this.read(copy, length));
+    Output.write(usage);
+    return Var.ZERO;
   }
 }

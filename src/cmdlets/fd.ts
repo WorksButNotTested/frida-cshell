@@ -43,9 +43,46 @@ export class FdCmdLet extends CmdLet {
   private pGetDTableSize: NativePointer | null = null;
   private pFcntl: NativePointer | null = null;
 
-  public usage(): Var {
-    Output.write(USAGE);
-    return Var.ZERO;
+  public run(tokens: Token[]): Var {
+    const retWithId = this.runWithId(tokens);
+    if (retWithId !== null) return retWithId;
+
+    const retWithoutParams = this.runWithoutParams(tokens);
+    if (retWithoutParams !== null) return retWithoutParams;
+
+    return this.usage();
+  }
+
+  private runWithId(tokens: Token[]): Var | null {
+    if (tokens.length !== 1) return null;
+
+    const t0 = tokens[0] as Token;
+    const v0 = t0.toVar();
+    if (v0 === null) return null;
+
+    const fd = v0.toU64().toNumber();
+
+    const path = this.readFds()[fd];
+    if (path === undefined) throw new Error(`fd: ${fd} not found`);
+
+    Output.writeln(`Fd: ${fd.toString().padStart(3, ' ')}, Path: ${path}`);
+
+    return new Var(uint64(fd));
+  }
+
+  private readFds(): Fds {
+    switch (Process.platform) {
+      case 'linux':
+        return this.readFdsLinux();
+      case 'darwin':
+      case 'freebsd':
+      case 'qnx':
+        return this.readFdsUnix();
+      case 'windows':
+      case 'barebone':
+      default:
+        throw new Error(`platform: ${Process.platform} unsupported`);
+    }
   }
 
   private readFdsLinux(): Fds {
@@ -185,38 +222,6 @@ export class FdCmdLet extends CmdLet {
     return result;
   }
 
-  private readFds(): Fds {
-    switch (Process.platform) {
-      case 'linux':
-        return this.readFdsLinux();
-      case 'darwin':
-      case 'freebsd':
-      case 'qnx':
-        return this.readFdsUnix();
-      case 'windows':
-      case 'barebone':
-      default:
-        throw new Error(`platform: ${Process.platform} unsupported`);
-    }
-  }
-
-  private runWithId(tokens: Token[]): Var | null {
-    if (tokens.length !== 1) return null;
-
-    const t0 = tokens[0] as Token;
-    const v0 = t0.toVar();
-    if (v0 === null) return null;
-
-    const fd = v0.toU64().toNumber();
-
-    const path = this.readFds()[fd];
-    if (path === undefined) throw new Error(`fd: ${fd} not found`);
-
-    Output.writeln(`Fd: ${fd.toString().padStart(3, ' ')}, Path: ${path}`);
-
-    return new Var(uint64(fd));
-  }
-
   private runWithoutParams(tokens: Token[]): Var | null {
     if (tokens.length !== 0) return null;
 
@@ -228,14 +233,9 @@ export class FdCmdLet extends CmdLet {
     return Var.ZERO;
   }
 
-  public run(tokens: Token[]): Var {
-    const retWithId = this.runWithId(tokens);
-    if (retWithId !== null) return retWithId;
-
-    const retWithoutParams = this.runWithoutParams(tokens);
-    if (retWithoutParams !== null) return retWithoutParams;
-
-    return this.usage();
+  public usage(): Var {
+    Output.write(USAGE);
+    return Var.ZERO;
   }
 
   public override isSupported(): boolean {

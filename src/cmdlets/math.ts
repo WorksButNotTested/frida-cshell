@@ -6,16 +6,6 @@ import { Var } from '../vars/var.js';
 
 abstract class MathCmdLet extends CmdLet {
   category = 'math';
-  public usage(): Var {
-    const usage: string = `Usage: ${this.name}
-
-${this.name} op1 op2 - ${this.OPERATION} two values together
-  op1   the first operand on which to perform the operation
-  op2   the second operand on which to perform the operation
-`;
-    Output.write(usage);
-    return Var.ZERO;
-  }
 
   protected abstract OPERATION: string;
   protected abstract op(op0: UInt64, op1: UInt64): UInt64;
@@ -39,6 +29,17 @@ ${this.name} op1 op2 - ${this.OPERATION} two values together
         `failed to ${this.OPERATION} ${Format.toHexString(op0)} and ${Format.toHexString(op1)}, ${error}`,
       );
     }
+  }
+
+  public usage(): Var {
+    const usage: string = `Usage: ${this.name}
+
+${this.name} op1 op2 - ${this.OPERATION} two values together
+  op1   the first operand on which to perform the operation
+  op2   the second operand on which to perform the operation
+`;
+    Output.write(usage);
+    return Var.ZERO;
   }
 }
 

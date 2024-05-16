@@ -16,9 +16,11 @@ export class LdCmdLet extends CmdLet {
   category = 'modules';
   help = 'load modules';
 
-  public usage(): Var {
-    Output.write(USAGE);
-    return Var.ZERO;
+  public run(tokens: Token[]): Var {
+    const retWithName = this.runWithName(tokens);
+    if (retWithName !== null) return retWithName;
+
+    return this.usage();
   }
 
   private runWithName(tokens: Token[]): Var | null {
@@ -37,10 +39,8 @@ export class LdCmdLet extends CmdLet {
     return new Var(mod.base.toString());
   }
 
-  public run(tokens: Token[]): Var {
-    const retWithName = this.runWithName(tokens);
-    if (retWithName !== null) return retWithName;
-
-    return this.usage();
+  public usage(): Var {
+    Output.write(USAGE);
+    return Var.ZERO;
   }
 }

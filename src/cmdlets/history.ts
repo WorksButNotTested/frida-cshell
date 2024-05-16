@@ -17,9 +17,14 @@ export class HistoryCmdLet extends CmdLet {
   category = 'misc';
   help = 'command history';
 
-  public usage(): Var {
-    Output.write(USAGE);
-    return Var.ZERO;
+  public run(tokens: Token[]): Var {
+    const retWithId = this.runWithId(tokens);
+    if (retWithId !== null) return retWithId;
+
+    const retWithoutId = this.runWithoutId(tokens);
+    if (retWithoutId !== null) return retWithoutId;
+
+    return this.usage();
   }
 
   private runWithId(tokens: Token[]): Var | null {
@@ -44,13 +49,8 @@ export class HistoryCmdLet extends CmdLet {
     return Var.ZERO;
   }
 
-  public run(tokens: Token[]): Var {
-    const retWithId = this.runWithId(tokens);
-    if (retWithId !== null) return retWithId;
-
-    const retWithoutId = this.runWithoutId(tokens);
-    if (retWithoutId !== null) return retWithoutId;
-
-    return this.usage();
+  public usage(): Var {
+    Output.write(USAGE);
+    return Var.ZERO;
   }
 }

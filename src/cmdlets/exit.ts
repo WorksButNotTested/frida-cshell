@@ -9,12 +9,12 @@ export class ExitCmdLet extends CmdLet {
   help = 'exits the shell';
   override visible = false;
 
+  public run(_: Token[]): Var {
+    return this.usage();
+  }
+
   public usage(): Var {
     Output.writeln('Press CTRL+C to exit.');
     return Var.ZERO;
-  }
-
-  public run(_: Token[]): Var {
-    return this.usage();
   }
 }

@@ -21,9 +21,17 @@ export class RegCmdLet extends CmdLet {
   category = 'breakpoints';
   help = 'register management';
 
-  public usage(): Var {
-    Output.write(USAGE);
-    return Var.ZERO;
+  public run(tokens: Token[]): Var {
+    const retWithNameAndPointer = this.runWithNameAndPointer(tokens);
+    if (retWithNameAndPointer !== null) return retWithNameAndPointer;
+
+    const retWithName = this.runWithName(tokens);
+    if (retWithName !== null) return retWithName;
+
+    const retWithoutParams = this.runWithoutParams(tokens);
+    if (retWithoutParams !== null) return retWithoutParams;
+
+    return this.usage();
   }
 
   private runWithNameAndPointer(tokens: Token[]): Var | null {
@@ -64,16 +72,8 @@ export class RegCmdLet extends CmdLet {
     return Vars.getRet();
   }
 
-  public run(tokens: Token[]): Var {
-    const retWithNameAndPointer = this.runWithNameAndPointer(tokens);
-    if (retWithNameAndPointer !== null) return retWithNameAndPointer;
-
-    const retWithName = this.runWithName(tokens);
-    if (retWithName !== null) return retWithName;
-
-    const retWithoutParams = this.runWithoutParams(tokens);
-    if (retWithoutParams !== null) return retWithoutParams;
-
-    return this.usage();
+  public usage(): Var {
+    Output.write(USAGE);
+    return Var.ZERO;
   }
 }

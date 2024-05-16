@@ -16,17 +16,17 @@ export class BtCmdLet extends CmdLet {
   category = 'thread';
   help = 'display backtrace information';
 
-  public usage(): Var {
-    Output.write(USAGE);
-    return Var.ZERO;
-  }
+  public run(tokens: Token[]): Var {
+    const retWithId = this.runWithId(tokens);
+    if (retWithId !== null) return retWithId;
 
-  private printBacktrace(t: ThreadDetails) {
-    Output.writeln(
-      Thread.backtrace(t.context, Backtracer.ACCURATE)
-        .map(DebugSymbol.fromAddress)
-        .join('\n'),
-    );
+    const retWithName = this.runWithName(tokens);
+    if (retWithName !== null) return retWithName;
+
+    const retWithoutParams = this.runWithoutParams(tokens);
+    if (retWithoutParams !== null) return retWithoutParams;
+
+    return this.usage();
   }
 
   private runWithId(tokens: Token[]): Var | null {
@@ -49,6 +49,14 @@ export class BtCmdLet extends CmdLet {
       });
       return new Var(uint64(id));
     }
+  }
+
+  private printBacktrace(t: ThreadDetails) {
+    Output.writeln(
+      Thread.backtrace(t.context, Backtracer.ACCURATE)
+        .map(DebugSymbol.fromAddress)
+        .join('\n'),
+    );
   }
 
   private runWithName(tokens: Token[]): Var | null {
@@ -92,16 +100,8 @@ export class BtCmdLet extends CmdLet {
     return Var.ZERO;
   }
 
-  public run(tokens: Token[]): Var {
-    const retWithId = this.runWithId(tokens);
-    if (retWithId !== null) return retWithId;
-
-    const retWithName = this.runWithName(tokens);
-    if (retWithName !== null) return retWithName;
-
-    const retWithoutParams = this.runWithoutParams(tokens);
-    if (retWithoutParams !== null) return retWithoutParams;
-
-    return this.usage();
+  public usage(): Var {
+    Output.write(USAGE);
+    return Var.ZERO;
   }
 }

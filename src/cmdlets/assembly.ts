@@ -18,47 +18,32 @@ export class AssemblyCmdLet extends CmdLet {
   category = 'data';
   help = 'disassembly listing';
 
-  public usage(): Var {
-    Output.write(USAGE);
-    return Var.ZERO;
+  public run(tokens: Token[]): Var {
+    const retWithLength = this.runWithLength(tokens);
+    if (retWithLength !== null) return retWithLength;
+
+    const retWithoutLength = this.runWithoutLength(tokens);
+    if (retWithoutLength !== null) return retWithoutLength;
+
+    return this.usage();
   }
 
-  private maxInstructionLen(): number {
-    switch (Process.arch) {
-      case 'arm':
-      case 'arm64':
-        return 4;
-      case 'ia32':
-      case 'x64':
-        return 15;
-      default:
-        throw new Error(`unsupported architecutre: ${Process.arch}`);
-    }
-  }
+  private runWithLength(tokens: Token[]): Var | null {
+    if (tokens.length !== 2) return null;
 
-  private readMaxBytes(ptr: NativePointer, length: number): Uint8Array {
-    for (let i = length; i > 0; i++) {
-      try {
-        const bytes = Mem.readBytes(ptr, i);
-        return bytes;
-      } catch {
-        continue;
-      }
-    }
-    return new Uint8Array(0);
-  }
+    const [a0, a1] = tokens;
+    const [t0, t1] = [a0 as Token, a1 as Token];
+    const [v0, v1] = [t0.toVar(), t1.toVar()];
 
-  private concatBuffers(buffer1: Uint8Array, buffer2: Uint8Array): Uint8Array {
-    const concatenatedBuffer = new Uint8Array(buffer1.length + buffer2.length);
-    concatenatedBuffer.set(buffer1, 0);
-    concatenatedBuffer.set(buffer2, buffer1.byteLength);
-    return concatenatedBuffer;
-  }
+    if (v0 === null) return null;
+    if (v1 === null) return null;
 
-  private isThumb(address: NativePointer): boolean {
-    if (Process.arch !== 'arm') return false;
-    if (address.and(1) === ptr(0)) return false;
-    return true;
+    const address = v0.toPointer();
+    const length = v1.toU64().toNumber();
+
+    if (length > 100) throw new Error(`too many instructions: ${length}`);
+
+    return this.list(address, length);
   }
 
   private list(address: NativePointer, length: number): Var {
@@ -112,22 +97,42 @@ export class AssemblyCmdLet extends CmdLet {
     }
   }
 
-  private runWithLength(tokens: Token[]): Var | null {
-    if (tokens.length !== 2) return null;
+  private isThumb(address: NativePointer): boolean {
+    if (Process.arch !== 'arm') return false;
+    if (address.and(1) === ptr(0)) return false;
+    return true;
+  }
 
-    const [a0, a1] = tokens;
-    const [t0, t1] = [a0 as Token, a1 as Token];
-    const [v0, v1] = [t0.toVar(), t1.toVar()];
+  private maxInstructionLen(): number {
+    switch (Process.arch) {
+      case 'arm':
+      case 'arm64':
+        return 4;
+      case 'ia32':
+      case 'x64':
+        return 15;
+      default:
+        throw new Error(`unsupported architecutre: ${Process.arch}`);
+    }
+  }
 
-    if (v0 === null) return null;
-    if (v1 === null) return null;
+  private readMaxBytes(ptr: NativePointer, length: number): Uint8Array {
+    for (let i = length; i > 0; i++) {
+      try {
+        const bytes = Mem.readBytes(ptr, i);
+        return bytes;
+      } catch {
+        continue;
+      }
+    }
+    return new Uint8Array(0);
+  }
 
-    const address = v0.toPointer();
-    const length = v1.toU64().toNumber();
-
-    if (length > 100) throw new Error(`too many instructions: ${length}`);
-
-    return this.list(address, length);
+  private concatBuffers(buffer1: Uint8Array, buffer2: Uint8Array): Uint8Array {
+    const concatenatedBuffer = new Uint8Array(buffer1.length + buffer2.length);
+    concatenatedBuffer.set(buffer1, 0);
+    concatenatedBuffer.set(buffer2, buffer1.byteLength);
+    return concatenatedBuffer;
   }
 
   private runWithoutLength(tokens: Token[]): Var | null {
@@ -142,13 +147,8 @@ export class AssemblyCmdLet extends CmdLet {
     return this.list(address, DEFAULT_LENGTH);
   }
 
-  public run(tokens: Token[]): Var {
-    const retWithLength = this.runWithLength(tokens);
-    if (retWithLength !== null) return retWithLength;
-
-    const retWithoutLength = this.runWithoutLength(tokens);
-    if (retWithoutLength !== null) return retWithoutLength;
-
-    return this.usage();
+  public usage(): Var {
+    Output.write(USAGE);
+    return Var.ZERO;
   }
 }

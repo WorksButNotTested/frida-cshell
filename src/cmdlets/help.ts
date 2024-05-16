@@ -9,6 +9,25 @@ export class HelpCmdLet extends CmdLet {
   category = 'misc';
   help = 'print this message';
 
+  public run(tokens: Token[]): Var {
+    const retWithName = this.runWithName(tokens);
+    if (retWithName !== null) return retWithName;
+
+    return this.usage();
+  }
+
+  private runWithName(tokens: Token[]): Var | null {
+    if (tokens.length !== 1) return null;
+
+    const t0 = tokens[0] as Token;
+    const name = t0.getLiteral();
+
+    const cmdlet = CmdLets.getByName(name);
+    if (cmdlet === null) return null;
+
+    return cmdlet.usage();
+  }
+
   public usage(): Var {
     const cmdlets = CmdLets.all().filter(c => c.visible);
     const groups: Map<string, CmdLet[]> = cmdlets.reduce((result, item) => {
@@ -36,24 +55,5 @@ export class HelpCmdLet extends CmdLet {
     Output.writeln('For more information about a command use:');
     Output.writeln('\thelp <cmd>');
     return Var.ZERO;
-  }
-
-  private runWithName(tokens: Token[]): Var | null {
-    if (tokens.length !== 1) return null;
-
-    const t0 = tokens[0] as Token;
-    const name = t0.getLiteral();
-
-    const cmdlet = CmdLets.getByName(name);
-    if (cmdlet === null) return null;
-
-    return cmdlet.usage();
-  }
-
-  public run(tokens: Token[]): Var {
-    const retWithName = this.runWithName(tokens);
-    if (retWithName !== null) return retWithName;
-
-    return this.usage();
   }
 }

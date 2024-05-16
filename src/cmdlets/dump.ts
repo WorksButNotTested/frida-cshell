@@ -19,9 +19,30 @@ export class DumpCmdLet extends CmdLet {
   category = 'data';
   help = 'dump data from memory';
 
-  public usage(): Var {
-    Output.write(USAGE);
-    return Var.ZERO;
+  public run(tokens: Token[]): Var {
+    const retWithLength = this.runWithLength(tokens);
+    if (retWithLength !== null) return retWithLength;
+
+    const retWithoutLength = this.runWithoutLength(tokens);
+    if (retWithoutLength !== null) return retWithoutLength;
+
+    return this.usage();
+  }
+
+  private runWithLength(tokens: Token[]): Var | null {
+    if (tokens.length !== 2) return null;
+
+    const [a0, a1] = tokens;
+    const [t0, t1] = [a0 as Token, a1 as Token];
+    const [v0, v1] = [t0.toVar(), t1.toVar()];
+
+    if (v0 === null) return null;
+    if (v1 === null) return null;
+
+    const address = v0.toPointer();
+    const length = v1.toU64().toNumber();
+    this.dump(address, length);
+    return v0;
   }
 
   private dump(address: NativePointer, length: number) {
@@ -42,22 +63,6 @@ export class DumpCmdLet extends CmdLet {
     }
   }
 
-  private runWithLength(tokens: Token[]): Var | null {
-    if (tokens.length !== 2) return null;
-
-    const [a0, a1] = tokens;
-    const [t0, t1] = [a0 as Token, a1 as Token];
-    const [v0, v1] = [t0.toVar(), t1.toVar()];
-
-    if (v0 === null) return null;
-    if (v1 === null) return null;
-
-    const address = v0.toPointer();
-    const length = v1.toU64().toNumber();
-    this.dump(address, length);
-    return v0;
-  }
-
   private runWithoutLength(tokens: Token[]): Var | null {
     if (tokens.length !== 1) return null;
 
@@ -66,17 +71,14 @@ export class DumpCmdLet extends CmdLet {
     if (v0 === null) return null;
 
     const address = v0.toPointer();
+    if (address === undefined) return null;
+
     this.dump(address, DEFAULT_LENGTH);
     return v0;
   }
 
-  public run(tokens: Token[]): Var {
-    const retWithLength = this.runWithLength(tokens);
-    if (retWithLength !== null) return retWithLength;
-
-    const retWithoutLength = this.runWithoutLength(tokens);
-    if (retWithoutLength !== null) return retWithoutLength;
-
-    return this.usage();
+  public usage(): Var {
+    Output.write(USAGE);
+    return Var.ZERO;
   }
 }

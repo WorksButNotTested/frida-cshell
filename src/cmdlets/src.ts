@@ -67,9 +67,11 @@ export class SrcCmdLet extends CmdLet {
   category = 'misc';
   help = 'load script';
 
-  public usage(): Var {
-    Output.write(USAGE);
-    return Var.ZERO;
+  public run(tokens: Token[]): Var {
+    const retWithName = this.runWithName(tokens);
+    if (retWithName !== null) return retWithName;
+
+    return this.usage();
   }
 
   private runWithName(tokens: Token[]): Var | null {
@@ -152,10 +154,8 @@ export class SrcCmdLet extends CmdLet {
     return Var.ZERO;
   }
 
-  public run(tokens: Token[]): Var {
-    const retWithName = this.runWithName(tokens);
-    if (retWithName !== null) return retWithName;
-
-    return this.usage();
+  public usage(): Var {
+    Output.write(USAGE);
+    return Var.ZERO;
   }
 }

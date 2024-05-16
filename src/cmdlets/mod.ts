@@ -20,16 +20,17 @@ export class ModCmdLet extends CmdLet {
   category = 'modules';
   help = 'display module information';
 
-  public usage(): Var {
-    Output.write(USAGE);
-    return Var.ZERO;
-  }
+  public run(tokens: Token[]): Var {
+    const retWithAddress = this.runWithAddress(tokens);
+    if (retWithAddress !== null) return retWithAddress;
 
-  private printModule(m: Module) {
-    const limit = m.base.add(m.size);
-    Output.writeln(
-      `${Format.toHexString(m.base)}-${Format.toHexString(limit)} ${Format.toSize(m.size)} ${m.name.padEnd(30, ' ')} ${m.path}`,
-    );
+    const retWithName = this.runWithName(tokens);
+    if (retWithName !== null) return retWithName;
+
+    const retWithoutName = this.runWithoutName(tokens);
+    if (retWithoutName !== null) return retWithoutName;
+
+    return this.usage();
   }
 
   private runWithAddress(tokens: Token[]): Var | null {
@@ -58,6 +59,13 @@ export class ModCmdLet extends CmdLet {
     return v0;
   }
 
+  private printModule(m: Module) {
+    const limit = m.base.add(m.size);
+    Output.writeln(
+      `${Format.toHexString(m.base)}-${Format.toHexString(limit)} ${Format.toSize(m.size)} ${m.name.padEnd(30, ' ')} ${m.path}`,
+    );
+  }
+
   private runWithName(tokens: Token[]): Var | null {
     if (tokens.length !== 1) return null;
 
@@ -83,16 +91,8 @@ export class ModCmdLet extends CmdLet {
     return Var.ZERO;
   }
 
-  public run(tokens: Token[]): Var {
-    const retWithAddress = this.runWithAddress(tokens);
-    if (retWithAddress !== null) return retWithAddress;
-
-    const retWithName = this.runWithName(tokens);
-    if (retWithName !== null) return retWithName;
-
-    const retWithoutName = this.runWithoutName(tokens);
-    if (retWithoutName !== null) return retWithoutName;
-
-    return this.usage();
+  public usage(): Var {
+    Output.write(USAGE);
+    return Var.ZERO;
   }
 }

@@ -3,12 +3,12 @@ export class Line {
   private pos: number;
 
   public constructor(val?: string) {
-    if (val) {
-      this.line = val;
-      this.pos = val.length;
-    } else {
+    if (val === undefined) {
       this.line = '';
       this.pos = 0;
+    } else {
+      this.line = val;
+      this.pos = val.length;
     }
   }
 

@@ -38,7 +38,7 @@ export class Parser {
 
     while (true) {
       const c = this.popEscaped();
-      if (!c) break;
+      if (c === undefined) break;
 
       switch (c) {
         case '\\':

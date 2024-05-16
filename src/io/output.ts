@@ -59,14 +59,14 @@ export class Output {
   public static write(buffer?: string, verbose: boolean = false) {
     if (verbose && !this.verbose) return;
 
-    if (buffer) {
+    if (buffer !== undefined) {
       const fixed = buffer.replace(new RegExp('\n', 'g'), '\r\n');
       send(['frida:stderr', fixed]);
     }
   }
 
   public static writeln(buffer?: string, verbose: boolean = false) {
-    if (buffer) {
+    if (buffer !== undefined) {
       this.write(`${buffer}\n`, verbose);
     } else {
       this.write('\n', verbose);

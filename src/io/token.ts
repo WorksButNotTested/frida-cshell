@@ -31,7 +31,7 @@ export class Token {
     if (v !== undefined) return v;
 
     const address = Module.findExportByName(null, this.value);
-    if (address) {
+    if (address !== null) {
       return new Var(uint64(address.toString()));
     }
 

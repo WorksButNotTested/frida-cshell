@@ -42,31 +42,12 @@ export class Output {
 
     this.writeln('Attached to:');
     this.writeln(`\tPID:  ${this.green(Process.id.toString())}`);
-    
+
     const modules = Process.enumerateModules();
     if (modules.length === 0) return;
-    
+
     const first = modules[0] as Module;
     this.writeln(`\tName: ${this.green(first.name)}`);
-  }
-
-  public static clearLine() {
-    this.write(CharCode.ERASE_LINE);
-    this.write(String.fromCharCode(CharCode.CR));
-  }
-
-  public static writeRet() {
-    Output.writeln();
-    Output.writeln(`ret: ${Output.bold(Vars.getRet().toString())}`);
-  }
-
-  public static write(buffer: string | null = null, verbose: boolean = false) {
-    if (verbose && !this.verbose) return;
-
-    if (buffer !== null) {
-      const fixed = buffer.replace(new RegExp('\n', 'g'), '\r\n');
-      send(['frida:stderr', fixed]);
-    }
   }
 
   public static writeln(
@@ -78,6 +59,25 @@ export class Output {
     } else {
       this.write('\n', verbose);
     }
+  }
+
+  public static write(buffer: string | null = null, verbose: boolean = false) {
+    if (verbose && !this.verbose) return;
+
+    if (buffer !== null) {
+      const fixed = buffer.replace(new RegExp('\n', 'g'), '\r\n');
+      send(['frida:stderr', fixed]);
+    }
+  }
+
+  public static clearLine() {
+    this.write(CharCode.ERASE_LINE);
+    this.write(String.fromCharCode(CharCode.CR));
+  }
+
+  public static writeRet() {
+    Output.writeln();
+    Output.writeln(`ret: ${Output.bold(Vars.getRet().toString())}`);
   }
 
   public static setVerbose(dev: boolean) {

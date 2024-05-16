@@ -51,7 +51,7 @@ export class VarCmdLet extends CmdLet {
     const value = t1.getLiteral();
     if (value !== DELETE_CHAR) return null;
 
-    const val = Vars.pop(name);
+    const val = Vars.delete(name);
     if (val === null) {
       Output.writeln(`Variable ${name} not assigned`);
       return Var.ZERO;
@@ -71,7 +71,7 @@ export class VarCmdLet extends CmdLet {
     const value = t1.toVar();
     if (value === null) return null;
 
-    Vars.push(name, value);
+    Vars.set(name, value);
     return value;
   }
 

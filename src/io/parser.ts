@@ -8,28 +8,6 @@ export class Parser {
     this.line = line;
   }
 
-  private pop(): string | null {
-    if (this.line.length === 0) return null;
-    const c = this.line[0] as string;
-    this.line = this.line.slice(1);
-    return c;
-  }
-
-  private popEscaped(): string | null {
-    const c = this.pop();
-    if (!this.inEscape) {
-      return c;
-    }
-    switch (c) {
-      case 'n':
-        return '\n';
-      case 't':
-        return '\t';
-      default:
-        return c;
-    }
-  }
-
   public tokenize(): Token[] {
     const tokens: Token[] = [];
     let inQuoteString = false;
@@ -84,5 +62,27 @@ export class Parser {
       tokens.push(new Token(current));
     }
     return tokens;
+  }
+
+  private popEscaped(): string | null {
+    const c = this.pop();
+    if (!this.inEscape) {
+      return c;
+    }
+    switch (c) {
+      case 'n':
+        return '\n';
+      case 't':
+        return '\t';
+      default:
+        return c;
+    }
+  }
+
+  private pop(): string | null {
+    if (this.line.length === 0) return null;
+    const c = this.line[0] as string;
+    this.line = this.line.slice(1);
+    return c;
   }
 }

@@ -119,7 +119,7 @@ export class Input {
     const line = cmd.toString();
     Output.write(line);
 
-    const remain = cmd.getLength() - cmd.getPos();
+    const remain = cmd.getLength() - cmd.getPosition();
     const backspaces = String.fromCharCode(CharCode.BS).repeat(remain);
     Output.write(backspaces);
   }

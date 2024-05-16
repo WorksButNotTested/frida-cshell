@@ -1,14 +1,4 @@
 export class Format {
-  private static is64bit(): boolean {
-    switch (Process.arch) {
-      case 'x64':
-      case 'arm64':
-        return true;
-      default:
-        return false;
-    }
-  }
-
   public static toHexString(
     ptr: NativePointer | UInt64 | number | null,
   ): string {
@@ -18,6 +8,16 @@ export class Format {
       hex = [hex.slice(0, 8), '`', hex.slice(8)].join('');
     }
     return `0x${hex}`;
+  }
+
+  private static is64bit(): boolean {
+    switch (Process.arch) {
+      case 'x64':
+      case 'arm64':
+        return true;
+      default:
+        return false;
+    }
   }
 
   public static toDecString(

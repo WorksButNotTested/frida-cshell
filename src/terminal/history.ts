@@ -20,38 +20,6 @@ export class History {
     return History.line;
   }
 
-  private static isHistoryCommand(token: Token | null): boolean {
-    if (token === null) return false;
-
-    const cmdlet = CmdLets.getByName(token.getLiteral());
-    if (cmdlet === null) return false;
-
-    if (cmdlet.name !== 'h') return false;
-
-    return true;
-  }
-
-  public static run(): Var {
-    const parser = new Parser(this.line.toString());
-    const tokens = parser.tokenize();
-    const isHistoryCommand = this.isHistoryCommand(tokens[0] ?? null);
-
-    /* If our command isn't already top-most */
-    if (this.line.toString() !== this.history[0] && !isHistoryCommand) {
-      this.history.unshift(this.line.toString());
-      if (this.history.length >= this.MAX_HISTORY) this.history.pop();
-    }
-
-    Output.writeln();
-    const ret = Command.run(tokens);
-    return ret;
-  }
-
-  public static clearLine() {
-    this.index = -1;
-    this.line = new Line();
-  }
-
   public static rerun(idx: number): Var {
     if (idx >= this.history.length)
       throw new Error(`invalid history index: ${idx}`);
@@ -59,6 +27,35 @@ export class History {
     this.line = new Line(str);
     Input.prompt();
     return this.run();
+  }
+
+  public static run(): Var {
+    const parser = new Parser(this.line.toString());
+    const tokens = parser.tokenize();
+
+    if (tokens.length !== 0) {
+      const t0 = tokens[0] as Token;
+      const isHistoryCommand = this.isHistoryCommand(t0);
+
+      /* If our command isn't already top-most */
+      if (this.line.toString() !== this.history[0] && !isHistoryCommand) {
+        this.history.unshift(this.line.toString());
+        if (this.history.length >= this.MAX_HISTORY) this.history.pop();
+      }
+    }
+
+    Output.writeln();
+    const ret = Command.run(tokens);
+    return ret;
+  }
+
+  private static isHistoryCommand(token: Token): boolean {
+    const cmdlet = CmdLets.getByName(token.getLiteral());
+    if (cmdlet === null) return false;
+
+    if (cmdlet.name !== 'h') return false;
+
+    return true;
   }
 
   public static up() {
@@ -71,6 +68,11 @@ export class History {
     if (this.index === -1) return;
     this.index--;
     this.line = new Line(this.history[this.index]);
+  }
+
+  public static clearLine() {
+    this.index = -1;
+    this.line = new Line();
   }
 
   public static all(): string[] {

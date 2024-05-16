@@ -20,7 +20,7 @@ export class Line {
     return this.line.length;
   }
 
-  public getPos(): number {
+  public getPosition(): number {
     return this.pos;
   }
 
@@ -72,12 +72,6 @@ export class Line {
     ].join('');
   }
 
-  private isAlpha(idx: number): boolean {
-    if (idx >= this.line.length) return false;
-    const line = this.line[idx] as string;
-    return /^[a-zA-Z0-9]$/.test(line);
-  }
-
   public wordLeft() {
     if (this.pos === 0) return;
 
@@ -100,5 +94,11 @@ export class Line {
       }
       this.pos++;
     }
+  }
+
+  private isAlpha(idx: number): boolean {
+    if (idx >= this.line.length) return false;
+    const line = this.line[idx] as string;
+    return /^[a-zA-Z0-9]$/.test(line);
   }
 }

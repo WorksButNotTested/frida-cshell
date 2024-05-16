@@ -21,8 +21,7 @@ r n address - read 'n' bytes from memory
     return Var.ZERO;
   }
 
-  private getLength(token: Token | undefined): number | undefined {
-    if (token === undefined) return undefined;
+  private getLength(token: Token): number | null {
     const literal = token.getLiteral();
     switch (literal) {
       case '1':
@@ -34,7 +33,7 @@ r n address - read 'n' bytes from memory
       case '8':
         return 8;
       default:
-        return undefined;
+        return null;
     }
   }
 
@@ -76,11 +75,15 @@ r n address - read 'n' bytes from memory
   public run(tokens: Token[]): Var {
     if (tokens.length !== 2) return this.usage();
 
-    const length = this.getLength(tokens[0]);
-    if (length === undefined) return this.usage();
+    const [a0, a1] = tokens;
+    const [t0, t1] = [a0 as Token, a1 as Token];
 
-    const address = tokens[1]?.toVar()?.toPointer();
-    if (address === undefined) return this.usage();
+    const length = this.getLength(t0);
+    if (length === null) return this.usage();
+
+    const v1 = t1.toVar();
+    if (v1 == null) return this.usage();
+    const address = v1.toPointer();
 
     const buff = Mem.readBytes(address, length);
     const copy = Memory.alloc(Process.pageSize);

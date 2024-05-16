@@ -72,11 +72,11 @@ export class SrcCmdLet extends CmdLet {
     return Var.ZERO;
   }
 
-  private runWithName(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 1) return undefined;
+  private runWithName(tokens: Token[]): Var | null {
+    if (tokens.length !== 1) return null;
 
-    let name = tokens[0]?.getLiteral();
-    if (name === undefined) return undefined;
+    const t0 = tokens[0] as Token;
+    let name = t0.getLiteral();
 
     if (name.length > 1 && name.startsWith('"') && name.endsWith('"'))
       name = name.slice(1, name.length - 1);
@@ -154,7 +154,7 @@ export class SrcCmdLet extends CmdLet {
 
   public run(tokens: Token[]): Var {
     const retWithName = this.runWithName(tokens);
-    if (retWithName !== undefined) return retWithName;
+    if (retWithName !== null) return retWithName;
 
     return this.usage();
   }

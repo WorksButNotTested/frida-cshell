@@ -39,11 +39,11 @@ export class SymCmdLet extends CmdLet {
     }
   }
 
-  private runWithName(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 1) return undefined;
+  private runWithName(tokens: Token[]): Var | null {
+    if (tokens.length !== 1) return null;
 
-    const name = tokens[0]?.getLiteral();
-    if (name === undefined) return undefined;
+    const t0 = tokens[0] as Token;
+    const name = t0.getLiteral();
 
     const address = Module.findExportByName(null, name);
     if (address !== null) {
@@ -61,8 +61,8 @@ export class SymCmdLet extends CmdLet {
     return Var.ZERO;
   }
 
-  private globToRegex(glob: string | undefined): RegExp {
-    if (glob === undefined) return /^.*$/;
+  private globToRegex(glob: string | null): RegExp {
+    if (glob === null) return /^.*$/;
 
     const escaped = glob.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = escaped
@@ -76,25 +76,25 @@ export class SymCmdLet extends CmdLet {
     return new RegExp(`^${regex}$`);
   }
 
-  private runWithWildcard(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 1) return undefined;
+  private runWithWildcard(tokens: Token[]): Var | null {
+    if (tokens.length !== 1) return null;
 
-    const name = tokens[0]?.getLiteral();
-    if (name === undefined) return undefined;
+    const t0 = tokens[0] as Token;
+    const name = t0.getLiteral();
 
     const specialRegex = /[[\]?!*]/;
-    if (!specialRegex.test(name)) return undefined;
+    if (!specialRegex.test(name)) return null;
 
     const fileNameRegex =
       /^((?<module>[[\]?!*\w .-]+?)!)?(?<symbol>[[?*a-zA-Z_][[\]?!*a-zA-Z0-9_]*)$/;
     const m = name.match(fileNameRegex);
-    if (m === null) return undefined;
+    if (m === null) return null;
 
     const g = m.groups;
-    if (g === undefined) return undefined;
+    if (g === undefined) return null;
 
-    const module = g['module'];
-    const symbol = g['symbol'];
+    const module = g['module'] ?? null;
+    const symbol = g['symbol'] ?? null;
 
     Output.writeln(`module: ${module}`, true);
     Output.writeln(`symbol: ${symbol}`, true);
@@ -159,12 +159,12 @@ export class SymCmdLet extends CmdLet {
     return Var.ZERO;
   }
 
-  private runWithAddress(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 1) return undefined;
+  private runWithAddress(tokens: Token[]): Var | null {
+    if (tokens.length !== 1) return null;
 
     const t0 = tokens[0] as Token;
     const v0 = t0.toVar();
-    if (v0 === null) return undefined;
+    if (v0 === null) return null;
 
     const address = v0.toPointer();
 
@@ -182,13 +182,13 @@ export class SymCmdLet extends CmdLet {
 
   public run(tokens: Token[]): Var {
     const retWithAddress = this.runWithAddress(tokens);
-    if (retWithAddress !== undefined) return retWithAddress;
+    if (retWithAddress !== null) return retWithAddress;
 
     const retWithWildCard = this.runWithWildcard(tokens);
-    if (retWithWildCard !== undefined) return retWithWildCard;
+    if (retWithWildCard !== null) return retWithWildCard;
 
     const retWithName = this.runWithName(tokens);
-    if (retWithName !== undefined) return retWithName;
+    if (retWithName !== null) return retWithName;
 
     return this.usage();
   }

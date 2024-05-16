@@ -32,12 +32,12 @@ export class ModCmdLet extends CmdLet {
     );
   }
 
-  private runWithAddress(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 1) return undefined;
+  private runWithAddress(tokens: Token[]): Var | null {
+    if (tokens.length !== 1) return null;
 
     const t0 = tokens[0] as Token;
     const v0 = t0.toVar();
-    if (v0 === null) return undefined;
+    if (v0 === null) return null;
 
     const address = v0.toPointer();
 
@@ -58,11 +58,11 @@ export class ModCmdLet extends CmdLet {
     return v0;
   }
 
-  private runWithName(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 1) return undefined;
+  private runWithName(tokens: Token[]): Var | null {
+    if (tokens.length !== 1) return null;
 
-    const name = tokens[0]?.getLiteral();
-    if (name === undefined) return undefined;
+    const t0 = tokens[0] as Token;
+    const name = t0.getLiteral();
 
     const mod = Process.findModuleByName(name);
     if (mod === null) {
@@ -74,8 +74,8 @@ export class ModCmdLet extends CmdLet {
     }
   }
 
-  private runWithoutName(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 0) return undefined;
+  private runWithoutName(tokens: Token[]): Var | null {
+    if (tokens.length !== 0) return null;
 
     Process.enumerateModules().forEach(m => {
       this.printModule(m);
@@ -85,13 +85,13 @@ export class ModCmdLet extends CmdLet {
 
   public run(tokens: Token[]): Var {
     const retWithAddress = this.runWithAddress(tokens);
-    if (retWithAddress !== undefined) return retWithAddress;
+    if (retWithAddress !== null) return retWithAddress;
 
     const retWithName = this.runWithName(tokens);
-    if (retWithName !== undefined) return retWithName;
+    if (retWithName !== null) return retWithName;
 
     const retWithoutName = this.runWithoutName(tokens);
-    if (retWithoutName !== undefined) return retWithoutName;
+    if (retWithoutName !== null) return retWithoutName;
 
     return this.usage();
   }

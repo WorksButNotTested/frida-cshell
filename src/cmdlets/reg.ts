@@ -26,36 +26,36 @@ export class RegCmdLet extends CmdLet {
     return Var.ZERO;
   }
 
-  private runWithNameAndPointer(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 2) return undefined;
+  private runWithNameAndPointer(tokens: Token[]): Var | null {
+    if (tokens.length !== 2) return null;
 
     const [a0, a1] = tokens;
     const [t0, t1] = [a0 as Token, a1 as Token];
 
     const name = t0.getLiteral();
-    if (name === undefined) return undefined;
 
     const value = t1.toVar();
-    if (value === null) return undefined;
+    if (value === null) return null;
 
     Regs.set(name, value);
     Output.writeln(`Register ${name}, set to value: ${value.toString()}`);
     return value;
   }
 
-  private runWithName(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 1) return undefined;
+  private runWithName(tokens: Token[]): Var | null {
+    if (tokens.length !== 1) return null;
 
-    const name = tokens[0]?.getLiteral();
-    if (name === undefined) return undefined;
+    const t0 = tokens[0] as Token;
+    const name = t0.getLiteral();
+    if (name === null) return null;
 
     const val = Regs.get(name);
     Output.writeln(`Register ${name}, value: ${val.toString()}`);
     return val;
   }
 
-  private runWithoutParams(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 0) return undefined;
+  private runWithoutParams(tokens: Token[]): Var | null {
+    if (tokens.length !== 0) return null;
 
     Output.writeln('Registers:');
     for (const [key, value] of Regs.all()) {
@@ -66,13 +66,13 @@ export class RegCmdLet extends CmdLet {
 
   public run(tokens: Token[]): Var {
     const retWithNameAndPointer = this.runWithNameAndPointer(tokens);
-    if (retWithNameAndPointer !== undefined) return retWithNameAndPointer;
+    if (retWithNameAndPointer !== null) return retWithNameAndPointer;
 
     const retWithName = this.runWithName(tokens);
-    if (retWithName !== undefined) return retWithName;
+    if (retWithName !== null) return retWithName;
 
     const retWithoutParams = this.runWithoutParams(tokens);
-    if (retWithoutParams !== undefined) return retWithoutParams;
+    if (retWithoutParams !== null) return retWithoutParams;
 
     return this.usage();
   }

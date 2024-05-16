@@ -1,4 +1,4 @@
-import { Bp, BpKind, BpType } from '../breakpoints/bp.js';
+import { BP_LENGTH, Bp, BpKind, BpType } from '../breakpoints/bp.js';
 import { Bps } from '../breakpoints/bps.js';
 import { CmdLet, CmdLetEdit } from '../commands/cmdlet.js';
 import { Input } from '../io/input.js';
@@ -96,7 +96,7 @@ ${Output.bold('NOTE:')} Set hits to '*' for unlimited breakpoint.
   }
 
   private parseLength(token: Token | undefined): number | undefined {
-    if (Bp.getBpKind(this.bpType) === BpKind.Code) return 0;
+    if (Bp.getBpKind(this.bpType) === BpKind.Code) return BP_LENGTH;
     return token?.toVar()?.toU64().toNumber();
   }
 

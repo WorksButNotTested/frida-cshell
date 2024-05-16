@@ -9,7 +9,7 @@ import { Format } from '../misc/format.js';
 import { Var } from '../vars/var.js';
 import { Vars } from '../vars/vars.js';
 
-const BP_LENGTH: number = 16;
+export const BP_LENGTH: number = 16;
 
 export enum BpKind {
   Code = 'code',

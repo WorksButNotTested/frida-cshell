@@ -24,24 +24,25 @@ export class Bps {
   public static create(
     type: BpType,
     hits: number = -1,
-    addr: Var | undefined = undefined,
-    literal: string | undefined = undefined,
+    addr: Var | null = null,
+    literal: string | null = null,
     length: number = 0,
   ): Bp {
     const idx = this.getNextFreeIndex(type);
     const key = this.buildKey(type, idx);
 
-    const overlapping = Array.from(this.byIndex.values()).find(bp => {
-      if (addr === undefined) return false;
-      else return bp.overlaps(addr.toPointer(), length);
-    });
-
-    if (overlapping !== undefined)
-      throw new Error(
-        `breakpoint overlaps existing breakpoint:\n\t${overlapping}`,
+    if (addr !== null) {
+      const overlapping = Array.from(this.byIndex.values()).find(bp =>
+        bp.overlaps(addr.toPointer(), length),
       );
 
-    const bp = new Bp(type, idx, hits, addr ?? null, literal ?? null, length);
+      if (overlapping !== undefined)
+        throw new Error(
+          `breakpoint overlaps existing breakpoint:\n\t${overlapping}`,
+        );
+    }
+
+    const bp = new Bp(type, idx, hits, addr, literal, length);
     this.byIndex.set(key, bp);
     this.last = bp;
     this.lines = [];
@@ -57,30 +58,29 @@ export class Bps {
     type: BpType,
     idx: number,
     hits: number,
-    addr: Var | undefined = undefined,
-    literal: string | undefined = undefined,
+    addr: Var | null = null,
+    literal: string | null = null,
     length: number = 0,
   ): Bp {
     const key = this.buildKey(type, idx);
     const bp = this.byIndex.get(key);
     if (bp === undefined) throw new Error(`breakpoint #${idx} doesn't exist`);
 
-    const overlapping = Array.from(this.byIndex.values())
-      .filter(b => b !== bp)
-      .find(b => {
-        if (addr === undefined) return false;
-        else return b.overlaps(addr.toPointer(), length);
-      });
+    if (addr !== null) {
+      const overlapping = Array.from(this.byIndex.values())
+        .filter(b => b !== bp)
+        .find(b => b.overlaps(addr.toPointer(), length));
 
-    if (overlapping !== undefined)
-      throw new Error(
-        `breakpoint overlaps existing breakpoint:\n\t${overlapping}`,
-      );
+      if (overlapping !== undefined)
+        throw new Error(
+          `breakpoint overlaps existing breakpoint:\n\t${overlapping}`,
+        );
+    }
 
     bp.disable();
     bp.hits = hits;
-    bp.address = addr ?? null;
-    bp.literal = literal ?? null;
+    bp.address = addr;
+    bp.literal = literal;
     bp.length = length;
     this.last = bp;
     this.lines = [];

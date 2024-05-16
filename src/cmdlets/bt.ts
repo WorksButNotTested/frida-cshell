@@ -29,11 +29,15 @@ export class BtCmdLet extends CmdLet {
     );
   }
 
-  private runWithId(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 1) return undefined;
+  private runWithId(tokens: Token[]): Var | null {
+    if (tokens.length !== 1) return null;
 
-    const id = tokens[0]?.toVar()?.toU64().toNumber();
-    if (id === undefined) return undefined;
+    const t0 = tokens[0] as Token;
+    const v0 = t0.toVar();
+    if (v0 === null) return null;
+
+    const id = v0.toU64().toNumber();
+    if (id === null) return null;
 
     const matches = Process.enumerateThreads().filter(t => t.id === id);
     if (matches.length === 0) {
@@ -47,11 +51,11 @@ export class BtCmdLet extends CmdLet {
     }
   }
 
-  private runWithName(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 1) return undefined;
+  private runWithName(tokens: Token[]): Var | null {
+    if (tokens.length !== 1) return null;
 
-    const name = tokens[0]?.getLiteral();
-    if (name === undefined) return undefined;
+    const t0 = tokens[0] as Token;
+    const name = t0.getLiteral();
 
     const matches = Process.enumerateThreads().filter(t => t.name === name);
     switch (matches.length) {
@@ -71,8 +75,8 @@ export class BtCmdLet extends CmdLet {
     }
   }
 
-  private runWithoutParams(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 0) return undefined;
+  private runWithoutParams(tokens: Token[]): Var | null {
+    if (tokens.length !== 0) return null;
 
     const ctx = Regs.getContext();
     if (ctx === null)
@@ -90,13 +94,13 @@ export class BtCmdLet extends CmdLet {
 
   public run(tokens: Token[]): Var {
     const retWithId = this.runWithId(tokens);
-    if (retWithId !== undefined) return retWithId;
+    if (retWithId !== null) return retWithId;
 
     const retWithName = this.runWithName(tokens);
-    if (retWithName !== undefined) return retWithName;
+    if (retWithName !== null) return retWithName;
 
     const retWithoutParams = this.runWithoutParams(tokens);
-    if (retWithoutParams !== undefined) return retWithoutParams;
+    if (retWithoutParams !== null) return retWithoutParams;
 
     return this.usage();
   }

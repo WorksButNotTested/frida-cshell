@@ -73,12 +73,8 @@ ${Output.bold('NOTE:')} Set hits to '*' for unlimited breakpoint.
     return val;
   }
 
-  private parseDelete(token: Token | undefined): boolean {
-    if (token === undefined) return false;
-
+  private parseDelete(token: Token): boolean {
     const literal = token.getLiteral();
-    if (literal === undefined) return false;
-
     if (literal !== DELETE_CHAR) return false;
 
     return true;

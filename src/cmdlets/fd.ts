@@ -200,11 +200,14 @@ export class FdCmdLet extends CmdLet {
     }
   }
 
-  private runWithId(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 1) return undefined;
+  private runWithId(tokens: Token[]): Var | null {
+    if (tokens.length !== 1) return null;
 
-    const fd = tokens[0]?.toVar()?.toU64().toNumber();
-    if (fd === undefined) return undefined;
+    const t0 = tokens[0] as Token;
+    const v0 = t0.toVar();
+    if (v0 === null) return null;
+
+    const fd = v0.toU64().toNumber();
 
     const path = this.readFds()[fd];
     if (path === undefined) throw new Error(`fd: ${fd} not found`);
@@ -214,8 +217,8 @@ export class FdCmdLet extends CmdLet {
     return new Var(uint64(fd));
   }
 
-  private runWithoutParams(tokens: Token[]): Var | undefined {
-    if (tokens.length !== 0) return undefined;
+  private runWithoutParams(tokens: Token[]): Var | null {
+    if (tokens.length !== 0) return null;
 
     const fds = this.readFds();
     for (const [fd, path] of Object.entries(fds)) {
@@ -227,10 +230,10 @@ export class FdCmdLet extends CmdLet {
 
   public run(tokens: Token[]): Var {
     const retWithId = this.runWithId(tokens);
-    if (retWithId !== undefined) return retWithId;
+    if (retWithId !== null) return retWithId;
 
     const retWithoutParams = this.runWithoutParams(tokens);
-    if (retWithoutParams !== undefined) return retWithoutParams;
+    if (retWithoutParams !== null) return retWithoutParams;
 
     return this.usage();
   }

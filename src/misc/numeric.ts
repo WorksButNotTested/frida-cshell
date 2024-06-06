@@ -19,6 +19,9 @@ export class Numeric {
     const decimalWithoutPrefix = '^[0-9]+$';
     if (val.match(decimalWithoutPrefix) !== null) return Base.Decimal;
 
+    const hexWithoutPrefix = '^[0-9a-fA-F]+$';
+    if (val.match(hexWithoutPrefix) !== null) return Base.Hexadecimal;
+
     return Base.Invalid;
   }
 

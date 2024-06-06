@@ -135,7 +135,7 @@ export class Bp {
     Output.write(`${Output.green(`#${this._idx}`)} `);
     Output.write(`[${this._type}] `);
     Output.write(`${Output.yellow(this._literal ?? '')} `);
-    Output.write(`@ $pc=${Output.blue(Format.toHexString(ctx.pc))}, `);
+    Output.write(`@ $pc=${Output.blue(Format.toHexString(ctx.pc))} `);
     Output.write(`$tid=${threadId}`);
     Output.writeln();
     Output.writeln(Output.yellow('-'.repeat(80)));
@@ -221,7 +221,7 @@ export class Bp {
     Output.write(`${Output.green(`#${this._idx}`)} `);
     Output.write(`[${this._type}] `);
     Output.write(`${Output.yellow(this._literal ?? '')} `);
-    Output.write(`@ $pc=${Output.blue(Format.toHexString(details.from))}, `);
+    Output.write(`@ $pc=${Output.blue(Format.toHexString(details.from))} `);
     Output.write(`$addr=${Output.blue(Format.toHexString(details.address))}`);
     Output.writeln();
     Output.writeln(Output.yellow('-'.repeat(80)));
@@ -252,11 +252,21 @@ export class Bp {
   }
 
   public toString(short: boolean = false): string {
-    const type = this._type.toString();
-    const addr = Output.bold(this.addrString);
-    const literal = Output.bold(this._literal ?? '');
-    const hits = `[hits:${this.hitsString}]`;
-    const header = `#${this._idx.toString().padEnd(3, ' ')}. ${short ? '' : type} ${addr}: ${literal} ${hits} ${this.lengthString}`;
+    const idxString = Output.green(`#${this._idx.toString()}.`.padEnd(4, ' '));
+    const typeString = `[${this._type.toString()}]`;
+    const literalString = Output.yellow(this._literal ?? '');
+    const addString = `@ $pc=${Output.blue(this.addrString)}`;
+    const hitsString = `[hits:${this.hitsString}]`;
+    const lengthString = this.lengthString;
+    const header = [
+      idxString,
+      typeString,
+      literalString,
+      addString,
+      hitsString,
+      lengthString,
+    ].join(' ');
+
     const lines = this._lines.map(l => `  - ${Output.yellow(l)}`);
     lines.unshift(header);
     return `${lines.join('\n')}\n`;

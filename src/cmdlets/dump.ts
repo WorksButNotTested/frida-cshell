@@ -55,7 +55,8 @@ export class DumpCmdLet extends CmdLet {
         ansi: true,
         address: address,
       });
-      Output.writeln(dump);
+      const prefixed = dump.split('\n').join(`\n${Output.green("0x")}`);
+      Output.writeln(prefixed);
     } catch (error) {
       throw new Error(
         `failed to read ${Format.toHexString(length)} bytes from ${Format.toHexString(address)}, ${error}`,

@@ -21,7 +21,8 @@ return {
         ansi: true,
         address: address,
       });
-    Output.writeln(dump);
+    const prefixed = dump.split('\n').join(`\n${Output.green("0x")}`);
+    Output.writeln(prefixed);
   },
 
   isSupported: function() {

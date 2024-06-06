@@ -55,7 +55,7 @@ export class DumpCmdLet extends CmdLet {
         ansi: true,
         address: address,
       });
-      const prefixed = dump.split('\n').join(`\n${Output.green("0x")}`);
+      const prefixed = dump.split('\n').join(`\n${Output.green('0x')}`);
       Output.writeln(prefixed);
     } catch (error) {
       throw new Error(

@@ -16,7 +16,7 @@ const QUIT_CHAR: string = 'q';
 const ABORT_CHAR: string = 'x';
 
 export class Input {
-  private static readonly PROMPT: string = '-> ';
+  public static readonly PROMPT: string = '-> ';
   private static readonly EDIT_PROMPT: string = '. ';
 
   private static buffer: string = '';

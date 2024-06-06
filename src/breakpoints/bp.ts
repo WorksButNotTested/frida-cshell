@@ -156,10 +156,12 @@ export class Bp {
       for (const line of this._lines) {
         if (line.length === 0) continue;
         if (line.charAt(0) === '#') continue;
+        Output.writeln(`${Output.bold(Input.PROMPT)}${line}`);
         const parser = new Parser(line.toString());
         const tokens = parser.tokenize();
         const ret = Command.run(tokens);
         Vars.setRet(ret);
+        Output.writeRet();
         Output.writeln();
       }
     } catch (error) {
@@ -170,7 +172,6 @@ export class Bp {
         Output.writeln(`ERROR: Unknown error`);
       }
     } finally {
-      Output.writeRet();
       Output.setIndent(false);
       Input.suppressEdit(false);
       Output.writeln(Output.yellow('-'.repeat(80)));

@@ -131,9 +131,13 @@ export class Bp {
     else if (this._hits > 0) this._hits--;
     Output.clearLine();
     Output.writeln(Output.yellow('-'.repeat(80)));
-    Output.writeln(
-      `${Output.yellow('|')} Break ${Output.green(`#${this._idx}`)} [${this._type}] ${Output.yellow(this._literal ?? '')} @ $pc=${Output.blue(Format.toHexString(ctx.pc))}, $tid=${threadId}`,
-    );
+    Output.write(`${Output.yellow('|')} Break `);
+    Output.write(`${Output.green(`#${this._idx}`)} `);
+    Output.write(`[${this._type}] `);
+    Output.write(`${Output.yellow(this._literal ?? '')} `);
+    Output.write(`@ $pc=${Output.blue(Format.toHexString(ctx.pc))}, `);
+    Output.write(`$tid=${threadId}`);
+    Output.writeln();
     Output.writeln(Output.yellow('-'.repeat(80)));
     Regs.setThreadId(threadId);
     Regs.setContext(ctx);
@@ -212,9 +216,13 @@ export class Bp {
 
     Output.clearLine();
     Output.writeln(Output.yellow('-'.repeat(80)));
-    Output.writeln(
-      `${Output.yellow('|')} Break ${Output.green(`#${this._idx}`)} [${this._type}] ${Output.yellow(this._literal ?? '')} @ $pc=${Output.blue(Format.toHexString(details.from))}, $addr=${Output.blue(Format.toHexString(details.address))}`,
-    );
+    Output.write(`${Output.yellow('|')} Break `);
+    Output.write(`${Output.green(`#${this._idx}`)} `);
+    Output.write(`[${this._type}] `);
+    Output.write(`${Output.yellow(this._literal ?? '')} `);
+    Output.write(`@ $pc=${Output.blue(Format.toHexString(details.from))}, `);
+    Output.write(`$addr=${Output.blue(Format.toHexString(details.address))}`);
+    Output.writeln();
     Output.writeln(Output.yellow('-'.repeat(80)));
     Regs.setAddress(details.address);
     Regs.setPc(details.from);

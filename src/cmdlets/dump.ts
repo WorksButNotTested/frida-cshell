@@ -58,7 +58,7 @@ export class DumpCmdLet extends CmdLet {
       const prefixed = dump.replace(
         new RegExp('\n', 'g'),
         `\n${Output.green('0x')}`,
-      )
+      );
       Output.writeln(`  ${prefixed}`);
     } catch (error) {
       throw new Error(

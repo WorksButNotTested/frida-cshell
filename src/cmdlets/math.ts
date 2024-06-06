@@ -296,3 +296,140 @@ export class NotCmdLet extends UnaryOpCmdLet {
     return val;
   }
 }
+
+export class EndianCmdLet extends UnaryOpCmdLet {
+  name = '<>';
+  help = 'reverse endian operation';
+
+  protected OPERATION: string = 'reverse endian';
+
+  public override run(tokens: Token[]): Var {
+    if (tokens.length !== 2) return this.usage();
+
+    const [a0, a1] = tokens;
+    const [t0, t1] = [a0 as Token, a1 as Token];
+    const width = this.getWidth(t0);
+    const v1 = t1.toVar();
+
+    if (width === null) return this.usage();
+    if (v1 === null) return this.usage();
+
+    const op = v1.toU64();
+    try {
+      return new Var(this.reverseEndian(width, op));
+    } catch (error) {
+      throw new Error(
+        `failed to ${this.OPERATION} ${Format.toHexString(op)} of width ${Format.toHexString(width)}, ${error}`,
+      );
+    }
+  }
+
+  private getWidth(token: Token): number | null {
+    const literal = token.getLiteral();
+    switch (literal) {
+      case '1':
+        return 1;
+      case '2':
+        return 2;
+      case '4':
+        return 4;
+      case '8':
+        return 8;
+      default:
+        return null;
+    }
+  }
+
+  private reverseEndian(width: number, op: UInt64): UInt64 {
+    this.testRange(width, op);
+    switch (width) {
+      case 1: {
+        this.output(op, op);
+        return op;
+      }
+      case 2: {
+        const b0 = op.and(uint64('0xff')).shl(8);
+        const b1 = op.and(uint64('0xff00')).shr(8);
+        const val = b0.or(b1);
+        this.output(op, val);
+        return val;
+      }
+      case 4: {
+        const b0 = op.and(uint64('0xff')).shl(24);
+        const b1 = op.and(uint64('0xff00')).shl(8);
+        const b2 = op.and(uint64('0xff0000')).shr(8);
+        const b3 = op.and(uint64('0xff000000')).shr(24);
+        const val = [b0, b1, b2, b3].reduce((v, x) => v.or(x));
+        this.output(op, val);
+        return val;
+      }
+      case 8: {
+        const b0 = op.and(uint64('0xff')).shl(56);
+        const b1 = op.and(uint64('0xff00')).shl(40);
+        const b2 = op.and(uint64('0xff0000')).shl(24);
+        const b3 = op.and(uint64('0xff000000')).shl(8);
+        const b4 = op.and(uint64('0xff00000000')).shr(8);
+        const b5 = op.and(uint64('0xff0000000000')).shr(24);
+        const b6 = op.and(uint64('0xff000000000000')).shr(40);
+        const b7 = op.and(uint64('0xff000000000000')).shr(56);
+        const val = [b0, b1, b2, b3, b4, b5, b6, b7].reduce((v, x) => v.or(x));
+        this.output(op, val);
+        return val;
+      }
+      default:
+        throw new Error(`unsupported width: ${width}`);
+    }
+  }
+
+  private testRange(width: number, op: UInt64) {
+    switch (width) {
+      case 1: {
+        if (op.compare(uint64('0xff')) > 0) {
+          throw new Error(
+            `operand: ${op} is larger than ${width} bytes in length`,
+          );
+        }
+        break;
+      }
+      case 2: {
+        if (op.compare(uint64('0xffff')) > 0) {
+          throw new Error(
+            `operand: ${op} is larger than ${width} bytes in length`,
+          );
+        }
+        break;
+      }
+      case 4: {
+        if (op.compare(uint64('0xffffffff')) > 0) {
+          throw new Error(
+            `operand: ${op} is larger than ${width} bytes in length`,
+          );
+        }
+        break;
+      }
+      case 8: {
+        /*
+         * 8 bytes is the maximum supported operand so it can't be out of range
+         */
+        break;
+      }
+      default:
+        throw new Error(`unsupported width: ${width}`);
+    }
+  }
+
+  public override op(op0: UInt64): UInt64 {
+    throw new Error('not implemented');
+  }
+
+  public override usage(): Var {
+    const usage: string = `Usage: ${this.name}
+
+${this.name} width val - ${this.OPERATION} of an operand
+  width   the width of the operand (1, 2, 4 or 8)
+  op      the operand on which to perform the operation
+`;
+    Output.write(usage);
+    return Var.ZERO;
+  }
+}

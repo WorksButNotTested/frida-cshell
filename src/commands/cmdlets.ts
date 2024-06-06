@@ -21,6 +21,7 @@ import {
   ShlCmdLet,
   ShrCmdLet,
   NotCmdLet,
+  EndianCmdLet,
 } from '../cmdlets/math.js';
 import { HistoryCmdLet } from '../cmdlets/history.js';
 import { HelpCmdLet } from '../cmdlets/help.js';
@@ -50,6 +51,7 @@ export class CmdLets {
     this.registerCmdletType(DivCmdLet);
     this.registerCmdletType(CopyCmdLet);
     this.registerCmdletType(DumpCmdLet);
+    this.registerCmdletType(EndianCmdLet);
     this.registerCmdletType(ExitCmdLet);
     this.registerCmdletType(FdCmdLet);
     this.registerCmdletType(FunctionEntryBpCmdLet);

@@ -115,7 +115,7 @@ export class DumpCmdLet extends CmdLet {
           for (let i = 0; i < 16; i++) {
             if (i % width != 0) continue;
             const hdr = i.toString(16).toUpperCase();
-            const padLen = (width * 2) + 1 - hdr.length;
+            const padLen = width * 2 + 1 - hdr.length;
             Output.write(` ${hdr.padStart(padLen, ' ')}`);
           }
           for (let i = 0; i < count; i++) {

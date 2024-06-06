@@ -40,7 +40,9 @@ export class RegCmdLet extends CmdLet {
     const [a0, a1] = tokens;
     const [t0, t1] = [a0 as Token, a1 as Token];
 
-    const name = t0.getLiteral();
+    let name = t0.getLiteral();
+
+    if (name.startsWith('$')) name = name.slice(1);
 
     const value = t1.toVar();
     if (value === null) return null;
@@ -54,8 +56,10 @@ export class RegCmdLet extends CmdLet {
     if (tokens.length !== 1) return null;
 
     const t0 = tokens[0] as Token;
-    const name = t0.getLiteral();
+    let name = t0.getLiteral();
     if (name === null) return null;
+
+    if (name.startsWith('$')) name = name.slice(1);
 
     const val = Regs.get(name);
     Output.writeln(`Register ${name}, value: ${val.toString()}`);

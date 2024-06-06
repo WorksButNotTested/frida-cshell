@@ -254,10 +254,15 @@ export class Input {
       for (const line of lines) {
         if (line.length === 0) continue;
         if (line.charAt(0) === '#') continue;
+
+        Output.write(Output.bold(this.PROMPT));
+        Output.writeln(line);
+
         const parser = new Parser(line.toString());
         const tokens = parser.tokenize();
         const ret = Command.run(tokens);
         Vars.setRet(ret);
+        Output.writeRet();
         Output.writeln();
       }
     } catch (_) {}

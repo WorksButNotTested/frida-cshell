@@ -60,6 +60,9 @@ export class Input {
       case CharCode.TAB:
         /* TODO - Command Completion */
         break;
+      case CharCode.BS:
+        History.getCurrent().backspace();
+        break;
       case CharCode.CR:
         this.parseEnter();
         break;

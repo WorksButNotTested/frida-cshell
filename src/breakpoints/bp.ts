@@ -131,7 +131,7 @@ export class Bp {
     else if (this._hits > 0) this._hits--;
     Output.clearLine();
     Output.writeln(
-      `Break #${this._idx} [${this._type}] @ $pc=${Format.toHexString(ctx.pc)}, $tid=${threadId}`,
+      `Break ${Output.green(`#${this._idx}`)} [${this._type}] ${Output.yellow(this._literal ?? '')} @ $pc=${Output.blue(Format.toHexString(ctx.pc))}, $tid=${threadId}`,
     );
     Output.writeln();
     Regs.setThreadId(threadId);
@@ -207,7 +207,7 @@ export class Bp {
 
     Output.clearLine();
     Output.writeln(
-      `Break #${this._idx} [${this._type}] @ $pc=${Format.toHexString(details.from)}, $addr=${Format.toHexString(details.address)}`,
+      `Break ${Output.green(`#${this._idx}`)} [${this._type}] ${Output.yellow(this._literal ?? '')} @ $pc=${Output.blue(Format.toHexString(details.from))}, $addr=${Output.blue(Format.toHexString(details.address))}`,
     );
     Output.writeln();
     Regs.setAddress(details.address);

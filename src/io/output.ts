@@ -23,6 +23,7 @@ export class Output {
   ];
 
   private static verbose: boolean = false;
+  private static indent: boolean = false;
 
   public static banner() {
     this.shell
@@ -54,17 +55,25 @@ export class Output {
     buffer: string | null = null,
     verbose: boolean = false,
   ) {
-    if (buffer !== null) {
-      this.write(`${buffer}\n`, verbose);
-    } else {
-      this.write('\n', verbose);
-    }
+    this.write(`${buffer ?? ''}\n`, verbose);
   }
 
   public static write(buffer: string | null = null, verbose: boolean = false) {
     if (verbose && !this.verbose) return;
 
-    if (buffer !== null) {
+    if (buffer === null) return;
+
+    if (this.indent) {
+      const trimmed = buffer.endsWith('\n')
+        ? buffer.slice(0, buffer.length - 1)
+        : buffer;
+      const fixed = trimmed.replace(
+        new RegExp('\n', 'g'),
+        `\r\n${Output.yellow('| ')}`,
+      );
+      const output = buffer.endsWith('\n') ? `${fixed}\r\n` : fixed;
+      send(['frida:stderr', `${Output.yellow('| ')}${output}`]);
+    } else {
       const fixed = buffer.replace(new RegExp('\n', 'g'), '\r\n');
       send(['frida:stderr', fixed]);
     }
@@ -80,8 +89,12 @@ export class Output {
     Output.writeln(`ret: ${Output.bold(Vars.getRet().toString())}`);
   }
 
-  public static setVerbose(dev: boolean) {
-    this.verbose = dev;
+  public static setVerbose(verbose: boolean) {
+    this.verbose = verbose;
+  }
+
+  public static setIndent(indent: boolean) {
+    this.indent = indent;
   }
 
   public static bold(input: string): string {

@@ -130,12 +130,11 @@ export class Bp {
     if (this._hits === 0) return;
     else if (this._hits > 0) this._hits--;
     Output.clearLine();
-    Output.writeln(Output.yellow("-".repeat(80)));
+    Output.writeln(Output.yellow('-'.repeat(80)));
     Output.writeln(
-      `${Output.yellow("|")} Break ${Output.green(`#${this._idx}`)} [${this._type}] ${Output.yellow(this._literal ?? '')} @ $pc=${Output.blue(Format.toHexString(ctx.pc))}, $tid=${threadId}`,
+      `${Output.yellow('|')} Break ${Output.green(`#${this._idx}`)} [${this._type}] ${Output.yellow(this._literal ?? '')} @ $pc=${Output.blue(Format.toHexString(ctx.pc))}, $tid=${threadId}`,
     );
-    Output.writeln(Output.yellow("-".repeat(80)));
-    Output.writeln();
+    Output.writeln(Output.yellow('-'.repeat(80)));
     Regs.setThreadId(threadId);
     Regs.setContext(ctx);
     Regs.setReturnAddress(returnAddress);
@@ -147,6 +146,8 @@ export class Bp {
 
   private runCommands() {
     Input.suppressEdit(true);
+    Output.setIndent(true);
+    Output.writeln();
     try {
       for (const line of this._lines) {
         if (line.length === 0) continue;
@@ -165,8 +166,10 @@ export class Bp {
         Output.writeln(`ERROR: Unknown error`);
       }
     } finally {
-      Input.suppressEdit(false);
       Output.writeRet();
+      Output.setIndent(false);
+      Input.suppressEdit(false);
+      Output.writeln(Output.yellow('-'.repeat(80)));
       Input.prompt();
       Regs.clear();
     }
@@ -208,12 +211,11 @@ export class Bp {
     else if (this._hits > 0) this._hits--;
 
     Output.clearLine();
-    Output.writeln(Output.yellow("-".repeat(80)));
+    Output.writeln(Output.yellow('-'.repeat(80)));
     Output.writeln(
-      `${Output.yellow("|")} Break ${Output.green(`#${this._idx}`)} [${this._type}] ${Output.yellow(this._literal ?? '')} @ $pc=${Output.blue(Format.toHexString(details.from))}, $addr=${Output.blue(Format.toHexString(details.address))}`,
+      `${Output.yellow('|')} Break ${Output.green(`#${this._idx}`)} [${this._type}] ${Output.yellow(this._literal ?? '')} @ $pc=${Output.blue(Format.toHexString(details.from))}, $addr=${Output.blue(Format.toHexString(details.address))}`,
     );
-    Output.writeln(Output.yellow("-".repeat(80)));
-    Output.writeln();
+    Output.writeln(Output.yellow('-'.repeat(80)));
     Regs.setAddress(details.address);
     Regs.setPc(details.from);
 

@@ -22,7 +22,7 @@ return {
         address: address,
       });
     const prefixed = dump.split('\n').join(`\n${Output.green("0x")}`);
-    Output.writeln(prefixed);
+    Output.writeln(`  ${prefixed}`);
   },
 
   isSupported: function() {

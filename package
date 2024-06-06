@@ -14,6 +14,26 @@ file=
 name=
 pid=
 
+show_help () {
+    echo Usage
+    echo "  \$0 [OPTION?]"
+    echo
+    echo Help Options:
+    echo "  -h,   show help options"
+    echo
+    echo Application Options:
+    echo "  -f    spawn FILE"
+    echo "  -n    attach to NAME"
+    echo "  -p    attach to PID"
+    echo "  -V    enable verbose mode"
+    echo
+}
+
+if [[ "\$1" == "--help" ]]; then
+    show_help
+    exit 0
+fi
+
 while getopts ":f:hn:p:V:" opt; do
     case \$opt in
         f)
@@ -37,24 +57,14 @@ while getopts ":f:hn:p:V:" opt; do
             ;;
         *)
             echo "Invalid option: - \$OPTARG"
+            show_help
             exit 1
             ;;
     esac
 done
 
 if [ \${help} ]; then
-    echo Usage
-    echo "  \$0 [OPTION?]"
-    echo
-    echo Help Options:
-    echo "  -h,   show help options"
-    echo
-    echo Application Options:
-    echo "  -f    spawn FILE"
-    echo "  -n    attach to NAME"
-    echo "  -p    attach to PID"
-    echo "  -V    enable verbose mode"
-    echo
+    show_help
     exit 0
 fi
 
@@ -74,6 +84,7 @@ fi
 
 if [ -z \${file} ] && [ -z \${name} ] && [ -z \${pid} ]; then
     echo "file, name or pid must be specified";
+    show_help
     exit 1
 fi
 

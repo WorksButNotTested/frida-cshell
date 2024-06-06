@@ -4,7 +4,7 @@ import { Format } from '../misc/format.js';
 import { Token } from '../io/token.js';
 import { Var } from '../vars/var.js';
 
-abstract class MathCmdLet extends CmdLet {
+abstract class BinaryOpCmdLet extends CmdLet {
   category = 'math';
 
   protected abstract OPERATION: string;
@@ -53,28 +53,87 @@ ${this.name} op1 op2 - ${this.OPERATION} two values together
     const dv = Format.toDecString(val);
     const dMax = Math.max(Math.max(d0.length, d1.length), dv.length);
 
-    const pad =' '.repeat(this.name.length);
+    const pad = ' '.repeat(this.name.length);
     const hLine = Output.bold('-'.repeat(this.name.length + hMax + 1));
     const dLine = Output.bold('-'.repeat(this.name.length + dMax + 1));
     const gap = ' '.repeat(5);
 
-    Output.writeln(`${pad} ${Output.blue(h0.padStart(hMax, ' '))}${gap}${pad} ${Output.blue(d0.padStart(dMax, ' '))}`);
-    Output.writeln(`${this.name} ${Output.blue(h1.padStart(hMax, ' '))}${gap}${this.name} ${Output.blue(d1.padStart(dMax, ' '))}`);
+    Output.writeln(
+      `${pad} ${Output.blue(h0.padStart(hMax, ' '))}${gap}${pad} ${Output.blue(d0.padStart(dMax, ' '))}`,
+    );
+    Output.writeln(
+      `${this.name} ${Output.blue(h1.padStart(hMax, ' '))}${gap}${this.name} ${Output.blue(d1.padStart(dMax, ' '))}`,
+    );
     Output.writeln(`${hLine}${gap}${dLine}`);
-    Output.writeln(`${pad} ${Output.green(hv.padStart(hMax, ' '))}${gap}${pad} ${Output.blue(dv.padStart(dMax, ' '))}`);
+    Output.writeln(
+      `${pad} ${Output.green(hv.padStart(hMax, ' '))}${gap}${pad} ${Output.green(dv.padStart(dMax, ' '))}`,
+    );
     Output.writeln(`${hLine}${gap}${dLine}`);
     Output.writeln();
-
-    Output.writeln(
-      `${Format.toHexString(op0)} ${this.name} ${Format.toHexString(op1)} = ${Format.toHexString(val)}`,
-    );
-    Output.writeln(
-      `${Format.toDecString(op0)} ${this.name} ${Format.toDecString(op1)} = ${Format.toDecString(val)}`,
-    );
   }
 }
 
-export class AddCmdLet extends MathCmdLet {
+abstract class UnaryOpCmdLet extends CmdLet {
+  category = 'math';
+
+  protected abstract OPERATION: string;
+  protected abstract op(op0: UInt64): UInt64;
+
+  public run(tokens: Token[]): Var {
+    if (tokens.length !== 1) return this.usage();
+
+    const t0 = tokens[0] as Token;
+    const v0 = t0.toVar();
+    if (v0 === null) return this.usage();
+
+    const op = v0.toU64();
+
+    try {
+      return new Var(this.op(op));
+    } catch (error) {
+      throw new Error(
+        `failed to ${this.OPERATION} ${Format.toHexString(op)}, ${error}`,
+      );
+    }
+  }
+
+  public usage(): Var {
+    const usage: string = `Usage: ${this.name}
+
+${this.name} op - perform a ${this.OPERATION} operation on an operand
+  op   the operand on which to operate
+`;
+    Output.write(usage);
+    return Var.ZERO;
+  }
+
+  protected output(op0: UInt64, val: UInt64) {
+    const h0 = Format.toHexString(op0);
+    const hv = Format.toHexString(val);
+    const hMax = Math.max(h0.length, hv.length);
+
+    const d0 = Format.toDecString(op0);
+    const dv = Format.toDecString(val);
+    const dMax = Math.max(d0.length, dv.length);
+
+    const pad = ' '.repeat(this.name.length);
+    const hLine = Output.bold('-'.repeat(this.name.length + hMax + 1));
+    const dLine = Output.bold('-'.repeat(this.name.length + dMax + 1));
+    const gap = ' '.repeat(5);
+
+    Output.writeln(
+      `${pad} ${Output.blue(h0.padStart(hMax, ' '))}${gap}${pad} ${Output.blue(d0.padStart(dMax, ' '))}`,
+    );
+    Output.writeln(`${hLine}${gap}${dLine}`);
+    Output.writeln(
+      `${pad} ${Output.green(hv.padStart(hMax, ' '))}${gap}${pad} ${Output.green(dv.padStart(dMax, ' '))}`,
+    );
+    Output.writeln(`${hLine}${gap}${dLine}`);
+    Output.writeln();
+  }
+}
+
+export class AddCmdLet extends BinaryOpCmdLet {
   name = '+';
   help = 'add two operands';
 
@@ -87,7 +146,7 @@ export class AddCmdLet extends MathCmdLet {
   }
 }
 
-export class SubCmdLet extends MathCmdLet {
+export class SubCmdLet extends BinaryOpCmdLet {
   name = '-';
   help = 'subtract two operands';
 
@@ -104,7 +163,7 @@ export class SubCmdLet extends MathCmdLet {
   }
 }
 
-export class MulCmdLet extends MathCmdLet {
+export class MulCmdLet extends BinaryOpCmdLet {
   name = '*';
   help = 'multiply two operands';
 
@@ -125,7 +184,7 @@ export class MulCmdLet extends MathCmdLet {
   }
 }
 
-export class DivCmdLet extends MathCmdLet {
+export class DivCmdLet extends BinaryOpCmdLet {
   name = '/';
   help = 'divide two operands';
 
@@ -141,7 +200,7 @@ export class DivCmdLet extends MathCmdLet {
   }
 }
 
-export class OrCmdLet extends MathCmdLet {
+export class OrCmdLet extends BinaryOpCmdLet {
   name = '|';
   help = 'or two operands';
 
@@ -154,7 +213,7 @@ export class OrCmdLet extends MathCmdLet {
   }
 }
 
-export class AndCmdLet extends MathCmdLet {
+export class AndCmdLet extends BinaryOpCmdLet {
   name = '&';
   help = 'and two operands';
 
@@ -167,7 +226,7 @@ export class AndCmdLet extends MathCmdLet {
   }
 }
 
-export class XorCmdLet extends MathCmdLet {
+export class XorCmdLet extends BinaryOpCmdLet {
   name = '^';
   help = 'xor two operands';
 
@@ -180,7 +239,7 @@ export class XorCmdLet extends MathCmdLet {
   }
 }
 
-export class ShrCmdLet extends MathCmdLet {
+export class ShrCmdLet extends BinaryOpCmdLet {
   name = '>>';
   help = 'shr op1 by op2';
 
@@ -193,7 +252,7 @@ export class ShrCmdLet extends MathCmdLet {
   }
 }
 
-export class ShlCmdLet extends MathCmdLet {
+export class ShlCmdLet extends BinaryOpCmdLet {
   name = '<<';
   help = 'shl op1 by op2';
 
@@ -206,34 +265,15 @@ export class ShlCmdLet extends MathCmdLet {
   }
 }
 
-export class NotCmdLet extends CmdLet {
+export class NotCmdLet extends UnaryOpCmdLet {
   name = '~';
-  category = 'math';
-  help = 'bitwise not';
+  help = 'bitwise not an operand';
 
-  public usage(): Var {
-    const usage: string = `Usage: not
+  protected OPERATION: string = 'bitwise not';
 
-not op - perform a bitwise not operation on an operand
-  op   the operand on which to operate
-`;
-    Output.write(usage);
-    return Var.ZERO;
-  }
-
-  public run(tokens: Token[]): Var {
-    if (tokens.length !== 1) return this.usage();
-
-    const t0 = tokens[0] as Token;
-    const v0 = t0.toVar();
-    if (v0 === null) return this.usage();
-
-    const op = v0.toU64();
-
-    try {
-      return new Var(op.not());
-    } catch (error) {
-      throw new Error(`failed to not ${Format.toHexString(op)}, ${error}`);
-    }
+  protected op(op: UInt64): UInt64 {
+    const val = op.not();
+    this.output(op, val);
+    return val;
   }
 }

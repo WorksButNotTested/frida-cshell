@@ -4,6 +4,9 @@ import { Format } from '../misc/format.js';
 import { Token } from '../io/token.js';
 import { Var } from '../vars/var.js';
 
+const HEX_LABEL: string = 'HEXADECIMAL';
+const DEC_LABEL: string = 'DECIMAL';
+
 abstract class BinaryOpCmdLet extends CmdLet {
   category = 'math';
 
@@ -46,18 +49,26 @@ ${this.name} op1 op2 - ${this.OPERATION} two values together
     const h0 = Format.toHexString(op0);
     const h1 = Format.toHexString(op1);
     const hv = Format.toHexString(val);
-    const hMax = Math.max(Math.max(h0.length, h1.length), hv.length);
+    const hMax = [HEX_LABEL, DEC_LABEL, h0, h1, hv]
+      .map(x => x.length)
+      .reduce((max, curr) => Math.max(max, curr));
 
     const d0 = Format.toDecString(op0);
     const d1 = Format.toDecString(op1);
     const dv = Format.toDecString(val);
-    const dMax = Math.max(Math.max(d0.length, d1.length), dv.length);
+    const dMax = [HEX_LABEL, DEC_LABEL, d0, d1, dv]
+      .map(x => x.length)
+      .reduce((max, curr) => Math.max(max, curr));
 
     const pad = ' '.repeat(this.name.length);
     const hLine = Output.bold('-'.repeat(this.name.length + hMax + 1));
     const dLine = Output.bold('-'.repeat(this.name.length + dMax + 1));
     const gap = ' '.repeat(5);
 
+    Output.writeln();
+    Output.writeln(
+      `${pad} ${HEX_LABEL.padStart(hMax, ' ')}${gap}${pad} ${DEC_LABEL.padStart(dMax, ' ')}`,
+    );
     Output.writeln(
       `${pad} ${Output.blue(h0.padStart(hMax, ' '))}${gap}${pad} ${Output.blue(d0.padStart(dMax, ' '))}`,
     );
@@ -110,17 +121,25 @@ ${this.name} op - perform a ${this.OPERATION} operation on an operand
   protected output(op0: UInt64, val: UInt64) {
     const h0 = Format.toHexString(op0);
     const hv = Format.toHexString(val);
-    const hMax = Math.max(h0.length, hv.length);
+    const hMax = [HEX_LABEL, DEC_LABEL, h0, hv]
+      .map(x => x.length)
+      .reduce((max, curr) => Math.max(max, curr));
 
     const d0 = Format.toDecString(op0);
     const dv = Format.toDecString(val);
-    const dMax = Math.max(d0.length, dv.length);
+    const dMax = [HEX_LABEL, DEC_LABEL, d0, dv]
+      .map(x => x.length)
+      .reduce((max, curr) => Math.max(max, curr));
 
     const pad = ' '.repeat(this.name.length);
     const hLine = Output.bold('-'.repeat(this.name.length + hMax + 1));
     const dLine = Output.bold('-'.repeat(this.name.length + dMax + 1));
     const gap = ' '.repeat(5);
 
+    Output.writeln();
+    Output.writeln(
+      `${pad} ${HEX_LABEL.padStart(hMax, ' ')}${gap}${pad} ${DEC_LABEL.padStart(dMax, ' ')}`,
+    );
     Output.writeln(
       `${pad} ${Output.blue(h0.padStart(hMax, ' '))}${gap}${pad} ${Output.blue(d0.padStart(dMax, ' '))}`,
     );

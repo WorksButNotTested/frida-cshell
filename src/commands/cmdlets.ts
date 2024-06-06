@@ -36,6 +36,7 @@ import { RegCmdLet } from '../cmdlets/reg.js';
 import { LdCmdLet } from '../cmdlets/ld.js';
 import { FdCmdLet } from '../cmdlets/fd.js';
 import { SrcCmdLet } from '../cmdlets/src.js';
+import { PrintCmdLet } from '../cmdlets/print.js';
 
 export class CmdLets {
   private static byName: Map<string, CmdLet> = new Map<string, CmdLet>();
@@ -62,6 +63,7 @@ export class CmdLets {
     this.registerCmdletType(ModCmdLet);
     this.registerCmdletType(MulCmdLet);
     this.registerCmdletType(NotCmdLet);
+    this.registerCmdletType(PrintCmdLet);
     this.registerCmdletType(ReadBpCmdLet);
     this.registerCmdletType(RegCmdLet);
     this.registerCmdletType(ShlCmdLet);

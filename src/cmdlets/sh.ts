@@ -87,7 +87,11 @@ export class ShCmdLet extends CmdLet {
     if (shellVar.equals(ptr(0)))
       throw new Error(`failed to getenv("SHELL"), errno: ${getenvErrno}`);
 
-    Output.writeln(`SHELL: ${shellVar.readUtf8String()}`, true);
+    const shellPath = shellVar.readUtf8String();
+    Output.writeln(`SHELL: ${shellPath}`, true);
+
+    if (shellPath === null) throw new Error('failed to read SHELL');
+
     const childPipe = this.createPipe();
     const parentPipe = this.createPipe();
 
@@ -97,7 +101,7 @@ export class ShCmdLet extends CmdLet {
 
     if (childPid === 0) {
       try {
-        const cmd = ['/usr/bin/ping', '-c3', 'localhost'];
+        const cmd = [shellPath, "-i"];
         this.runChild(cmd, childPipe, parentPipe);
       } finally {
         this.fnExit(1);

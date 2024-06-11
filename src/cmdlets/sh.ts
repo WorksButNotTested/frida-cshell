@@ -28,6 +28,7 @@ export class ShCmdLet extends CmdLet {
   private pClose: NativePointer | null = null;
   private pDup2: NativePointer | null = null;
   private pExecV: NativePointer | null = null;
+  private pExit: NativePointer | null = null;
   private pWaitPid: NativePointer | null = null;
 
   public override runSync(tokens: Token[]): Var {
@@ -47,6 +48,8 @@ export class ShCmdLet extends CmdLet {
       this.pDup2 === null ||
       this.pGetEnv == null ||
       this.pExecV == null ||
+      this.pExit == null ||
+      this.pExit == null ||
       this.pWaitPid == null
     )
       throw new Error('failed to find necessary native functions');
@@ -72,6 +75,8 @@ export class ShCmdLet extends CmdLet {
       'pointer',
       'int',
     ]);
+    // void exit(int status);
+    const fnExit = new SystemFunction(this.pExit, 'void', ['int']);
 
     const shell = Memory.allocUtf8String('SHELL');
     const { value: shellVar, errno: getenvErrno } = fnGetEnv(
@@ -102,50 +107,74 @@ export class ShCmdLet extends CmdLet {
 
     if (forkRet === 0) {
       // child
-      const { value: closeChildRet, errno: closeChildErrno } = fnClose(
-        toChildPipes.add(PIPE_WRITE_OFFSET).readInt(),
-      ) as UnixSystemFunctionResult<number>;
-      if (closeChildRet !== 0)
-        throw new Error(`failed to close(child), errno: ${closeChildErrno}`);
+      try {
+        const { value: closeChildRet, errno: closeChildErrno } = fnClose(
+          toChildPipes.add(PIPE_WRITE_OFFSET).readInt(),
+        ) as UnixSystemFunctionResult<number>;
+        if (closeChildRet !== 0)
+          throw new Error(`failed to close(child), errno: ${closeChildErrno}`);
 
-      const { value: closeParentRet, errno: closeParentErrno } = fnClose(
-        toParentPipes.add(PIPE_READ_OFFSET).readInt(),
-      ) as UnixSystemFunctionResult<number>;
-      if (closeParentRet !== 0)
-        throw new Error(`failed to close(parent), errno: ${closeParentErrno}`);
+        const { value: closeParentRet, errno: closeParentErrno } = fnClose(
+          toParentPipes.add(PIPE_READ_OFFSET).readInt(),
+        ) as UnixSystemFunctionResult<number>;
+        if (closeParentRet !== 0)
+          throw new Error(
+            `failed to close(parent), errno: ${closeParentErrno}`,
+          );
 
-      const { value: dup2InRet, errno: dup2InErrno } = fnDup2(
-        toChildPipes.add(PIPE_READ_OFFSET).readInt(),
-        STDIN_FILENO,
-      ) as UnixSystemFunctionResult<number>;
-      if (dup2InRet !== STDIN_FILENO)
-        throw new Error(`failed to dup2(stdin), errno: ${dup2InErrno}`);
+        const { value: dup2InRet, errno: dup2InErrno } = fnDup2(
+          toChildPipes.add(PIPE_READ_OFFSET).readInt(),
+          STDIN_FILENO,
+        ) as UnixSystemFunctionResult<number>;
+        if (dup2InRet !== STDIN_FILENO)
+          throw new Error(`failed to dup2(stdin), errno: ${dup2InErrno}`);
 
-      const { value: dup2OutRet, errno: dup2OutErrno } = fnDup2(
-        toParentPipes.add(PIPE_WRITE_OFFSET).readInt(),
-        STDOUT_FILENO,
-      ) as UnixSystemFunctionResult<number>;
-      if (dup2OutRet !== STDOUT_FILENO)
-        throw new Error(`failed to dup2(stdout), errno: ${dup2OutErrno}`);
+        const { value: dup2OutRet, errno: dup2OutErrno } = fnDup2(
+          toParentPipes.add(PIPE_WRITE_OFFSET).readInt(),
+          STDOUT_FILENO,
+        ) as UnixSystemFunctionResult<number>;
+        if (dup2OutRet !== STDOUT_FILENO)
+          throw new Error(`failed to dup2(stdout), errno: ${dup2OutErrno}`);
 
-      const { value: dup2ErrRet, errno: dup2ErrErrno } = fnDup2(
-        toParentPipes.add(PIPE_WRITE_OFFSET).readInt(),
-        STDERR_FILENO,
-      ) as UnixSystemFunctionResult<number>;
-      if (dup2ErrRet !== STDERR_FILENO)
-        throw new Error(`failed to dup2(stderr), errno: ${dup2ErrErrno}`);
+        const { value: dup2ErrRet, errno: dup2ErrErrno } = fnDup2(
+          toParentPipes.add(PIPE_WRITE_OFFSET).readInt(),
+          STDERR_FILENO,
+        ) as UnixSystemFunctionResult<number>;
+        if (dup2ErrRet !== STDERR_FILENO)
+          throw new Error(`failed to dup2(stderr), errno: ${dup2ErrErrno}`);
 
-      const argv = Memory.alloc(Process.pointerSize * 2);
-      const cmd = Memory.allocUtf8String('/usr/bin/ls');
-      argv.writePointer(cmd);
-      argv.add(Process.pointerSize).writePointer(ptr(0));
+        const cmd = '/usr/bin/ping';
+        const cmdPtr = Memory.allocUtf8String(cmd);
+        const args = [cmd, '-c3', 'localhost'];
+        const argPtrs: NativePointer[] = Array.from(args).map(arg =>
+          Memory.allocUtf8String(arg),
+        );
+        argPtrs.push(ptr(0));
+        const argv = Memory.alloc(Process.pointerSize * argPtrs.length);
+        for (const [idx, ptr] of argPtrs.entries()) {
+          argv.add(Process.pointerSize * idx).writePointer(ptr);
+        }
 
-      const { value: execvRet, errno: execvErrno } = fnExecV(
-        cmd,
-        argv,
-      ) as UnixSystemFunctionResult<number>;
-      if (execvRet !== 0)
-        throw new Error(`failed to execv, errno: ${execvErrno}`);
+        const { value: execvRet, errno: execvErrno } = fnExecV(
+          cmdPtr,
+          argv,
+        ) as UnixSystemFunctionResult<number>;
+        if (execvRet !== 0)
+          throw new Error(`failed to execv, errno: ${execvErrno}`);
+      } catch (error) {
+        const output = new UnixOutputStream(
+          toParentPipes.add(PIPE_WRITE_OFFSET).readInt(),
+        );
+        if (error instanceof Error) {
+          output.write(Format.toByteArray(`ERROR: ${error.message}`));
+          output.write(Format.toByteArray(`${error.stack}`));
+        } else {
+          output.write(Format.toByteArray('Unknown error'));
+        }
+        output.close();
+      } finally {
+        fnExit(1);
+      }
 
       // unreachable
     } else {
@@ -173,6 +202,8 @@ export class ShCmdLet extends CmdLet {
       //   { autoClose: true },
       // );
 
+      Output.writeln(`reading pid: ${forkRet}`, true);
+
       for (
         let buf = await input.read(READ_SIZE);
         buf.byteLength !== 0;
@@ -181,6 +212,8 @@ export class ShCmdLet extends CmdLet {
         const str: string = Format.toTextString(buf);
         Output.write(str);
       }
+
+      Output.writeln(`waiting pid: ${forkRet}`, true);
 
       const pStatus = Memory.alloc(INT_SIZE);
 
@@ -205,6 +238,7 @@ export class ShCmdLet extends CmdLet {
     }
     return Var.ZERO;
   }
+
   private static wifExited(status: number): boolean {
     return (status & 0xff00) >> 8 === 0;
   }
@@ -237,8 +271,8 @@ export class ShCmdLet extends CmdLet {
         this.pFork = Module.findExportByName(null, 'fork');
         this.pClose = Module.findExportByName(null, 'close');
         this.pDup2 = Module.findExportByName(null, 'dup2');
-
         this.pExecV = Module.findExportByName(null, 'execv');
+        this.pExit = Module.findExportByName(null, 'exit');
         this.pWaitPid = Module.findExportByName(null, 'waitpid');
 
         if (
@@ -248,6 +282,7 @@ export class ShCmdLet extends CmdLet {
           this.pClose === null ||
           this.pDup2 === null ||
           this.pExecV == null ||
+          this.pExit == null ||
           this.pWaitPid == null
         )
           return false;

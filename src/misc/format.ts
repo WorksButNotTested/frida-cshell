@@ -48,4 +48,9 @@ export class Format {
   public static toTextString(bytes: ArrayBuffer): string {
     return String.fromCharCode(...new Uint8Array(bytes));
   }
+
+  public static toByteArray(str: string): ArrayBuffer {
+    return new Uint8Array(str.split('').map(c => c.charCodeAt(0)))
+      .buffer as ArrayBuffer;
+  }
 }

@@ -97,7 +97,8 @@ export class ShCmdLet extends CmdLet {
 
     if (childPid === 0) {
       try {
-        this.runChild(childPipe, parentPipe);
+        const cmd = ['/usr/bin/ping', '-c3', 'localhost'];
+        this.runChild(cmd, childPipe, parentPipe);
       } finally {
         this.fnExit(1);
       }
@@ -120,7 +121,7 @@ export class ShCmdLet extends CmdLet {
     return { readFd, writeFd };
   }
 
-  private runChild(childPipe: Pipe, parentPipe: Pipe) {
+  private runChild(command: string[], childPipe: Pipe, parentPipe: Pipe) {
     const { readFd: toChildReadFd, writeFd: toChildWriteFd } = childPipe;
     const { readFd: toParentReadFd, writeFd: toParentWriteFd } = parentPipe;
     try {
@@ -166,20 +167,18 @@ export class ShCmdLet extends CmdLet {
       if (dup2ErrRet !== STDERR_FILENO)
         throw new Error(`failed to dup2(stderr), errno: ${dup2ErrErrno}`);
 
-      const cmd = '/usr/bin/ping';
-      const cmdPtr = Memory.allocUtf8String(cmd);
-      const args = [cmd, '-c3', 'localhost'];
-      const argPtrs: NativePointer[] = Array.from(args).map(arg =>
+      if (command.length === 0) throw new Error('empty command');
+      const args: NativePointer[] = Array.from(command).map(arg =>
         Memory.allocUtf8String(arg),
       );
-      argPtrs.push(ptr(0));
-      const argv = Memory.alloc(Process.pointerSize * argPtrs.length);
-      for (const [idx, ptr] of argPtrs.entries()) {
+      args.push(ptr(0));
+      const argv = Memory.alloc(Process.pointerSize * args.length);
+      for (const [idx, ptr] of args.entries()) {
         argv.add(Process.pointerSize * idx).writePointer(ptr);
       }
 
       const { value: execvRet, errno: execvErrno } = this.fnExecV(
-        cmdPtr,
+        args[0] as NativePointer,
         argv,
       ) as UnixSystemFunctionResult<number>;
       if (execvRet !== 0)
@@ -200,10 +199,7 @@ export class ShCmdLet extends CmdLet {
     const { readFd: toChildReadFd, writeFd: toChildWriteFd } = childPipe;
     const { readFd: toParentReadFd, writeFd: toParentWriteFd } = parentPipe;
     try {
-      if (
-        this.fnClose === null ||
-        this.fnWaitPid === null
-      )
+      if (this.fnClose === null || this.fnWaitPid === null)
         throw new Error('failed to find necessary native functions');
 
       Output.writeln(`child pid: ${childPid}`, true);

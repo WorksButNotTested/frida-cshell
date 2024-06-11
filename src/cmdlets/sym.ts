@@ -22,7 +22,7 @@ export class SymCmdLet extends CmdLet {
   category = 'memory';
   help = 'look up a symbol information';
 
-  public run(tokens: Token[]): Var {
+  public runSync(tokens: Token[]): Var {
     const retWithAddress = this.runWithAddress(tokens);
     if (retWithAddress !== null) return retWithAddress;
 

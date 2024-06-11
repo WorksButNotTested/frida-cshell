@@ -20,7 +20,7 @@ export class VmCmdLet extends CmdLet {
   category = 'memory';
   help = 'display virtual memory ranges';
 
-  public run(tokens: Token[]): Var {
+  public runSync(tokens: Token[]): Var {
     const retWithAddress = this.runWithAddress(tokens);
     if (retWithAddress !== null) return retWithAddress;
 

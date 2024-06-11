@@ -15,7 +15,7 @@ abstract class TypedBpCmdLet extends CmdLet implements CmdLetEdit {
 
   category = 'breakpoints';
 
-  public run(tokens: Token[]): Var {
+  public runSync(tokens: Token[]): Var {
     const retWithIndexHitsAndAddress = this.runWithIndexHitsAndAddr(tokens);
     if (retWithIndexHitsAndAddress !== null) return retWithIndexHitsAndAddress;
 

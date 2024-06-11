@@ -13,7 +13,7 @@ abstract class BinaryOpCmdLet extends CmdLet {
   protected abstract OPERATION: string;
   protected abstract op(op0: UInt64, op1: UInt64): UInt64;
 
-  public run(tokens: Token[]): Var {
+  public runSync(tokens: Token[]): Var {
     if (tokens.length !== 2) return this.usage();
 
     const [a0, a1] = tokens;
@@ -90,7 +90,7 @@ abstract class UnaryOpCmdLet extends CmdLet {
   protected abstract OPERATION: string;
   protected abstract op(op0: UInt64): UInt64;
 
-  public run(tokens: Token[]): Var {
+  public runSync(tokens: Token[]): Var {
     if (tokens.length !== 1) return this.usage();
 
     const t0 = tokens[0] as Token;
@@ -303,7 +303,7 @@ export class EndianCmdLet extends UnaryOpCmdLet {
 
   protected OPERATION: string = 'reverse endian';
 
-  public override run(tokens: Token[]): Var {
+  public override runSync(tokens: Token[]): Var {
     if (tokens.length !== 2) return this.usage();
 
     const [a0, a1] = tokens;

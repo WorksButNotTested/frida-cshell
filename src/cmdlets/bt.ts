@@ -16,7 +16,7 @@ export class BtCmdLet extends CmdLet {
   category = 'thread';
   help = 'display backtrace information';
 
-  public run(tokens: Token[]): Var {
+  public runSync(tokens: Token[]): Var {
     const retWithId = this.runWithId(tokens);
     if (retWithId !== null) return retWithId;
 

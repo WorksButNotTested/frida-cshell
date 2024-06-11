@@ -16,13 +16,12 @@ export class HistoryCmdLet extends CmdLet {
   name = 'h';
   category = 'misc';
   help = 'command history';
-  override asynchronous: boolean = true;
 
-  public run(tokens: Token[]): Var {
+  public runSync(tokens: Token[]): Var {
     throw new Error('not supported');
   }
 
-  public override async runAsync(tokens: Token[]): Promise<Var> {
+  public override async run(tokens: Token[]): Promise<Var> {
     const retWithId = await this.runWithId(tokens);
     if (retWithId !== null) return retWithId;
 

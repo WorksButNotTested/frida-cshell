@@ -10,7 +10,7 @@ export class WriteCmdLet extends CmdLet {
   category = 'data';
   help = 'write data to memory';
 
-  public run(tokens: Token[]): Var {
+  public runSync(tokens: Token[]): Var {
     if (tokens.length !== 3) return this.usage();
 
     const [a0, a1, a2] = tokens;

@@ -24,7 +24,7 @@ export class DumpCmdLet extends CmdLet {
   category = 'data';
   help = 'dump data from memory';
 
-  public run(tokens: Token[]): Var {
+  public runSync(tokens: Token[]): Var {
     const retWithLengthAndWidth = this.runWithLengthAndWidth(tokens);
     if (retWithLengthAndWidth !== null) return retWithLengthAndWidth;
 

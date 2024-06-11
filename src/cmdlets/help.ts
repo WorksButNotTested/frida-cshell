@@ -9,7 +9,7 @@ export class HelpCmdLet extends CmdLet {
   category = 'misc';
   help = 'print this message';
 
-  public run(tokens: Token[]): Var {
+  public runSync(tokens: Token[]): Var {
     const retWithName = this.runWithName(tokens);
     if (retWithName !== null) return retWithName;
 

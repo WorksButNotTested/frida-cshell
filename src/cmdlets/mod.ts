@@ -20,7 +20,7 @@ export class ModCmdLet extends CmdLet {
   category = 'modules';
   help = 'display module information';
 
-  public run(tokens: Token[]): Var {
+  public runSync(tokens: Token[]): Var {
     const retWithAddress = this.runWithAddress(tokens);
     if (retWithAddress !== null) return retWithAddress;
 

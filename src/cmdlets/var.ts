@@ -25,7 +25,7 @@ export class VarCmdLet extends CmdLet {
   category = 'misc';
   help = 'variable management';
 
-  public run(tokens: Token[]): Var {
+  public runSync(tokens: Token[]): Var {
     const retWithNameAndHash = this.runWithNameAndHash(tokens);
     if (retWithNameAndHash !== null) return retWithNameAndHash;
 

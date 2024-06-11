@@ -20,7 +20,6 @@ export class ShCmdLet extends CmdLet {
   name = 'sh';
   category = 'misc';
   help = 'run a shell';
-  override asynchronous = true;
 
   private pGetEnv: NativePointer | null = null;
   private pPipe: NativePointer | null = null;
@@ -30,20 +29,16 @@ export class ShCmdLet extends CmdLet {
   private pExecV: NativePointer | null = null;
   private pWaitPid: NativePointer | null = null;
 
-  public override run(tokens: Token[]): Var {
-    throw new Error('not supported');
+  public override runSync(tokens: Token[]): Var {
+    throw new Error("can't run in synchronous mode");
   }
 
-  public override async runAsync(tokens: Token[]): Promise<Var> {
+  public override async run(tokens: Token[]): Promise<Var> {
     if (tokens.length !== 0) {
       this.usage();
       return Var.ZERO;
     }
-    await this.runSh();
-    return Var.ZERO;
-  }
-
-  private async runSh(): Promise<void> {
+   
     if (
       this.pPipe === null ||
       this.pFork === null ||
@@ -206,6 +201,7 @@ export class ShCmdLet extends CmdLet {
         Output.write(str);
       }
     }
+    return Var.ZERO;
   }
 
   private wifExited(status: number): boolean {

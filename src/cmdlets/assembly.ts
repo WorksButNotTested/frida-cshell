@@ -18,7 +18,7 @@ export class AssemblyCmdLet extends CmdLet {
   category = 'data';
   help = 'disassembly listing';
 
-  public run(tokens: Token[]): Var {
+  public runSync(tokens: Token[]): Var {
     const retWithLength = this.runWithLength(tokens);
     if (retWithLength !== null) return retWithLength;
 

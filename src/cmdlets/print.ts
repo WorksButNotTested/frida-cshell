@@ -15,7 +15,7 @@ export class PrintCmdLet extends CmdLet {
   category = 'misc';
   help = 'print an expression';
 
-  public run(tokens: Token[]): Var {
+  public runSync(tokens: Token[]): Var {
     const retWithExpression = this.runWithExpression(tokens);
     if (retWithExpression !== null) return retWithExpression;
 

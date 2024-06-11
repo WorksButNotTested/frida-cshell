@@ -10,7 +10,7 @@ export class ReadCmdLet extends CmdLet {
   category = 'data';
   help = 'read data from memory';
 
-  public run(tokens: Token[]): Var {
+  public runSync(tokens: Token[]): Var {
     if (tokens.length !== 2) return this.usage();
 
     const [a0, a1] = tokens;

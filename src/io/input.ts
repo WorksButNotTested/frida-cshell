@@ -29,7 +29,7 @@ export class Input {
   public static async read(buffer: string) {
     this.buffer += buffer;
     while (this.buffer.length !== 0) {
-      this.parse();
+      await this.parse();
     }
     this.prompt();
   }
@@ -37,7 +37,7 @@ export class Input {
   private static async parse() {
     switch (this.state) {
       case InputState.Default:
-        this.parseDefault();
+        await this.parseDefault();
         break;
       case InputState.Esc:
         this.ParseEsc();
@@ -64,7 +64,7 @@ export class Input {
         History.getCurrent().backspace();
         break;
       case CharCode.CR:
-        this.parseEnter();
+        await this.parseEnter();
         break;
       case CharCode.FF:
         Output.writeln(CharCode.CLEAR_SCREEN);

@@ -16,7 +16,7 @@ export class LdCmdLet extends CmdLet {
   category = 'modules';
   help = 'load modules';
 
-  public run(tokens: Token[]): Var {
+  public runSync(tokens: Token[]): Var {
     const retWithName = this.runWithName(tokens);
     if (retWithName !== null) return retWithName;
 

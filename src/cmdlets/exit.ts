@@ -9,7 +9,7 @@ export class ExitCmdLet extends CmdLet {
   help = 'exits the shell';
   override visible = false;
 
-  public run(_: Token[]): Var {
+  public runSync(_: Token[]): Var {
     return this.usage();
   }
 

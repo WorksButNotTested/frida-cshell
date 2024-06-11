@@ -21,7 +21,7 @@ export class RegCmdLet extends CmdLet {
   category = 'breakpoints';
   help = 'register management';
 
-  public run(tokens: Token[]): Var {
+  public runSync(tokens: Token[]): Var {
     const retWithNameAndPointer = this.runWithNameAndPointer(tokens);
     if (retWithNameAndPointer !== null) return retWithNameAndPointer;
 

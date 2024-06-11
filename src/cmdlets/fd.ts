@@ -43,7 +43,7 @@ export class FdCmdLet extends CmdLet {
   private pGetDTableSize: NativePointer | null = null;
   private pFcntl: NativePointer | null = null;
 
-  public run(tokens: Token[]): Var {
+  public runSync(tokens: Token[]): Var {
     const retWithId = this.runWithId(tokens);
     if (retWithId !== null) return retWithId;
 

@@ -11,11 +11,7 @@ export class Command {
     if (cmdlet === null) {
       return this.runFunction(tokens);
     } else {
-      if (cmdlet.asynchronous) {
-        return await cmdlet.runAsync(tokens.slice(1));
-      } else {
-        return cmdlet.run(tokens.slice(1));
-      }
+      return cmdlet.run(tokens.slice(1));
     }
   }
 
@@ -24,9 +20,7 @@ export class Command {
     if (cmdlet === null) {
       return this.runFunction(tokens);
     } else {
-      if (cmdlet.asynchronous)
-        throw new Error("can't run synchronous command in asynchronous mode");
-      return cmdlet.run(tokens.slice(1));
+      return cmdlet.runSync(tokens.slice(1));
     }
   }
 

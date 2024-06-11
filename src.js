@@ -8,7 +8,7 @@ return {
     return Var.ZERO;
   },
 
-  run: function(tokens) {
+  runSync: function(tokens) {
     if (tokens.length !== 1) return this.usage();
     const address = tokens[0].toVar().toPointer();
     Output.writeln(`test: ${address}`);

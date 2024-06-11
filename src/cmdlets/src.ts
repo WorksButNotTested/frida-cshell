@@ -142,12 +142,9 @@ export class SrcCmdLet extends CmdLet {
       XorCmdLet: XorCmdLet,
     };
 
-    const preamble = Object.keys(gThis)
-      .map(k => `${k} = this['${k}'];`)
-      .join('\n');
     const script = File.readAllText(name);
-    const func = new Function(`${preamble}${script}`);
-    const cmdlet = func.call(gThis);
+    const func = new Function('gThis', `with (gThis) { ${script} }`);
+    const cmdlet = func(gThis);
     if (cmdlet !== undefined) {
       Output.writeln(`Found cmdlet: ${cmdlet.name}`);
       CmdLets.registerCmdlet(cmdlet);

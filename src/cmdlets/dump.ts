@@ -113,7 +113,7 @@ export class DumpCmdLet extends CmdLet {
           output.writeByteArray(bytes.buffer as ArrayBuffer);
           Output.write(' '.repeat(2 + Process.pointerSize * 2));
           for (let i = 0; i < 16; i++) {
-            if (i % width != 0) continue;
+            if (i % width !== 0) continue;
             const hdr = i.toString(16).toUpperCase();
             const padLen = width * 2 + 1 - hdr.length;
             Output.write(` ${hdr.padStart(padLen, ' ')}`);

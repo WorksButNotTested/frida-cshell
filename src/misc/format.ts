@@ -44,4 +44,8 @@ export class Format {
       return `${val.toString().padStart(4, ' ')} B`;
     }
   }
+
+  public static toTextString(bytes: ArrayBuffer): string {
+    return String.fromCharCode(...new Uint8Array(bytes));
+  }
 }

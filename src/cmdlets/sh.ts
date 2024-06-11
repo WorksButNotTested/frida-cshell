@@ -32,6 +32,30 @@ export class ShCmdLet extends CmdLet {
   private pExit: NativePointer | null = null;
   private pWaitPid: NativePointer | null = null;
 
+  // char *getenv(const char *name);
+  private fnGetEnv: SystemFunction<NativePointer, [NativePointer]> | null =
+    null;
+  // int pipe(int pipefd[2]);
+  private fnPipe: SystemFunction<number, [NativePointer]> | null = null;
+  // pid_t fork(void);
+  private fnFork: SystemFunction<number, []> | null = null;
+  // int close(int fd);
+  private fnClose: SystemFunction<number, [number]> | null = null;
+  // int dup2(int oldfd, int newfd);
+  private fnDup2: SystemFunction<number, [number, number]> | null = null;
+  // int execv(const char *path, char *const argv[]);
+  private fnExecV: SystemFunction<
+    number,
+    [NativePointer, NativePointer]
+  > | null = null;
+  // pid_t waitpid(pid_t pid, int *status, int options);
+  private fnWaitPid: SystemFunction<
+    number,
+    [number, NativePointer, number]
+  > | null = null;
+  // void exit(int status);
+  private fnExit: SystemFunction<void, [number]> | null = null;
+
   public override runSync(tokens: Token[]): Var {
     throw new Error("can't run in synchronous mode");
   }
@@ -43,44 +67,19 @@ export class ShCmdLet extends CmdLet {
     }
 
     if (
-      this.pPipe === null ||
-      this.pFork === null ||
-      this.pClose === null ||
-      this.pDup2 === null ||
-      this.pGetEnv == null ||
-      this.pExecV == null ||
-      this.pExit == null ||
-      this.pExit == null ||
-      this.pWaitPid == null
+      this.fnGetEnv == null ||
+      this.fnPipe === null ||
+      this.fnFork === null ||
+      this.fnClose === null ||
+      this.fnDup2 === null ||
+      this.fnExecV == null ||
+      this.fnWaitPid == null ||
+      this.fnExit == null
     )
       throw new Error('failed to find necessary native functions');
 
-    // char *getenv(const char *name);
-    const fnGetEnv = new SystemFunction(this.pGetEnv, 'pointer', ['pointer']);
-    // int pipe(int pipefd[2]);
-    const fnPipe = new SystemFunction(this.pPipe, 'int', ['pointer']);
-    // pid_t fork(void);
-    const fnFork = new SystemFunction(this.pFork, 'int', []);
-    // int close(int fd);
-    const fnClose = new SystemFunction(this.pClose, 'int', ['int']);
-    // int dup2(int oldfd, int newfd);
-    const fnDup2 = new SystemFunction(this.pDup2, 'int', ['int', 'int']);
-    // int execv(const char *path, char *const argv[]);
-    const fnExecV = new SystemFunction(this.pExecV, 'int', [
-      'pointer',
-      'pointer',
-    ]);
-    // pid_t waitpid(pid_t pid, int *status, int options);
-    const fnWaitPid = new SystemFunction(this.pWaitPid, 'int', [
-      'int',
-      'pointer',
-      'int',
-    ]);
-    // void exit(int status);
-    const fnExit = new SystemFunction(this.pExit, 'void', ['int']);
-
     const shell = Memory.allocUtf8String('SHELL');
-    const { value: shellVar, errno: getenvErrno } = fnGetEnv(
+    const { value: shellVar, errno: getenvErrno } = this.fnGetEnv(
       shell,
     ) as UnixSystemFunctionResult<NativePointer>;
     if (shellVar.equals(ptr(0)))
@@ -89,33 +88,33 @@ export class ShCmdLet extends CmdLet {
     Output.writeln(`SHELL: ${shellVar.readUtf8String()}`, true);
 
     const toChildPipes = Memory.alloc(INT_SIZE * 2);
-    const { value: pipeChildRet, errno: pipeChildErrno } = fnPipe(
+    const { value: pipeChildRet, errno: pipeChildErrno } = this.fnPipe(
       toChildPipes,
     ) as UnixSystemFunctionResult<number>;
     if (pipeChildRet !== 0)
       throw new Error(`failed to pipe(child), errno: ${pipeChildErrno}`);
 
     const toParentPipes = Memory.alloc(INT_SIZE * 2);
-    const { value: pipeParentRet, errno: pipeParentErrno } = fnPipe(
+    const { value: pipeParentRet, errno: pipeParentErrno } = this.fnPipe(
       toParentPipes,
     ) as UnixSystemFunctionResult<number>;
     if (pipeParentRet !== 0)
       throw new Error(`failed to pipe, errno: ${pipeParentErrno}`);
 
     const { value: forkRet, errno: forkErrno } =
-      fnFork() as UnixSystemFunctionResult<number>;
+      this.fnFork() as UnixSystemFunctionResult<number>;
     if (forkRet < 0) throw new Error(`failed to fork, errno: ${forkErrno}`);
 
     if (forkRet === 0) {
       // child
       try {
-        const { value: closeChildRet, errno: closeChildErrno } = fnClose(
+        const { value: closeChildRet, errno: closeChildErrno } = this.fnClose(
           toChildPipes.add(PIPE_WRITE_OFFSET).readInt(),
         ) as UnixSystemFunctionResult<number>;
         if (closeChildRet !== 0)
           throw new Error(`failed to close(child), errno: ${closeChildErrno}`);
 
-        const { value: closeParentRet, errno: closeParentErrno } = fnClose(
+        const { value: closeParentRet, errno: closeParentErrno } = this.fnClose(
           toParentPipes.add(PIPE_READ_OFFSET).readInt(),
         ) as UnixSystemFunctionResult<number>;
         if (closeParentRet !== 0)
@@ -123,21 +122,21 @@ export class ShCmdLet extends CmdLet {
             `failed to close(parent), errno: ${closeParentErrno}`,
           );
 
-        const { value: dup2InRet, errno: dup2InErrno } = fnDup2(
+        const { value: dup2InRet, errno: dup2InErrno } = this.fnDup2(
           toChildPipes.add(PIPE_READ_OFFSET).readInt(),
           STDIN_FILENO,
         ) as UnixSystemFunctionResult<number>;
         if (dup2InRet !== STDIN_FILENO)
           throw new Error(`failed to dup2(stdin), errno: ${dup2InErrno}`);
 
-        const { value: dup2OutRet, errno: dup2OutErrno } = fnDup2(
+        const { value: dup2OutRet, errno: dup2OutErrno } = this.fnDup2(
           toParentPipes.add(PIPE_WRITE_OFFSET).readInt(),
           STDOUT_FILENO,
         ) as UnixSystemFunctionResult<number>;
         if (dup2OutRet !== STDOUT_FILENO)
           throw new Error(`failed to dup2(stdout), errno: ${dup2OutErrno}`);
 
-        const { value: dup2ErrRet, errno: dup2ErrErrno } = fnDup2(
+        const { value: dup2ErrRet, errno: dup2ErrErrno } = this.fnDup2(
           toParentPipes.add(PIPE_WRITE_OFFSET).readInt(),
           STDERR_FILENO,
         ) as UnixSystemFunctionResult<number>;
@@ -156,7 +155,7 @@ export class ShCmdLet extends CmdLet {
           argv.add(Process.pointerSize * idx).writePointer(ptr);
         }
 
-        const { value: execvRet, errno: execvErrno } = fnExecV(
+        const { value: execvRet, errno: execvErrno } = this.fnExecV(
           cmdPtr,
           argv,
         ) as UnixSystemFunctionResult<number>;
@@ -174,19 +173,19 @@ export class ShCmdLet extends CmdLet {
         }
         output.close();
       } finally {
-        fnExit(1);
+        this.fnExit(1);
       }
     } else {
       // parent
       try {
         Output.writeln(`child pid: ${forkRet}`, true);
-        const { value: closeChildRet, errno: closeChildErrno } = fnClose(
+        const { value: closeChildRet, errno: closeChildErrno } = this.fnClose(
           toChildPipes.add(PIPE_READ_OFFSET).readInt(),
         ) as UnixSystemFunctionResult<number>;
         if (closeChildRet !== 0)
           throw new Error(`failed to close(child), errno: ${closeChildErrno}`);
 
-        const { value: closeParentRet, errno: closeParentErrno } = fnClose(
+        const { value: closeParentRet, errno: closeParentErrno } = this.fnClose(
           toParentPipes.add(PIPE_WRITE_OFFSET).readInt(),
         ) as UnixSystemFunctionResult<number>;
         if (closeParentRet !== 0)
@@ -228,7 +227,7 @@ export class ShCmdLet extends CmdLet {
 
         const pStatus = Memory.alloc(INT_SIZE);
 
-        const { value: waitRet, errno: waitErrno } = fnWaitPid(
+        const { value: waitRet, errno: waitErrno } = this.fnWaitPid(
           forkRet,
           pStatus,
           WNOHANG,
@@ -301,6 +300,33 @@ export class ShCmdLet extends CmdLet {
           this.pWaitPid == null
         )
           return false;
+
+        // char *getenv(const char *name);
+        this.fnGetEnv = new SystemFunction(this.pGetEnv, 'pointer', [
+          'pointer',
+        ]);
+        // int pipe(int pipefd[2]);
+        this.fnPipe = new SystemFunction(this.pPipe, 'int', ['pointer']);
+        // pid_t fork(void);
+        this.fnFork = new SystemFunction(this.pFork, 'int', []);
+        // int close(int fd);
+        this.fnClose = new SystemFunction(this.pClose, 'int', ['int']);
+        // int dup2(int oldfd, int newfd);
+        this.fnDup2 = new SystemFunction(this.pDup2, 'int', ['int', 'int']);
+        // int execv(const char *path, char *const argv[]);
+        this.fnExecV = new SystemFunction(this.pExecV, 'int', [
+          'pointer',
+          'pointer',
+        ]);
+        // pid_t waitpid(pid_t pid, int *status, int options);
+        this.fnWaitPid = new SystemFunction(this.pWaitPid, 'int', [
+          'int',
+          'pointer',
+          'int',
+        ]);
+        // void exit(int status);
+        this.fnExit = new SystemFunction(this.pExit, 'void', ['int']);
+
         break;
       case 'windows':
       case 'barebone':

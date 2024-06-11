@@ -148,8 +148,10 @@ export class SrcCmdLet extends CmdLet {
     const script = File.readAllText(name);
     const func = new Function(`${preamble}${script}`);
     const cmdlet = func.call(gThis);
-    Output.writeln(`Found cmdlet: ${cmdlet.name}`);
-    CmdLets.registerCmdlet(cmdlet);
+    if (cmdlet !== undefined) {
+      Output.writeln(`Found cmdlet: ${cmdlet.name}`);
+      CmdLets.registerCmdlet(cmdlet);
+    }
 
     return Var.ZERO;
   }

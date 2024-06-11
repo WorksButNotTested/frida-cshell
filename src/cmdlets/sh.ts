@@ -101,7 +101,7 @@ export class ShCmdLet extends CmdLet {
 
     if (childPid === 0) {
       try {
-        const cmd = [shellPath, "-i"];
+        const cmd = [shellPath, '-i'];
         this.runChild(cmd, childPipe, parentPipe);
       } finally {
         this.fnExit(1);

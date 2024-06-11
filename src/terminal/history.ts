@@ -20,7 +20,7 @@ export class History {
     return History.line;
   }
 
-  public static rerun(idx: number): Var {
+  public static async rerun(idx: number): Promise<Var> {
     if (idx >= this.history.length)
       throw new Error(`invalid history index: ${idx}`);
     const str = this.history[idx] as string;
@@ -29,7 +29,7 @@ export class History {
     return this.run();
   }
 
-  public static run(): Var {
+  public static async run(): Promise<Var> {
     const parser = new Parser(this.line.toString());
     const tokens = parser.tokenize();
 

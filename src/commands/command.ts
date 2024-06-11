@@ -3,40 +3,50 @@ import { Output } from '../io/output.js';
 import { Format } from '../misc/format.js';
 import { Var } from '../vars/var.js';
 import { Token } from '../io/token.js';
+import { CmdLet } from './cmdlet.js';
 
 export class Command {
-  public static run(tokens: Token[]): Var {
-    for (const [index, token] of tokens.entries()) {
-      const p = token.toVar();
-      if (p === null) {
-        Output.writeln(
-          `${index.toString().padStart(3, ' ')}: ${token.getLiteral().padStart(20)} - literal`,
-          true,
-        );
+  public static async run(tokens: Token[]): Promise<Var> {
+    const cmdlet = this.getCmdlet(tokens);
+    if (cmdlet === null) {
+      return this.runFunction(tokens);
+    } else {
+      if (cmdlet.asynchronous) {
+        return await cmdlet.runAsync(tokens.slice(1));
       } else {
-        Output.writeln(
-          `${index.toString().padStart(3, ' ')}: ${token.getLiteral().padStart(20)} - ${p}`,
-          true,
-        );
+        return cmdlet.run(tokens.slice(1));
       }
     }
+  }
 
-    if (tokens.length === 0) throw new Error('failed to tokenize command');
-    const t0 = tokens[0] as Token;
-
-    const cmdlet = CmdLets.getByName(t0.getLiteral());
+  public static runSync(tokens: Token[]): Var {
+    const cmdlet = this.getCmdlet(tokens);
     if (cmdlet === null) {
-      const v0 = t0.toVar();
-      if (v0 === null) {
-        throw new Error(
-          'request was not understood as an internal command or a detected symbol',
-        );
-      }
-      const addr = v0.toPointer();
-      return this.executeAddress(addr, tokens.slice(1));
+      return this.runFunction(tokens);
     } else {
+      if (cmdlet.asynchronous)
+        throw new Error("can't run synchronous command in asynchronous mode");
       return cmdlet.run(tokens.slice(1));
     }
+  }
+
+  private static getCmdlet(tokens: Token[]): CmdLet | null {
+    if (tokens.length === 0) throw new Error('failed to tokenize command');
+    const t0 = tokens[0] as Token;
+    return CmdLets.getByName(t0.getLiteral());
+  }
+
+  private static runFunction(tokens: Token[]): Var {
+    if (tokens.length === 0) throw new Error('failed to tokenize command');
+    const t0 = tokens[0] as Token;
+    const v0 = t0.toVar();
+    if (v0 === null) {
+      throw new Error(
+        'request was not understood as an internal command or a detected symbol',
+      );
+    }
+    const addr = v0.toPointer();
+    return this.executeAddress(addr, tokens.slice(1));
   }
 
   private static executeAddress(address: NativePointer, tokens: Token[]): Var {

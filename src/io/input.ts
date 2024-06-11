@@ -26,7 +26,7 @@ export class Input {
 
   private constructor() {}
 
-  public static read(buffer: string) {
+  public static async read(buffer: string) {
     this.buffer += buffer;
     while (this.buffer.length !== 0) {
       this.parse();
@@ -34,7 +34,7 @@ export class Input {
     this.prompt();
   }
 
-  private static parse() {
+  private static async parse() {
     switch (this.state) {
       case InputState.Default:
         this.parseDefault();
@@ -48,7 +48,7 @@ export class Input {
     }
   }
 
-  private static parseDefault() {
+  private static async parseDefault() {
     const c = this.pop();
     switch (c) {
       case CharCode.ESC:
@@ -83,7 +83,7 @@ export class Input {
     return c;
   }
 
-  private static parseEnter() {
+  private static async parseEnter() {
     const current = History.getCurrent();
     if (current.getLength() === 0 || current.peek(1).charAt(0) === '#') {
       History.clearLine();
@@ -94,7 +94,7 @@ export class Input {
 
     try {
       if (this.edit === null) {
-        this.parseEnterDefault();
+        await this.parseEnterDefault();
       } else {
         this.parseEnterEdit();
       }
@@ -127,8 +127,8 @@ export class Input {
     Output.write(backspaces);
   }
 
-  private static parseEnterDefault() {
-    const ret = History.run();
+  private static async parseEnterDefault() {
+    const ret = await History.run();
     Vars.setRet(ret);
 
     /*
@@ -260,7 +260,7 @@ export class Input {
 
         const parser = new Parser(line.toString());
         const tokens = parser.tokenize();
-        const ret = Command.run(tokens);
+        const ret = Command.runSync(tokens);
         Vars.setRet(ret);
         Output.writeRet();
         Output.writeln();

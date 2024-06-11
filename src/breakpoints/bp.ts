@@ -159,7 +159,7 @@ export class Bp {
         Output.writeln(`${Output.bold(Input.PROMPT)}${line}`);
         const parser = new Parser(line.toString());
         const tokens = parser.tokenize();
-        const ret = Command.run(tokens);
+        const ret = Command.runSync(tokens);
         Vars.setRet(ret);
         Output.writeRet();
         Output.writeln();

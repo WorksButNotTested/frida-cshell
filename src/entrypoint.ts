@@ -34,8 +34,8 @@ rpc.exports = {
    * in the script as follows. Here, the data parameter is the string typed
    * by the user including the newline.
    */
-  onFridaStdin(data: string) {
-    Input.read(data);
+  async onFridaStdin(data: string) {
+    await Input.read(data);
   },
   /*
    * If getFridaTerminalMode returns "raw", then frida-inject will set the

@@ -16,9 +16,14 @@ export class HistoryCmdLet extends CmdLet {
   name = 'h';
   category = 'misc';
   help = 'command history';
+  override asynchronous: boolean = true;
 
   public run(tokens: Token[]): Var {
-    const retWithId = this.runWithId(tokens);
+    throw new Error('not supported');
+  }
+
+  public override async runAsync(tokens: Token[]): Promise<Var> {
+    const retWithId = await this.runWithId(tokens);
     if (retWithId !== null) return retWithId;
 
     const retWithoutId = this.runWithoutId(tokens);
@@ -27,7 +32,7 @@ export class HistoryCmdLet extends CmdLet {
     return this.usage();
   }
 
-  private runWithId(tokens: Token[]): Var | null {
+  private async runWithId(tokens: Token[]): Promise<Var | null> {
     if (tokens.length !== 1) return null;
 
     const t0 = tokens[0] as Token;

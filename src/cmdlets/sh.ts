@@ -20,6 +20,7 @@ export class ShCmdLet extends CmdLet {
   name = 'sh';
   category = 'misc';
   help = 'run a shell';
+  override asynchronous = true;
 
   private pGetEnv: NativePointer | null = null;
   private pPipe: NativePointer | null = null;
@@ -29,18 +30,16 @@ export class ShCmdLet extends CmdLet {
   private pExecV: NativePointer | null = null;
   private pWaitPid: NativePointer | null = null;
 
-  public run(tokens: Token[]): Var {
-    const retWithoutParams = this.runWithoutParams(tokens);
-    if (retWithoutParams !== null) return retWithoutParams;
-
-    return this.usage();
+  public override run(tokens: Token[]): Var {
+    throw new Error('not supported');
   }
 
-  private runWithoutParams(tokens: Token[]): Var | null {
-    if (tokens.length !== 0) return null;
-
-    this.runSh();
-
+  public override async runAsync(tokens: Token[]): Promise<Var> {
+    if (tokens.length !== 0) {
+      this.usage();
+      return Var.ZERO;
+    }
+    await this.runSh();
     return Var.ZERO;
   }
 
@@ -72,7 +71,7 @@ export class ShCmdLet extends CmdLet {
       'pointer',
     ]);
     // pid_t waitpid(pid_t pid, int *status, int options);
-    const fnWaitPid = new SystemFunction(this.pExecV, 'int', [
+    const fnWaitPid = new SystemFunction(this.pWaitPid, 'int', [
       'int',
       'pointer',
       'int',
@@ -123,25 +122,25 @@ export class ShCmdLet extends CmdLet {
         toChildPipes.add(PIPE_READ_OFFSET).readInt(),
         STDIN_FILENO,
       ) as UnixSystemFunctionResult<number>;
-      if (dup2InRet !== 0)
+      if (dup2InRet !== STDIN_FILENO)
         throw new Error(`failed to dup2(stdin), errno: ${dup2InErrno}`);
 
       const { value: dup2OutRet, errno: dup2OutErrno } = fnDup2(
         toParentPipes.add(PIPE_WRITE_OFFSET).readInt(),
         STDOUT_FILENO,
       ) as UnixSystemFunctionResult<number>;
-      if (dup2OutRet !== 0)
+      if (dup2OutRet !== STDOUT_FILENO)
         throw new Error(`failed to dup2(stdout), errno: ${dup2OutErrno}`);
 
       const { value: dup2ErrRet, errno: dup2ErrErrno } = fnDup2(
         toParentPipes.add(PIPE_WRITE_OFFSET).readInt(),
         STDERR_FILENO,
       ) as UnixSystemFunctionResult<number>;
-      if (dup2ErrRet !== 0)
+      if (dup2ErrRet !== STDERR_FILENO)
         throw new Error(`failed to dup2(stderr), errno: ${dup2ErrErrno}`);
 
       const argv = Memory.alloc(Process.pointerSize * 2);
-      const cmd = Memory.allocUtf8String('/bin/ls');
+      const cmd = Memory.allocUtf8String('/usr/bin/ls');
       argv.writePointer(cmd);
       argv.add(Process.pointerSize).writePointer(ptr(0));
 
@@ -155,6 +154,7 @@ export class ShCmdLet extends CmdLet {
       // unreachable
     } else {
       // parent
+      Output.writeln(`child pid: ${forkRet}`, true);
       const { value: closeChildRet, errno: closeChildErrno } = fnClose(
         toChildPipes.add(PIPE_READ_OFFSET).readInt(),
       ) as UnixSystemFunctionResult<number>;
@@ -183,7 +183,7 @@ export class ShCmdLet extends CmdLet {
         0,
       ) as UnixSystemFunctionResult<number>;
       if (waitRet < 0)
-        throw new Error(`failed to waitpid, errno: ${waitErrno}`);
+        throw new Error(`failed to waitpid ${waitRet}, errno: ${waitErrno}`);
 
       if (waitRet !== forkRet)
         throw new Error(`waitpid exited abnormally, status: ${waitRet}`);
@@ -197,13 +197,15 @@ export class ShCmdLet extends CmdLet {
         Output.writeln(`terminated by signal: ${termSig}`);
       }
 
-      for (let buf = await input.read(READ_SIZE); buf.byteLength !== 0; buf = await input.read(READ_SIZE)) {
+      for (
+        let buf = await input.read(READ_SIZE);
+        buf.byteLength !== 0;
+        buf = await input.read(READ_SIZE)
+      ) {
         const str: string = Format.toTextString(buf);
         Output.write(str);
       }
     }
-
-    throw new Error('Unimplemented');
   }
 
   private wifExited(status: number): boolean {

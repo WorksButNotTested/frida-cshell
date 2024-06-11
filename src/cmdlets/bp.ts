@@ -1,7 +1,7 @@
 import { BP_LENGTH, Bp, BpKind, BpType } from '../breakpoints/bp.js';
 import { Bps } from '../breakpoints/bps.js';
-import { CmdLet, CmdLetEdit } from '../commands/cmdlet.js';
-import { Input } from '../io/input.js';
+import { CmdLet } from '../commands/cmdlet.js';
+import { Input, InputInterceptLine } from '../io/input.js';
 import { Output } from '../io/output.js';
 import { Token } from '../io/token.js';
 import { Var } from '../vars/var.js';
@@ -10,7 +10,7 @@ const DELETE_CHAR: string = '#';
 const NUM_CHAR: string = '#';
 const UNLIMITED_CHAR: string = '*';
 
-abstract class TypedBpCmdLet extends CmdLet implements CmdLetEdit {
+abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
   public abstract readonly bpType: BpType;
 
   category = 'breakpoints';
@@ -91,7 +91,7 @@ abstract class TypedBpCmdLet extends CmdLet implements CmdLetEdit {
       Output.writeln(`Modified ${bp.toString()}`);
     }
 
-    Input.setEdit(this);
+    Input.setInterceptLine(this);
     return Var.ZERO;
   }
 
@@ -130,7 +130,7 @@ abstract class TypedBpCmdLet extends CmdLet implements CmdLetEdit {
 
     const bp = Bps.modify(this.bpType, index, hits);
     Output.writeln(`Modified ${bp.toString()}`);
-    Input.setEdit(this);
+    Input.setInterceptLine(this);
 
     return Var.ZERO;
   }
@@ -189,7 +189,7 @@ abstract class TypedBpCmdLet extends CmdLet implements CmdLetEdit {
       const bp = Bps.create(this.bpType, hits, addr, literal, BP_LENGTH);
       Output.writeln(`Created ${bp.toString()}`);
 
-      Input.setEdit(this);
+      Input.setInterceptLine(this);
 
       return addr;
     } else {
@@ -215,7 +215,7 @@ abstract class TypedBpCmdLet extends CmdLet implements CmdLetEdit {
       );
       Output.writeln(`Created ${bp.toString()}`);
 
-      Input.setEdit(this);
+      Input.setInterceptLine(this);
 
       return addr;
     }
@@ -231,7 +231,7 @@ abstract class TypedBpCmdLet extends CmdLet implements CmdLetEdit {
 
     const bp = Bps.create(this.bpType, hits);
     Output.writeln(`Created ${bp.toString()}`);
-    Input.setEdit(this);
+    Input.setInterceptLine(this);
 
     return Var.ZERO;
   }
@@ -295,7 +295,7 @@ ${Output.bold('NOTE:')} Set hits to '*' for unlimited breakpoint.
     return Var.ZERO;
   }
 
-  addCommandLine(line: string) {
+  addLine(line: string) {
     Bps.addCommandLine(line);
   }
 

@@ -149,7 +149,7 @@ export class Bp {
   }
 
   private runCommands() {
-    Input.suppressEdit(true);
+    Input.suppressIntercept(true);
     Output.setIndent(true);
     Output.writeln();
     try {
@@ -173,7 +173,7 @@ export class Bp {
       }
     } finally {
       Output.setIndent(false);
-      Input.suppressEdit(false);
+      Input.suppressIntercept(false);
       Output.writeln(Output.yellow('-'.repeat(80)));
       Input.prompt();
       Regs.clear();

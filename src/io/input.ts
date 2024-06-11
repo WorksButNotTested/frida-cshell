@@ -2,7 +2,6 @@ import { Output } from './output.js';
 import { History } from '../terminal/history.js';
 import { Vars } from '../vars/vars.js';
 import { CharCode, Vt } from './char.js';
-import { CmdLetEdit } from '../commands/cmdlet.js';
 import { Parser } from './parser.js';
 import { Command } from '../commands/command.js';
 
@@ -21,17 +20,26 @@ export class Input {
 
   private static buffer: string = '';
   private static state: InputState = InputState.Default;
-  private static edit: CmdLetEdit | null = null;
-  private static editSuppressed: boolean = false;
+  private static interceptLine: InputInterceptLine | null = null;
+  private static interceptRaw: InputInterceptRaw | null = null;
+  private static interceptSuppressed: boolean = false;
 
   private constructor() {}
 
   public static async read(buffer: string) {
-    this.buffer += buffer;
-    while (this.buffer.length !== 0) {
-      await this.parse();
+    if (this.interceptRaw !== null) {
+      if (this.buffer.length === 0) {
+        this.interceptRaw.addRaw(buffer);
+        this.buffer = '';
+      }
+      this.interceptRaw.addRaw(buffer);
+    } else {
+      this.buffer += buffer;
+      while (this.buffer.length !== 0) {
+        await this.parse();
+      }
+      this.prompt();
     }
-    this.prompt();
   }
 
   private static async parse() {
@@ -93,7 +101,7 @@ export class Input {
     }
 
     try {
-      if (this.edit === null) {
+      if (this.interceptLine === null) {
         await this.parseEnterDefault();
       } else {
         this.parseEnterEdit();
@@ -112,7 +120,7 @@ export class Input {
 
   public static prompt() {
     Output.clearLine();
-    if (this.edit === null) {
+    if (this.interceptLine === null) {
       Output.write(Output.bold(this.PROMPT));
     } else {
       Output.write(Output.bold(this.EDIT_PROMPT));
@@ -135,13 +143,13 @@ export class Input {
      * If our command hasn't caused us to enter edit mode print the result,
      * otherwise we will defer until the edit is complete.
      */
-    if (this.edit === null) {
+    if (this.interceptLine === null) {
       Output.writeRet();
     }
   }
 
   private static parseEnterEdit() {
-    const edit = this.edit as CmdLetEdit;
+    const edit = this.interceptLine as InputInterceptLine;
 
     /* Display the line */
     const line = History.getCurrent().toString();
@@ -153,7 +161,7 @@ export class Input {
       try {
         edit.done();
       } finally {
-        this.edit = null;
+        this.interceptLine = null;
       }
       Output.writeRet();
     } else if (line === ABORT_CHAR) {
@@ -161,13 +169,13 @@ export class Input {
       try {
         edit.abort();
       } finally {
-        this.edit = null;
+        this.interceptLine = null;
       }
-      this.edit = null;
+      this.interceptLine = null;
       Output.writeRet();
     } else {
       /* Notify the commandlet of the line */
-      edit.addCommandLine(line);
+      edit.addLine(line);
     }
   }
 
@@ -232,18 +240,38 @@ export class Input {
     return false;
   }
 
-  public static suppressEdit(value: boolean) {
-    this.editSuppressed = value;
+  public static suppressIntercept(value: boolean) {
+    this.interceptSuppressed = value;
   }
 
-  public static setEdit(edit: CmdLetEdit) {
-    if (this.editSuppressed) {
-      edit.abort();
+  public static setInterceptLine(interceptLine: InputInterceptLine) {
+    if (this.interceptSuppressed) {
+      interceptLine.abort();
     } else {
+      if (this.interceptRaw !== null) {
+        this.interceptRaw.abort();
+        this.interceptRaw = null;
+      }
       Output.writeln(
         `Type '${QUIT_CHAR}' to finish, or '${ABORT_CHAR}' to abort`,
       );
-      this.edit = edit;
+      this.interceptLine = interceptLine;
+    }
+  }
+
+  public static setInterceptRaw(interceptRaw: InputInterceptRaw | null) {
+    if (interceptRaw === null) {
+      this.interceptRaw = null;
+      return;
+    }
+    if (this.interceptSuppressed) {
+      interceptRaw.abort();
+    } else {
+      if (this.interceptLine !== null) {
+        this.interceptLine.abort();
+        this.interceptLine = null;
+      }
+      this.interceptRaw = interceptRaw;
     }
   }
 
@@ -267,4 +295,15 @@ export class Input {
       }
     } catch (_) {}
   }
+}
+
+export interface InputInterceptLine {
+  addLine(line: string): void;
+  done(): void;
+  abort(): void;
+}
+
+export interface InputInterceptRaw {
+  addRaw(c: string): void;
+  abort(): void;
 }

@@ -1,4 +1,5 @@
 import { CmdLet } from '../commands/cmdlet.js';
+import { Input, InputInterceptRaw } from '../io/input.js';
 import { Output } from '../io/output.js';
 import { Token } from '../io/token.js';
 import { Format } from '../misc/format.js';
@@ -175,65 +176,79 @@ export class ShCmdLet extends CmdLet {
       } finally {
         fnExit(1);
       }
-
-      // unreachable
     } else {
       // parent
-      Output.writeln(`child pid: ${forkRet}`, true);
-      const { value: closeChildRet, errno: closeChildErrno } = fnClose(
-        toChildPipes.add(PIPE_READ_OFFSET).readInt(),
-      ) as UnixSystemFunctionResult<number>;
-      if (closeChildRet !== 0)
-        throw new Error(`failed to close(child), errno: ${closeChildErrno}`);
+      try {
+        Output.writeln(`child pid: ${forkRet}`, true);
+        const { value: closeChildRet, errno: closeChildErrno } = fnClose(
+          toChildPipes.add(PIPE_READ_OFFSET).readInt(),
+        ) as UnixSystemFunctionResult<number>;
+        if (closeChildRet !== 0)
+          throw new Error(`failed to close(child), errno: ${closeChildErrno}`);
 
-      const { value: closeParentRet, errno: closeParentErrno } = fnClose(
-        toParentPipes.add(PIPE_WRITE_OFFSET).readInt(),
-      ) as UnixSystemFunctionResult<number>;
-      if (closeParentRet !== 0)
-        throw new Error(`failed to close(parent), errno: ${closeParentErrno}`);
+        const { value: closeParentRet, errno: closeParentErrno } = fnClose(
+          toParentPipes.add(PIPE_WRITE_OFFSET).readInt(),
+        ) as UnixSystemFunctionResult<number>;
+        if (closeParentRet !== 0)
+          throw new Error(
+            `failed to close(parent), errno: ${closeParentErrno}`,
+          );
 
-      const input = new UnixInputStream(
-        toParentPipes.add(PIPE_READ_OFFSET).readInt(),
-        { autoClose: true },
-      );
+        const input = new UnixInputStream(
+          toParentPipes.add(PIPE_READ_OFFSET).readInt(),
+          { autoClose: true },
+        );
 
-      // const output = new UnixOutputStream(
-      //   toChildPipes.add(PIPE_WRITE_OFFSET).readInt(),
-      //   { autoClose: true },
-      // );
+        const output = new UnixOutputStream(
+          toChildPipes.add(PIPE_WRITE_OFFSET).readInt(),
+          { autoClose: true },
+        );
 
-      Output.writeln(`reading pid: ${forkRet}`, true);
+        const onRaw: InputInterceptRaw = {
+          addRaw(raw: string) {
+            output.write(Format.toByteArray(raw));
+          },
+          abort() {},
+        };
 
-      for (
-        let buf = await input.read(READ_SIZE);
-        buf.byteLength !== 0;
-        buf = await input.read(READ_SIZE)
-      ) {
-        const str: string = Format.toTextString(buf);
-        Output.write(str);
-      }
+        Input.setInterceptRaw(onRaw);
 
-      Output.writeln(`waiting pid: ${forkRet}`, true);
+        Output.writeln(`reading pid: ${forkRet}`, true);
 
-      const pStatus = Memory.alloc(INT_SIZE);
+        for (
+          let buf = await input.read(READ_SIZE);
+          buf.byteLength !== 0;
+          buf = await input.read(READ_SIZE)
+        ) {
+          const str: string = Format.toTextString(buf);
+          Output.write(str);
+        }
 
-      const { value: waitRet, errno: waitErrno } = fnWaitPid(
-        forkRet,
-        pStatus,
-        WNOHANG,
-      ) as UnixSystemFunctionResult<number>;
-      if (waitRet < 0)
-        throw new Error(`failed to waitpid ${waitRet}, errno: ${waitErrno}`);
+        Output.writeln(`waiting pid: ${forkRet}`, true);
 
-      if (waitRet !== forkRet) throw new Error(`failed to waitpid ${waitRet}`);
+        const pStatus = Memory.alloc(INT_SIZE);
 
-      const status = pStatus.readInt();
-      if (ShCmdLet.wifExited(status)) {
-        const exitStatus = ShCmdLet.wExitStatus(status);
-        Output.writeln(`exit status: ${exitStatus}`);
-      } else if (ShCmdLet.wifSignalled(status)) {
-        const termSig = ShCmdLet.wTermSig(status);
-        Output.writeln(`terminated by signal: ${termSig}`);
+        const { value: waitRet, errno: waitErrno } = fnWaitPid(
+          forkRet,
+          pStatus,
+          WNOHANG,
+        ) as UnixSystemFunctionResult<number>;
+        if (waitRet < 0)
+          throw new Error(`failed to waitpid ${waitRet}, errno: ${waitErrno}`);
+
+        if (waitRet !== forkRet)
+          throw new Error(`failed to waitpid ${waitRet}`);
+
+        const status = pStatus.readInt();
+        if (ShCmdLet.wifExited(status)) {
+          const exitStatus = ShCmdLet.wExitStatus(status);
+          Output.writeln(`exit status: ${exitStatus}`);
+        } else if (ShCmdLet.wifSignalled(status)) {
+          const termSig = ShCmdLet.wTermSig(status);
+          Output.writeln(`terminated by signal: ${termSig}`);
+        }
+      } finally {
+        Input.setInterceptRaw(null);
       }
     }
     return Var.ZERO;

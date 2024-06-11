@@ -15,9 +15,3 @@ export abstract class CmdLet {
     return true;
   }
 }
-
-export interface CmdLetEdit {
-  addCommandLine(line: string): void;
-  done(): void;
-  abort(): void;
-}

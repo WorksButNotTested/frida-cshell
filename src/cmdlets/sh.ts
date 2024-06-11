@@ -14,6 +14,8 @@ const STDERR_FILENO: number = 2;
 const READ_SIZE: number = 4096;
 const WNOHANG: number = 1;
 
+type Pipes = { readFd: number; writeFd: number };
+
 const USAGE: string = `Usage: fd
 sh - run a shell
 `;
@@ -87,19 +89,8 @@ export class ShCmdLet extends CmdLet {
 
     Output.writeln(`SHELL: ${shellVar.readUtf8String()}`, true);
 
-    const toChildPipes = Memory.alloc(INT_SIZE * 2);
-    const { value: pipeChildRet, errno: pipeChildErrno } = this.fnPipe(
-      toChildPipes,
-    ) as UnixSystemFunctionResult<number>;
-    if (pipeChildRet !== 0)
-      throw new Error(`failed to pipe(child), errno: ${pipeChildErrno}`);
-
-    const toParentPipes = Memory.alloc(INT_SIZE * 2);
-    const { value: pipeParentRet, errno: pipeParentErrno } = this.fnPipe(
-      toParentPipes,
-    ) as UnixSystemFunctionResult<number>;
-    if (pipeParentRet !== 0)
-      throw new Error(`failed to pipe, errno: ${pipeParentErrno}`);
+    const { readFd: toChildRead, writeFd: toChildWrite } = this.createPipe();
+    const { readFd: toParentRead, writeFd: toParentWrite } = this.createPipe();
 
     const { value: forkRet, errno: forkErrno } =
       this.fnFork() as UnixSystemFunctionResult<number>;
@@ -109,13 +100,13 @@ export class ShCmdLet extends CmdLet {
       // child
       try {
         const { value: closeChildRet, errno: closeChildErrno } = this.fnClose(
-          toChildPipes.add(PIPE_WRITE_OFFSET).readInt(),
+          toChildWrite,
         ) as UnixSystemFunctionResult<number>;
         if (closeChildRet !== 0)
           throw new Error(`failed to close(child), errno: ${closeChildErrno}`);
 
         const { value: closeParentRet, errno: closeParentErrno } = this.fnClose(
-          toParentPipes.add(PIPE_READ_OFFSET).readInt(),
+          toParentRead,
         ) as UnixSystemFunctionResult<number>;
         if (closeParentRet !== 0)
           throw new Error(
@@ -123,21 +114,21 @@ export class ShCmdLet extends CmdLet {
           );
 
         const { value: dup2InRet, errno: dup2InErrno } = this.fnDup2(
-          toChildPipes.add(PIPE_READ_OFFSET).readInt(),
+          toChildRead,
           STDIN_FILENO,
         ) as UnixSystemFunctionResult<number>;
         if (dup2InRet !== STDIN_FILENO)
           throw new Error(`failed to dup2(stdin), errno: ${dup2InErrno}`);
 
         const { value: dup2OutRet, errno: dup2OutErrno } = this.fnDup2(
-          toParentPipes.add(PIPE_WRITE_OFFSET).readInt(),
+          toParentWrite,
           STDOUT_FILENO,
         ) as UnixSystemFunctionResult<number>;
         if (dup2OutRet !== STDOUT_FILENO)
           throw new Error(`failed to dup2(stdout), errno: ${dup2OutErrno}`);
 
         const { value: dup2ErrRet, errno: dup2ErrErrno } = this.fnDup2(
-          toParentPipes.add(PIPE_WRITE_OFFSET).readInt(),
+          toParentWrite,
           STDERR_FILENO,
         ) as UnixSystemFunctionResult<number>;
         if (dup2ErrRet !== STDERR_FILENO)
@@ -162,9 +153,7 @@ export class ShCmdLet extends CmdLet {
         if (execvRet !== 0)
           throw new Error(`failed to execv, errno: ${execvErrno}`);
       } catch (error) {
-        const output = new UnixOutputStream(
-          toParentPipes.add(PIPE_WRITE_OFFSET).readInt(),
-        );
+        const output = new UnixOutputStream(toParentWrite);
         if (error instanceof Error) {
           output.write(Format.toByteArray(`ERROR: ${error.message}`));
           output.write(Format.toByteArray(`${error.stack}`));
@@ -180,28 +169,22 @@ export class ShCmdLet extends CmdLet {
       try {
         Output.writeln(`child pid: ${forkRet}`, true);
         const { value: closeChildRet, errno: closeChildErrno } = this.fnClose(
-          toChildPipes.add(PIPE_READ_OFFSET).readInt(),
+          toChildRead,
         ) as UnixSystemFunctionResult<number>;
         if (closeChildRet !== 0)
           throw new Error(`failed to close(child), errno: ${closeChildErrno}`);
 
         const { value: closeParentRet, errno: closeParentErrno } = this.fnClose(
-          toParentPipes.add(PIPE_WRITE_OFFSET).readInt(),
+          toParentWrite,
         ) as UnixSystemFunctionResult<number>;
         if (closeParentRet !== 0)
           throw new Error(
             `failed to close(parent), errno: ${closeParentErrno}`,
           );
 
-        const input = new UnixInputStream(
-          toParentPipes.add(PIPE_READ_OFFSET).readInt(),
-          { autoClose: true },
-        );
+        const input = new UnixInputStream(toParentRead, { autoClose: true });
 
-        const output = new UnixOutputStream(
-          toChildPipes.add(PIPE_WRITE_OFFSET).readInt(),
-          { autoClose: true },
-        );
+        const output = new UnixOutputStream(toChildWrite, { autoClose: true });
 
         const onRaw: InputInterceptRaw = {
           addRaw(raw: string) {
@@ -251,6 +234,19 @@ export class ShCmdLet extends CmdLet {
       }
     }
     return Var.ZERO;
+  }
+
+  private createPipe(): Pipes {
+    if (this.fnPipe === null)
+      throw new Error('failed to find necessary native functions');
+    const pipes = Memory.alloc(INT_SIZE * 2);
+    const { value: pipeRet, errno: pipeErrno } = this.fnPipe(
+      pipes,
+    ) as UnixSystemFunctionResult<number>;
+    if (pipeRet !== 0) throw new Error(`failed to pipe, errno: ${pipeErrno}`);
+    const readFd = pipes.add(PIPE_READ_OFFSET).readInt();
+    const writeFd = pipes.add(PIPE_WRITE_OFFSET).readInt();
+    return { readFd, writeFd };
   }
 
   private static wifExited(status: number): boolean {

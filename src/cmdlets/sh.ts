@@ -11,6 +11,7 @@ const STDIN_FILENO: number = 0;
 const STDOUT_FILENO: number = 1;
 const STDERR_FILENO: number = 2;
 const READ_SIZE: number = 4096;
+const WNOHANG: number = 1;
 
 const USAGE: string = `Usage: fd
 sh - run a shell
@@ -38,7 +39,7 @@ export class ShCmdLet extends CmdLet {
       this.usage();
       return Var.ZERO;
     }
-   
+
     if (
       this.pPipe === null ||
       this.pFork === null ||
@@ -166,31 +167,11 @@ export class ShCmdLet extends CmdLet {
         toParentPipes.add(PIPE_READ_OFFSET).readInt(),
         { autoClose: true },
       );
+
       // const output = new UnixOutputStream(
       //   toChildPipes.add(PIPE_WRITE_OFFSET).readInt(),
       //   { autoClose: true },
       // );
-
-      const pStatus = Memory.alloc(INT_SIZE);
-      const { value: waitRet, errno: waitErrno } = fnWaitPid(
-        forkRet,
-        pStatus,
-        0,
-      ) as UnixSystemFunctionResult<number>;
-      if (waitRet < 0)
-        throw new Error(`failed to waitpid ${waitRet}, errno: ${waitErrno}`);
-
-      if (waitRet !== forkRet)
-        throw new Error(`waitpid exited abnormally, status: ${waitRet}`);
-
-      const status = pStatus.readInt();
-      if (this.wifExited(status)) {
-        const exitStatus = this.wExitStatus(status);
-        Output.writeln(`exit status: ${exitStatus}`);
-      } else if (this.wifSignalled(status)) {
-        const termSig = this.wTermSig(status);
-        Output.writeln(`terminated by signal: ${termSig}`);
-      }
 
       for (
         let buf = await input.read(READ_SIZE);
@@ -200,23 +181,43 @@ export class ShCmdLet extends CmdLet {
         const str: string = Format.toTextString(buf);
         Output.write(str);
       }
+
+      const pStatus = Memory.alloc(INT_SIZE);
+
+      const { value: waitRet, errno: waitErrno } = fnWaitPid(
+        forkRet,
+        pStatus,
+        WNOHANG,
+      ) as UnixSystemFunctionResult<number>;
+      if (waitRet < 0)
+        throw new Error(`failed to waitpid ${waitRet}, errno: ${waitErrno}`);
+
+      if (waitRet !== forkRet) throw new Error(`failed to waitpid ${waitRet}`);
+
+      const status = pStatus.readInt();
+      if (ShCmdLet.wifExited(status)) {
+        const exitStatus = ShCmdLet.wExitStatus(status);
+        Output.writeln(`exit status: ${exitStatus}`);
+      } else if (ShCmdLet.wifSignalled(status)) {
+        const termSig = ShCmdLet.wTermSig(status);
+        Output.writeln(`terminated by signal: ${termSig}`);
+      }
     }
     return Var.ZERO;
   }
-
-  private wifExited(status: number): boolean {
+  private static wifExited(status: number): boolean {
     return (status & 0xff00) >> 8 === 0;
   }
 
-  private wExitStatus(status: number): number {
+  private static wExitStatus(status: number): number {
     return (status & 0xff00) >> 8;
   }
 
-  private wifSignalled(status: number): boolean {
+  private static wifSignalled(status: number): boolean {
     return (status & 0xff00) >> 8 === 0x7f;
   }
 
-  private wTermSig(status: number): number {
+  private static wTermSig(status: number): number {
     return status & 0x7f;
   }
 

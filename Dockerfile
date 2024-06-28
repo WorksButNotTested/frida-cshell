@@ -346,6 +346,28 @@ RUN CC=arm-none-linux-gnueabihf-gcc \
 RUN make
 
 ################################################################################
+# FRIDA-arm32                                                                  #
+################################################################################
+FROM platform as frida-arm32-sf
+COPY --from=frida-source /root/frida-core /root/frida-core
+WORKDIR /root/frida-core
+RUN apt-get update && \
+    apt-get install -y \
+    gcc-arm-linux-gnueabi \
+    g++-arm-linux-gnueabi
+RUN apt-get purge -y libelf-dev libssl-dev
+RUN CC=arm-linux-gnueabi-gcc \
+    CXX=arm-linux-gnueabi-g++ \
+    STRIP=arm-linux-gnueabi-strip \
+    NM=arm-linux-gnueabi-nm \
+    READELF=arm-linux-gnueabi-readelf \
+    ./configure \
+        --host linux-arm \
+        --without-prebuilds=sdk:host
+RUN make
+
+
+################################################################################
 # FRIDA-arm64                                                                  #
 ################################################################################
 FROM platform as frida-arm64

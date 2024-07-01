@@ -612,7 +612,7 @@ COPY assets/initrd/entropy.c /root/entropy.c
 ################################################################################
 # INITRD-ARM32                                                                 #
 ################################################################################
-FROM initrd-platform AS initrd-arm32
+FROM initrd-base AS initrd-arm32
 COPY --from=busybox-arm32 /root/busybox-1.36.1/build/_install/bin /root/initramfs/bin/
 COPY --from=busybox-arm32 /root/busybox-1.36.1/build/_install/sbin /root/initramfs/sbin/
 COPY --from=busybox-arm32 /root/busybox-1.36.1/build/_install/usr /root/initramfs/usr/
@@ -632,7 +632,7 @@ RUN find . | cpio -o --format=newc -R root:root > /root/initramfs-arm32.img
 ################################################################################
 # INITRD-ARM64                                                                 #
 ################################################################################
-FROM initrd-platform AS initrd-arm64
+FROM initrd-base AS initrd-arm64
 COPY --from=busybox-arm64 /root/busybox-1.36.1/build/_install/bin /root/initramfs/bin/
 COPY --from=busybox-arm64 /root/busybox-1.36.1/build/_install/sbin /root/initramfs/sbin/
 COPY --from=busybox-arm64 /root/busybox-1.36.1/build/_install/usr /root/initramfs/usr/
@@ -658,7 +658,7 @@ RUN find . | cpio -o --format=newc -R root:root > /root/initramfs-arm64.img
 ################################################################################
 # INITRD-x86                                                                   #
 ################################################################################
-FROM initrd-platform AS initrd-x86
+FROM initrd-base AS initrd-x86
 COPY --from=busybox-x86 /root/busybox-1.36.1/build/_install/bin /root/initramfs/bin/
 COPY --from=busybox-x86 /root/busybox-1.36.1/build/_install/sbin /root/initramfs/sbin/
 COPY --from=busybox-x86 /root/busybox-1.36.1/build/_install/usr /root/initramfs/usr/
@@ -687,7 +687,7 @@ RUN find . | cpio -o --format=newc -R root:root > /root/initramfs-x86.img
 ################################################################################
 # INITRD-x64                                                                   #
 ################################################################################
-FROM initrd-platform AS initrd-x64
+FROM initrd-base AS initrd-x64
 COPY --from=busybox-x64 /root/busybox-1.36.1/build/_install/bin /root/initramfs/bin/
 COPY --from=busybox-x64 /root/busybox-1.36.1/build/_install/sbin /root/initramfs/sbin/
 COPY --from=busybox-x64 /root/busybox-1.36.1/build/_install/usr /root/initramfs/usr/

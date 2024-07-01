@@ -346,7 +346,173 @@ RUN CC=arm-none-linux-gnueabihf-gcc \
 RUN make
 
 ################################################################################
-# FRIDA-arm32                                                                  #
+# GMP                                                                          #
+################################################################################
+FROM platform AS gmp
+WORKDIR /root/
+RUN wget http://ftpmirror.gnu.org/gmp/gmp-6.2.0.tar.bz2
+RUN tar xf gmp-6.2.0.tar.bz2
+
+################################################################################
+# MPFR                                                                         #
+################################################################################
+FROM platform AS mpfr
+WORKDIR /root/
+RUN wget http://ftpmirror.gnu.org/mpfr/mpfr-4.0.2.tar.bz2
+RUN tar xf mpfr-4.0.2.tar.bz2
+
+################################################################################
+# MPC                                                                          #
+################################################################################
+FROM platform AS mpc
+WORKDIR /root/
+RUN wget http://ftpmirror.gnu.org/mpc/mpc-1.1.0.tar.gz
+RUN tar xf mpc-1.1.0.tar.gz
+
+################################################################################
+# BINUTILS                                                                     #
+################################################################################
+FROM platform AS binutils
+WORKDIR /root/
+RUN wget http://ftpmirror.gnu.org/binutils/binutils-2.34.tar.bz2
+RUN tar xf binutils-2.34.tar.bz2
+
+################################################################################
+# BINUTILS-ARM                                                                 #
+################################################################################
+FROM platform AS binutils-arm32
+COPY --from=gmp /root/gmp-6.2.0 /root/gmp-6.2.0
+COPY --from=mpfr /root/mpfr-4.0.2 /root/mpfr-4.0.2
+COPY --from=mpc /root/mpc-1.1.0 /root/mpc-1.1.0
+COPY --from=binutils /root/binutils-2.34 /root/binutils-2.34
+WORKDIR /root/binutils-2.34
+COPY assets/toolchain/binutils-2.34-sysroot.patch /root/binutils-2.34-sysroot.patch
+RUN patch -p1 < /root/binutils-2.34-sysroot.patch
+RUN mkdir build-binutils
+WORKDIR /root/build-binutils
+RUN /root/binutils-2.34/configure \
+    --prefix=/opt/x-tools/arm-linux-gnueabi \
+    --target=arm-linux-gnueabi \
+    --disable-multilib \
+    --with-sysroot=/opt/x-tools/arm-linux-gnueabi/arm-linux-gnueabi/sysroot \
+    CFLAGS="-Wno-error"
+RUN make -j
+RUN make install
+
+################################################################################
+# LINUX                                                                        #
+################################################################################
+FROM platform AS linux
+WORKDIR /root/
+RUN wget https://www.kernel.org/pub/linux/kernel/v4.x/linux-4.4.240.tar.xz
+RUN tar xf linux-4.4.240.tar.xz
+
+################################################################################
+# HEADERS-ARM32                                                                #
+################################################################################
+FROM binutils-arm32 AS headers-arm32
+COPY --from=linux /root/linux-4.4.240 /root/linux-4.4.240
+WORKDIR /root/linux-4.4.240
+RUN make \
+    ARCH=arm \
+    INSTALL_HDR_PATH=/opt/x-tools/arm-linux-gnueabi/arm-linux-gnueabi/sysroot/usr headers_install
+
+################################################################################
+# GCC                                                                          #
+################################################################################
+FROM platform AS gcc
+WORKDIR /root/
+RUN wget http://ftpmirror.gnu.org/gnu/gcc/gcc-9.2.0/gcc-9.2.0.tar.xz
+RUN tar xf gcc-9.2.0.tar.xz
+
+################################################################################
+# GCC-ARM32                                                                    #
+################################################################################
+FROM headers-arm32 AS gcc-arm32
+COPY --from=gcc /root/gcc-9.2.0 /root/gcc-9.2.0
+WORKDIR /root/gcc-9.2.0/
+COPY assets/toolchain/gcc.patch /root/gcc.patch
+RUN patch -p0 < /root/gcc.patch
+RUN ln -s /root/gmp-6.2.0/ gmp
+RUN ln -s /root/mpfr-4.0.2/ mpfr
+RUN ln -s /root/mpc-1.1.0/ mpc
+RUN mkdir /root/build-gcc
+WORKDIR /root/build-gcc
+RUN /root/gcc-9.2.0/configure \
+    --prefix=/opt/x-tools/arm-linux-gnueabi \
+    --target=arm-linux-gnueabi \
+    --enable-languages=c,c++ \
+    --disable-multilib \
+    --with-sysroot=/opt/x-tools/arm-linux-gnueabi/arm-linux-gnueabi/sysroot
+RUN make -j all-gcc
+RUN make install-gcc
+
+################################################################################
+# GLIBC                                                                        #
+################################################################################
+FROM platform AS glibc
+WORKDIR /root/
+RUN wget http://ftpmirror.gnu.org/glibc/glibc-2.31.tar.xz
+RUN tar xf glibc-2.31.tar.xz
+
+################################################################################
+# GLIBC-ARM32                                                                  #
+################################################################################
+FROM gcc-arm32 AS glibc-arm32
+COPY --from=glibc /root/glibc-2.31 /root/glibc-2.31
+WORKDIR /root/glibc-2.31/
+COPY assets/toolchain/glibc.patch /root/glibc.patch
+RUN patch -p0 < /root/glibc.patch
+RUN apt-get update && \
+    apt-get install -y \
+    gettext \
+    autoconf \
+    bison \
+    python3
+RUN mkdir /root/build-glibc
+WORKDIR /root/build-glibc
+RUN /root/glibc-2.31/configure \
+    --prefix=/opt/x-tools/arm-linux-gnueabi/arm-linux-gnueabi/sysroot/usr \
+    --build="${MACHTYPE}" \
+    --host=arm-linux-gnueabi \
+    --target=arm-linux-gnueabi \
+    --with-headers=/opt/x-tools/arm-linux-gnueabi/arm-linux-gnueabi/sysroot/usr/include \
+    --with-sysroot=/opt/x-tools/arm-linux-gnueabi/arm-linux-gnueabi/sysroot \
+    --disable-multilib \
+    --disable-werror \
+    CC="/opt/x-tools/arm-linux-gnueabi/bin/arm-linux-gnueabi-gcc" \
+    libc_cv_forced_unwind=yes
+RUN make -j install-bootstrap-headers=yes install-headers
+RUN make -j csu/subdir_lib
+RUN mkdir /opt/x-tools/arm-linux-gnueabi/arm-linux-gnueabi/sysroot/usr/lib/
+RUN install csu/crt1.o csu/crti.o csu/crtn.o /opt/x-tools/arm-linux-gnueabi/arm-linux-gnueabi/sysroot/usr/lib/
+RUN /opt/x-tools/arm-linux-gnueabi/bin/arm-linux-gnueabi-gcc \
+    -nostdlib \
+    -nostartfiles \
+    -shared \
+    -x c \
+    /dev/null \
+    -o /opt/x-tools/arm-linux-gnueabi/arm-linux-gnueabi/sysroot/usr/lib/libc.so
+RUN touch /opt/x-tools/arm-linux-gnueabi/arm-linux-gnueabi/sysroot/usr/include/gnu/stubs.h
+
+################################################################################
+# CSL-ARM32                                                                    #
+################################################################################
+FROM glibc-arm32 AS csl-arm32
+WORKDIR /root/build-gcc
+RUN make -j all-target-libgcc
+RUN make install-target-libgcc
+
+################################################################################
+# GLIBC-ARM32-2                                                                  #
+################################################################################
+FROM csl-arm32 AS glibc-arm32-2
+WORKDIR /root/build-glibc
+# RUN make -j
+# RUN make install
+
+################################################################################
+# FRIDA-arm32-sf                                                               #
 ################################################################################
 FROM platform as frida-arm32-sf
 COPY --from=frida-source /root/frida-core /root/frida-core
@@ -427,7 +593,7 @@ COPY assets/initrd/entropy.c /root/entropy.c
 ################################################################################
 # INITRD-ARM32                                                                 #
 ################################################################################
-FROM initrd-base as initrd-arm32
+FROM initrd-platform AS initrd-arm32
 COPY --from=busybox-arm32 /root/busybox-1.36.1/build/_install/bin /root/initramfs/bin/
 COPY --from=busybox-arm32 /root/busybox-1.36.1/build/_install/sbin /root/initramfs/sbin/
 COPY --from=busybox-arm32 /root/busybox-1.36.1/build/_install/usr /root/initramfs/usr/
@@ -447,7 +613,7 @@ RUN find . | cpio -o --format=newc -R root:root > /root/initramfs-arm32.img
 ################################################################################
 # INITRD-ARM64                                                                 #
 ################################################################################
-FROM initrd-base as initrd-arm64
+FROM initrd-platform AS initrd-arm64
 COPY --from=busybox-arm64 /root/busybox-1.36.1/build/_install/bin /root/initramfs/bin/
 COPY --from=busybox-arm64 /root/busybox-1.36.1/build/_install/sbin /root/initramfs/sbin/
 COPY --from=busybox-arm64 /root/busybox-1.36.1/build/_install/usr /root/initramfs/usr/
@@ -473,7 +639,7 @@ RUN find . | cpio -o --format=newc -R root:root > /root/initramfs-arm64.img
 ################################################################################
 # INITRD-x86                                                                   #
 ################################################################################
-FROM initrd-base as initrd-x86
+FROM initrd-platform AS initrd-x86
 COPY --from=busybox-x86 /root/busybox-1.36.1/build/_install/bin /root/initramfs/bin/
 COPY --from=busybox-x86 /root/busybox-1.36.1/build/_install/sbin /root/initramfs/sbin/
 COPY --from=busybox-x86 /root/busybox-1.36.1/build/_install/usr /root/initramfs/usr/
@@ -502,7 +668,7 @@ RUN find . | cpio -o --format=newc -R root:root > /root/initramfs-x86.img
 ################################################################################
 # INITRD-x64                                                                   #
 ################################################################################
-FROM initrd-base as initrd-x64
+FROM initrd-platform AS initrd-x64
 COPY --from=busybox-x64 /root/busybox-1.36.1/build/_install/bin /root/initramfs/bin/
 COPY --from=busybox-x64 /root/busybox-1.36.1/build/_install/sbin /root/initramfs/sbin/
 COPY --from=busybox-x64 /root/busybox-1.36.1/build/_install/usr /root/initramfs/usr/

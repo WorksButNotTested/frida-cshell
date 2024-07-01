@@ -1,0 +1,11 @@
+--- meson.build 2024-07-01 10:38:56.579118441 +0000
++++ meson.build.patched 2024-07-01 10:38:52.443042274 +0000
+@@ -296,7 +296,7 @@
+ endif
+
+ foreach library : openssl_libraries
+-  dependencies += compiler.find_library(library)
++  dependencies += compiler.find_library(library, static: true)
+ endforeach
+
+ # We may need to add some defines for static builds

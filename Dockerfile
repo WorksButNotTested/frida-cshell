@@ -533,22 +533,24 @@ RUN cat \
 ################################################################################
 FROM platform as frida-arm32-sf
 COPY --from=frida-source /root/frida-core /root/frida-core
+COPY --from=cpp-arm32 /opt/x-tools/arm-linux-gnueabi /opt/x-tools/arm-linux-gnueabi
 WORKDIR /root/frida-core
-RUN apt-get update && \
-    apt-get install -y \
-    gcc-arm-linux-gnueabi \
-    g++-arm-linux-gnueabi
 RUN apt-get purge -y libelf-dev libssl-dev
-RUN CC=arm-linux-gnueabi-gcc \
-    CXX=arm-linux-gnueabi-g++ \
-    STRIP=arm-linux-gnueabi-strip \
-    NM=arm-linux-gnueabi-nm \
-    READELF=arm-linux-gnueabi-readelf \
+RUN CC="/opt/x-tools/arm-linux-gnueabi/bin/arm-linux-gnueabi-gcc" \
+    CXX="/opt/x-tools/arm-linux-gnueabi/bin/arm-linux-gnueabi-g++" \
+    STRIP="/opt/x-tools/arm-linux-gnueabi/bin/arm-linux-gnueabi-strip" \
+    NM="/opt/x-tools/arm-linux-gnueabi/bin/arm-linux-gnueabi-nm" \
+    READELF="/opt/x-tools/arm-linux-gnueabi/bin/arm-linux-gnueabi-readelf" \
+    LDFLAGS="/opt/x-tools/arm-linux-gnueabi/arm-linux-gnueabi/lib/libatomic.a" \
     ./configure \
         --host linux-arm \
         --without-prebuilds=sdk:host
 RUN make
-
+WORKDIR /root/frida-core/subprojects/openssl
+COPY assets/toolchain/frida.patch /root/frida.patch
+RUN patch -p0 < /root/frida.patch
+WORKDIR /root/frida-core
+RUN make
 
 ################################################################################
 # FRIDA-arm64                                                                  #

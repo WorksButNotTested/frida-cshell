@@ -1,0 +1,11 @@
+--- gcc/include-fixed/limits.h  2023-07-26 13:52:38.544657025 +0000
++++ gcc/include-fixed/limits.h  2023-07-26 13:53:00.912657343 +0000
+@@ -149,4 +149,8 @@
+ # define ULLONG_WIDTH __LONG_LONG_WIDTH__
+ #endif
+
++#ifndef PATH_MAX
++# define PATH_MAX (4096)
++#endif
++
+ #endif /* _LIMITS_H___ */

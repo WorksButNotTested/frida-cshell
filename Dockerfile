@@ -481,6 +481,7 @@ RUN /root/glibc-2.31/configure \
     --disable-multilib \
     --disable-werror \
     CC="/opt/x-tools/arm-linux-gnueabi/bin/arm-linux-gnueabi-gcc" \
+    CXX="/opt/x-tools/arm-linux-gnueabi/bin/arm-linux-gnueabi-g++" \
     libc_cv_forced_unwind=yes
 RUN make -j install-bootstrap-headers=yes install-headers
 RUN make -j csu/subdir_lib
@@ -508,8 +509,24 @@ RUN make install-target-libgcc
 ################################################################################
 FROM csl-arm32 AS glibc-arm32-2
 WORKDIR /root/build-glibc
-# RUN make -j
-# RUN make install
+RUN make -j
+RUN make install
+
+################################################################################
+# CPP-ARM32                                                                    #
+################################################################################
+FROM glibc-arm32-2 AS cpp-arm32
+WORKDIR /root/build-gcc
+COPY assets/toolchain/cpp.patch /root/cpp.patch
+RUN patch -p0 < /root/cpp.patch
+RUN make -j
+RUN make install
+WORKDIR /root/gcc-9.2.0/
+RUN cat \
+    gcc/limitx.h \
+    gcc/glimits.h \
+    gcc/limity.h \
+    > /opt/x-tools/arm-linux-gnueabi/lib/gcc/arm-linux-gnueabi/9.2.0/include-fixed/limits.h
 
 ################################################################################
 # FRIDA-arm32-sf                                                               #

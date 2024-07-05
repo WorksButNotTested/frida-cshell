@@ -29,9 +29,13 @@ export class Bps {
     return bp;
   }
 
-  private static checkOverlaps(type: BpType, addr: NativePointer, length: number): void {
-    const overlapping = Array.from(this.byIndex.values()).some(bp =>
-      bp.overlaps(addr, length) && Bps.conflicts(type, bp.type),
+  private static checkOverlaps(
+    type: BpType,
+    addr: NativePointer,
+    length: number,
+  ): void {
+    const overlapping = Array.from(this.byIndex.values()).some(
+      bp => bp.overlaps(addr, length) && Bps.conflicts(type, bp.type),
     );
 
     if (overlapping) {
@@ -44,7 +48,7 @@ export class Bps {
   private static conflicts(type1: BpType, type2: BpType): boolean {
     const kind1 = Bp.getBpKind(type1);
     const kind2 = Bp.getBpKind(type2);
-    return (kind1 === BpKind.Memory || kind2 === BpKind.Memory);
+    return kind1 === BpKind.Memory || kind2 === BpKind.Memory;
   }
 
   private static getNextFreeIndex(type: BpType): number {

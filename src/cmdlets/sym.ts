@@ -3,6 +3,7 @@ import { Output } from '../io/output.js';
 import { Token } from '../io/token.js';
 import { Format } from '../misc/format.js';
 import { Var } from '../vars/var.js';
+import { Regex } from '../misc/regex.js';
 
 const USAGE: string = `Usage: sym
 
@@ -74,8 +75,7 @@ export class SymCmdLet extends CmdLet {
     const t0 = tokens[0] as Token;
     const name = t0.getLiteral();
 
-    const specialRegex = /[[\]?!*]/;
-    if (!specialRegex.test(name)) return null;
+    if (!Regex.isGlob(name)) return null;
 
     const fileNameRegex =
       /^((?<module>[[\]?!*\w .-]+?)!)?(?<symbol>[[?*a-zA-Z_][[\]?!*a-zA-Z0-9_]*)$/;
@@ -91,7 +91,13 @@ export class SymCmdLet extends CmdLet {
     Output.writeln(`module: ${module}`, true);
     Output.writeln(`symbol: ${symbol}`, true);
 
-    const modRegex = this.globToRegex(module);
+    let modRegex = Regex.MatchAll;
+    if (module !== null)
+    {
+      const regex = Regex.globToRegex(module);
+      if (regex === null) return this.usage();
+      modRegex = regex;
+    }
 
     const modules = Process.enumerateModules().filter(m =>
       m.name.match(modRegex),
@@ -102,7 +108,12 @@ export class SymCmdLet extends CmdLet {
       return Var.ZERO;
     }
 
-    const symRegex = this.globToRegex(symbol);
+    let symRegex = Regex.MatchAll;
+    if (symbol !== null) {
+      const regex = Regex.globToRegex(symbol);
+      if (regex === null) return this.usage();
+      symRegex = regex;
+    }
 
     const exports = modules
       .map(m =>
@@ -149,21 +160,6 @@ export class SymCmdLet extends CmdLet {
     ).forEach(s => Output.writeln(s));
 
     return Var.ZERO;
-  }
-
-  private globToRegex(glob: string | null): RegExp {
-    if (glob === null) return /^.*$/;
-
-    const escaped = glob.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = escaped
-      .replace(/\\\*/g, '.*')
-      .replace(/\\\?/g, '.')
-      .replace(/\\\[/g, '[')
-      .replace(/\\\]/g, ']')
-      .replace(/\[!(.*?)]/g, (match, chars) => {
-        return '[^' + chars + ']';
-      });
-    return new RegExp(`^${regex}$`);
   }
 
   private runWithName(tokens: Token[]): Var | null {

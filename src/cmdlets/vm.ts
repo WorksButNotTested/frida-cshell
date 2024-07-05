@@ -107,7 +107,7 @@ export class VmCmdLet extends CmdLet {
     mod.enumerateRanges('---').forEach(r => {
       this.printMapping(r);
     });
-    return Var.ZERO;
+    return new Var(uint64(mod.base.toString()));
   }
 
   private runWithoutParams(tokens: Token[]): Var | null {

@@ -78,7 +78,7 @@ export class ModCmdLet extends CmdLet {
       return Var.ZERO;
     } else {
       this.printModule(mod);
-      return Var.ZERO;
+      return new Var(uint64(mod.base.toString()))
     }
   }
 

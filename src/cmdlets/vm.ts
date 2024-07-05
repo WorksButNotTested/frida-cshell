@@ -3,6 +3,7 @@ import { Output } from '../io/output.js';
 import { Format } from '../misc/format.js';
 import { Token } from '../io/token.js';
 import { Var } from '../vars/var.js';
+import { Regex } from '../misc/regex.js';
 
 const USAGE: string = `Usage: vm
 
@@ -23,6 +24,9 @@ export class VmCmdLet extends CmdLet {
   public runSync(tokens: Token[]): Var {
     const retWithAddress = this.runWithAddress(tokens);
     if (retWithAddress !== null) return retWithAddress;
+
+    const retWithWildCard = this.runWithWildcard(tokens);
+    if (retWithWildCard !== null) return retWithWildCard;
 
     const retWithName = this.runWithName(tokens);
     if (retWithName !== null) return retWithName;
@@ -94,6 +98,31 @@ export class VmCmdLet extends CmdLet {
       Output.write(`name: ${Output.blue(r.file.path)}`);
     }
     Output.writeln();
+  }
+
+  private runWithWildcard(tokens: Token[]): Var | null {
+    if (tokens.length !== 1) return null;
+
+    const t0 = tokens[0] as Token;
+    const name = t0.getLiteral();
+    if (!Regex.isGlob(name)) return null;
+
+    const regex = Regex.globToRegex(name);
+    if (regex === null) return this.usage();
+
+    const modules = Process.enumerateModules().filter(m => m.name.match(regex));
+    modules.sort();
+    modules.forEach(m => {
+      m.enumerateRanges('---').forEach(r => {
+        this.printMapping(r);
+      });
+    });
+    if (modules.length === 1) {
+      const module = modules[0] as Module;
+      return new Var(module.base.toString());
+    } else {
+      return Var.ZERO;
+    }
   }
 
   private runWithName(tokens: Token[]): Var | null {

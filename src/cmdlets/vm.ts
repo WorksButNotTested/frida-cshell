@@ -82,14 +82,18 @@ export class VmCmdLet extends CmdLet {
 
   private printMapping(r: RangeDetails) {
     const limit = r.base.add(r.size);
-    if (r.file === undefined)
-      Output.writeln(
-        `\t${Format.toHexString(r.base)}-${Format.toHexString(limit)} ${r.protection} ${Format.toSize(r.size)}`,
+    Output.write(
+      `\t${Output.green(Format.toHexString(r.base))}-${Output.green(Format.toHexString(limit))} `,
+    );
+    Output.write(`${Output.bold(Output.yellow(r.protection))} `);
+    Output.write(`${Output.bold(Format.toSize(r.size))} `);
+    if (r.file !== undefined) {
+      Output.write(
+        `offset: ${Output.bold(Format.toHexString(r.file.offset))}, `,
       );
-    else
-      Output.writeln(
-        `\t${Format.toHexString(r.base)}-${Format.toHexString(limit)} ${r.protection} ${Format.toSize(r.size)} offset: ${Format.toHexString(r.file.offset)}, name: ${r.file.path}`,
-      );
+      Output.write(`name: ${Output.blue(r.file.path)}`);
+    }
+    Output.writeln();
   }
 
   private runWithName(tokens: Token[]): Var | null {

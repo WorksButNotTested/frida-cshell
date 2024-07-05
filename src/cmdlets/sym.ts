@@ -92,8 +92,7 @@ export class SymCmdLet extends CmdLet {
     Output.writeln(`symbol: ${symbol}`, true);
 
     let modRegex = Regex.MatchAll;
-    if (module !== null)
-    {
+    if (module !== null) {
       const regex = Regex.globToRegex(module);
       if (regex === null) return this.usage();
       modRegex = regex;

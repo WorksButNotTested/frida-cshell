@@ -61,9 +61,13 @@ export class ModCmdLet extends CmdLet {
 
   private printModule(m: Module) {
     const limit = m.base.add(m.size);
-    Output.writeln(
-      `${Format.toHexString(m.base)}-${Format.toHexString(limit)} ${Format.toSize(m.size)} ${m.name.padEnd(30, ' ')} ${m.path}`,
+    Output.write(
+      `${Output.green(Format.toHexString(m.base))}-${Output.green(Format.toHexString(limit))} `,
     );
+    Output.write(`${Output.bold(Format.toSize(m.size))} `);
+    Output.write(`${Output.yellow(m.name.padEnd(30, ' '))} `);
+    Output.write(`${Output.blue(m.path)}`);
+    Output.writeln();
   }
 
   private runWithName(tokens: Token[]): Var | null {
@@ -78,7 +82,7 @@ export class ModCmdLet extends CmdLet {
       return Var.ZERO;
     } else {
       this.printModule(mod);
-      return new Var(uint64(mod.base.toString()))
+      return new Var(uint64(mod.base.toString()));
     }
   }
 

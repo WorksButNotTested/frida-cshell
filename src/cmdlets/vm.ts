@@ -119,7 +119,7 @@ export class VmCmdLet extends CmdLet {
     });
     if (modules.length === 1) {
       const module = modules[0] as Module;
-      return new Var(module.base.toString());
+      return new Var(uint64(module.base.toString()));
     } else {
       return Var.ZERO;
     }

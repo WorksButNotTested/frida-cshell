@@ -85,7 +85,9 @@ export class ModCmdLet extends CmdLet {
   private runWithoutName(tokens: Token[]): Var | null {
     if (tokens.length !== 0) return null;
 
-    Process.enumerateModules().forEach(m => {
+    const modules = Process.enumerateModules();
+    modules.sort((a, b) => a.base.compare(b.base));
+    modules.forEach(m => {
       this.printModule(m);
     });
     return Var.ZERO;

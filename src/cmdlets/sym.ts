@@ -158,7 +158,13 @@ export class SymCmdLet extends CmdLet {
         `${index.toString().padStart(3, ' ')}: ${Output.green(key.padEnd(40, '.'))} ${Output.yellow(Format.toHexString(value.address))} [${Output.blue(value.type)}]`,
     ).forEach(s => Output.writeln(s));
 
-    return Var.ZERO;
+    const values = Array.from(dict.values());
+    if (values.length === 1) {
+      const value = values[0] as {name: string, type: string, address: NativePointer};
+      return new Var(uint64(value.address.toString()))
+    } else {
+      return Var.ZERO;
+    }
   }
 
   private runWithName(tokens: Token[]): Var | null {

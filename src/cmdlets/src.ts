@@ -18,12 +18,12 @@ export class SrcCmdLet extends CmdLet {
   category = 'misc';
   help = 'load script';
 
-  public static readonly defaultPath = `${Process.getHomeDir()}/.cshellrc`;
-  private lastPath = SrcCmdLet.defaultPath;
+  private static lastPath: string | null = null;
 
-  public static loadInitScript() {
+  public static loadInitScript(path: string) {
+    this.lastPath = path;
     const src = new SrcCmdLet();
-    src.runScript(SrcCmdLet.defaultPath);
+    src.runScript(path);
   }
 
   public runSync(tokens: Token[]): Var {
@@ -46,7 +46,7 @@ export class SrcCmdLet extends CmdLet {
       name = name.slice(1, name.length - 1);
 
     Output.writeln(`Loading: ${name}`);
-    this.lastPath = name;
+    SrcCmdLet.lastPath = name;
     this.runScript(name);
 
     return Var.ZERO;
@@ -76,8 +76,10 @@ export class SrcCmdLet extends CmdLet {
   private runWithoutName(tokens: Token[]): Var | null {
     if (tokens.length !== 0) return null;
 
-    Output.writeln(`Loading: ${this.lastPath}`);
-    this.runScript(this.lastPath);
+    if (SrcCmdLet.lastPath === null) throw new Error('path not initialized');
+
+    Output.writeln(`Loading: ${SrcCmdLet.lastPath}`);
+    this.runScript(SrcCmdLet.lastPath);
     return Var.ZERO;
   }
 

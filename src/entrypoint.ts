@@ -14,6 +14,8 @@ import { Regs } from './breakpoints/regs.js';
 import { Format } from './misc/format.js';
 import { SrcCmdLet } from './cmdlets/src.js';
 
+export const DEFAULT_SRC_PATH: string = `${Process.getHomeDir()}/.cshellrc`;
+
 type InitParams = {
   verbose: boolean;
 };
@@ -25,7 +27,7 @@ rpc.exports = {
     Output.writeln(`init - stage: ${stage}, verbose: ${verbose}`, true);
     Output.banner();
     Process.setExceptionHandler(exceptionHandler);
-    SrcCmdLet.loadInitScript();
+    SrcCmdLet.loadInitScript(DEFAULT_SRC_PATH);
     Input.prompt();
   },
   /**

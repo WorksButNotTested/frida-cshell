@@ -1,5 +1,6 @@
 import { CharCode } from './char.js';
 import { Vars } from '../vars/vars.js';
+import { DEFAULT_SRC_PATH } from '../entrypoint.js';
 
 export class Output {
   private static readonly VERSION = '@VER@';
@@ -40,6 +41,7 @@ export class Output {
         `CSHELL v${this.VERSION}, running in FRIDA ${Frida.version} using ${Script.runtime}`,
       ),
     );
+    this.writeln(`init script: ${Output.bold(DEFAULT_SRC_PATH)}`);
 
     this.writeln('Attached to:');
     this.writeln(`\tPID:  ${this.green(Process.id.toString())}`);

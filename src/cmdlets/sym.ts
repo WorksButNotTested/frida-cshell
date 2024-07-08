@@ -59,12 +59,13 @@ export class SymCmdLet extends CmdLet {
 
   private printDebugSymbol(debug: DebugSymbol) {
     const prefix = debug.moduleName === null ? '' : `${debug.moduleName}!`;
+    const name = `${prefix}${debug.name}`;
     Output.writeln(
-      `Debug Symbol: ${prefix}${debug.name} found at ${Format.toHexString(debug.address)}`,
+      `${Output.green(name.padEnd(40, '.'))} ${Output.yellow(Format.toHexString(debug.address))}`,
     );
     if (debug.fileName !== null && debug.lineNumber !== null) {
       if (debug.fileName.length !== 0 && debug.lineNumber !== 0) {
-        Output.writeln(`\t${debug.fileName}:${debug.lineNumber} `);
+        Output.writeln(`\t${Output.blue(debug.fileName)}:${Output.blue(debug.lineNumber.toString())} `);
       }
     }
   }
@@ -175,7 +176,7 @@ export class SymCmdLet extends CmdLet {
 
     const address = Module.findExportByName(null, name);
     if (address !== null) {
-      Output.writeln(`Export: ${name} found at ${Format.toHexString(address)}`);
+      Output.writeln(`${Output.green(name.padEnd(40, '.'))} ${Output.yellow(Format.toHexString(address))}`);
       return new Var(uint64(address.toString()));
     }
 
@@ -185,7 +186,7 @@ export class SymCmdLet extends CmdLet {
       return new Var(uint64(debug.address.toString()));
     }
 
-    Output.writeln(`Symbol ${name} not found`);
+    Output.writeln(`Symbol ${Output.bold(name)} not found`);
     return Var.ZERO;
   }
 

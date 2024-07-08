@@ -12,6 +12,7 @@ import { Output } from './io/output.js';
 import { MemoryBps } from './breakpoints/memory.js';
 import { Regs } from './breakpoints/regs.js';
 import { Format } from './misc/format.js';
+import { SrcCmdLet } from './cmdlets/src.js';
 
 type InitParams = {
   verbose: boolean;
@@ -24,7 +25,7 @@ rpc.exports = {
     Output.writeln(`init - stage: ${stage}, verbose: ${verbose}`, true);
     Output.banner();
     Process.setExceptionHandler(exceptionHandler);
-    Input.loadInitScript();
+    SrcCmdLet.loadInitScript();
     Input.prompt();
   },
   /**

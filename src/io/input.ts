@@ -2,8 +2,6 @@ import { Output } from './output.js';
 import { History } from '../terminal/history.js';
 import { Vars } from '../vars/vars.js';
 import { CharCode, Vt } from './char.js';
-import { Parser } from './parser.js';
-import { Command } from '../commands/command.js';
 
 enum InputState {
   Default,
@@ -273,27 +271,6 @@ export class Input {
       }
       this.interceptRaw = interceptRaw;
     }
-  }
-
-  public static loadInitScript(): void {
-    try {
-      const initScript = File.readAllText(`${Process.getHomeDir()}/.cshellrc`);
-      const lines = initScript.split('\n');
-      for (const line of lines) {
-        if (line.length === 0) continue;
-        if (line.charAt(0) === '#') continue;
-
-        Output.write(Output.bold(this.PROMPT));
-        Output.writeln(line);
-
-        const parser = new Parser(line.toString());
-        const tokens = parser.tokenize();
-        const ret = Command.runSync(tokens);
-        Vars.setRet(ret);
-        Output.writeRet();
-        Output.writeln();
-      }
-    } catch (_) {}
   }
 }
 

@@ -21,6 +21,11 @@ export class SrcCmdLet extends CmdLet {
   public static readonly defaultPath = `${Process.getHomeDir()}/.cshellrc`;
   private lastPath = SrcCmdLet.defaultPath;
 
+  public static loadInitScript() {
+    const src = new SrcCmdLet();
+    src.runScript(SrcCmdLet.defaultPath);
+  }
+
   public runSync(tokens: Token[]): Var {
     const retWithName = this.runWithName(tokens);
     if (retWithName !== null) return retWithName;

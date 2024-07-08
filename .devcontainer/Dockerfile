@@ -1,1 +1,1 @@
-FROM cshell as frida-cshell
+FROM cshell AS frida-cshell

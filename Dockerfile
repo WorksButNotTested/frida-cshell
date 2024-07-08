@@ -1,7 +1,7 @@
 ################################################################################
 # PLATFORM                                                                     #
 ################################################################################
-FROM ubuntu:22.04 as platform
+FROM ubuntu:22.04 AS platform
 ARG http_proxy
 ARG https_proxy
 
@@ -64,7 +64,7 @@ ENV PATH=$PATH:/opt/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-linux-gnueabihf/
 ################################################################################
 # KERNEL-SOURCE                                                                #
 ################################################################################
-FROM platform as kernel-source
+FROM platform AS kernel-source
 WORKDIR /root/
 RUN wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.8.7.tar.xz
 RUN tar xf linux-6.8.7.tar.xz
@@ -72,7 +72,7 @@ RUN tar xf linux-6.8.7.tar.xz
 ################################################################################
 # KERNEL-ARM32                                                                 #
 ################################################################################
-FROM platform as kernel-arm32
+FROM platform AS kernel-arm32
 COPY --from=kernel-source /root/linux-6.8.7 /root/linux-6.8.7
 WORKDIR /root/linux-6.8.7
 
@@ -98,7 +98,7 @@ RUN ARCH=arm \
 ################################################################################
 # KERNEL-ARM64                                                                 #
 ################################################################################
-FROM platform as kernel-arm64
+FROM platform AS kernel-arm64
 COPY --from=kernel-source /root/linux-6.8.7 /root/linux-6.8.7
 WORKDIR /root/linux-6.8.7
 
@@ -118,7 +118,7 @@ RUN ARCH=arm64 \
 ################################################################################
 # KERNEL-x86                                                                   #
 ################################################################################
-FROM platform as kernel-x86
+FROM platform AS kernel-x86
 COPY --from=kernel-source /root/linux-6.8.7 /root/linux-6.8.7
 WORKDIR /root/linux-6.8.7
 
@@ -135,7 +135,7 @@ RUN ARCH=i386 \
 ################################################################################
 # KERNEL-x64                                                                   #
 ################################################################################
-FROM platform as kernel-x64
+FROM platform AS kernel-x64
 COPY --from=kernel-source /root/linux-6.8.7 /root/linux-6.8.7
 WORKDIR /root/linux-6.8.7
 
@@ -151,7 +151,7 @@ RUN make \
 ################################################################################
 # BUSYBOX SOURCE                                                               #
 ################################################################################
-FROM platform as busybox-source
+FROM platform AS busybox-source
 RUN wget \
     -O /tmp/busybox-1.36.1.tar.bz2 \
     https://busybox.net/downloads/busybox-1.36.1.tar.bz2
@@ -161,7 +161,7 @@ RUN tar -C /root/ -j -x -v -f /tmp/busybox-1.36.1.tar.bz2
 ################################################################################
 # BUSYBOX-ARM32                                                                #
 ################################################################################
-FROM platform as busybox-arm32
+FROM platform AS busybox-arm32
 COPY --from=busybox-source /root/busybox-1.36.1 /root/busybox-1.36.1
 WORKDIR /root/busybox-1.36.1
 RUN mkdir build
@@ -182,7 +182,7 @@ RUN make \
 ################################################################################
 # BUSYBOX-ARM64                                                                #
 ################################################################################
-FROM platform as busybox-arm64
+FROM platform AS busybox-arm64
 COPY --from=busybox-source /root/busybox-1.36.1 /root/busybox-1.36.1
 WORKDIR /root/busybox-1.36.1
 RUN mkdir build
@@ -205,7 +205,7 @@ RUN make \
 ################################################################################
 # BUSYBOX-x86                                                                  #
 ################################################################################
-FROM platform as busybox-x86
+FROM platform AS busybox-x86
 COPY --from=busybox-source /root/busybox-1.36.1 /root/busybox-1.36.1
 WORKDIR /root/busybox-1.36.1
 RUN mkdir build
@@ -227,7 +227,7 @@ RUN make \
 ################################################################################
 # BUSYBOX-x64                                                                  #
 ################################################################################
-FROM platform as busybox-x64
+FROM platform AS busybox-x64
 COPY --from=busybox-source /root/busybox-1.36.1 /root/busybox-1.36.1
 WORKDIR /root/busybox-1.36.1
 RUN mkdir build
@@ -246,7 +246,7 @@ RUN make \
 ################################################################################
 # TARGET                                                                       #
 ################################################################################
-FROM platform as target
+FROM platform AS target
 COPY assets/target/target.c /root/target.c
 COPY assets/target/module.c /root/module.c
 RUN mkdir /root/x64
@@ -327,15 +327,15 @@ RUN aarch64-none-linux-gnu-gcc \
 ################################################################################
 # FRIDA SOURCE                                                                 #
 ################################################################################
-FROM platform as frida-source
+FROM platform AS frida-source
 WORKDIR /root/
-ENV TAG=c0fb9c6
+ENV TAG=fd5a2746804336e0a84c97317dc49594990ab67a
 RUN git clone https://github.com/frida/frida-core.git
 
 ################################################################################
 # FRIDA-arm32                                                                  #
 ################################################################################
-FROM platform as frida-arm32
+FROM platform AS frida-arm32
 COPY --from=frida-source /root/frida-core /root/frida-core
 WORKDIR /root/frida-core
 RUN CC=arm-none-linux-gnueabihf-gcc \
@@ -533,7 +533,7 @@ RUN cat \
 ################################################################################
 # FRIDA-arm32-sf                                                               #
 ################################################################################
-FROM platform as frida-arm32-sf
+FROM platform AS frida-arm32-sf
 COPY --from=frida-source /root/frida-core /root/frida-core
 COPY --from=cpp-arm32 /opt/x-tools/arm-linux-gnueabi /opt/x-tools/arm-linux-gnueabi
 WORKDIR /root/frida-core
@@ -557,7 +557,7 @@ RUN make
 ################################################################################
 # FRIDA-arm64                                                                  #
 ################################################################################
-FROM platform as frida-arm64
+FROM platform AS frida-arm64
 COPY --from=frida-source /root/frida-core /root/frida-core
 WORKDIR /root/frida-core
 RUN CC=aarch64-none-linux-gnu-gcc \
@@ -572,7 +572,7 @@ RUN make
 ################################################################################
 # FRIDA-x86                                                                    #
 ################################################################################
-FROM platform as frida-x86
+FROM platform AS frida-x86
 COPY --from=frida-source /root/frida-core /root/frida-core
 WORKDIR /root/frida-core
 RUN ./configure --host linux-x86
@@ -581,7 +581,7 @@ RUN make
 ################################################################################
 # FRIDA-x64                                                                    #
 ################################################################################
-FROM platform as frida-x64
+FROM platform AS frida-x64
 COPY --from=frida-source /root/frida-core /root/frida-core
 WORKDIR /root/frida-core
 RUN ./configure --host linux-x86_64
@@ -590,7 +590,7 @@ RUN make
 ################################################################################
 # INITRD-BASE                                                                  #
 ################################################################################
-FROM platform as initrd-base
+FROM platform AS initrd-base
 WORKDIR /root/
 RUN mkdir /root/initramfs/
 WORKDIR /root/initramfs/
@@ -728,7 +728,7 @@ RUN find . | cpio -o --format=newc -R root:root > /root/initramfs-x64.img
 ################################################################################
 # CSHELL                                                                       #
 ################################################################################
-FROM platform as cshell
+FROM platform AS cshell
 COPY --from=kernel-arm32 /root/linux-6.8.7/build/arch/arm/boot/zImage /root/zImage-arm32
 COPY --from=kernel-arm64 /root/linux-6.8.7/build/arch/arm64/boot/Image.gz /root/zImage-arm64
 COPY --from=kernel-x64 /root/linux-6.8.7/build/arch/x86_64/boot/bzImage /root/bzImage-x64
@@ -754,23 +754,23 @@ WORKDIR /root/
 ################################################################################
 # CSHELL-ARM32                                                                 #
 ################################################################################
-FROM cshell as cshell-arm32
+FROM cshell AS cshell-arm32
 ENTRYPOINT ["/bin/vm-arm32"]
 
 ################################################################################
 # CSHELL-ARM64                                                                 #
 ################################################################################
-FROM cshell as cshell-arm64
+FROM cshell AS cshell-arm64
 ENTRYPOINT ["/bin/vm-arm64"]
 
 ################################################################################
 # CSHELL-x86                                                                   #
 ################################################################################
-FROM cshell as cshell-x86
+FROM cshell AS cshell-x86
 ENTRYPOINT ["/bin/vm-x86"]
 
 ################################################################################
 # CSHELL-x64                                                                   #
 ################################################################################
-FROM cshell as cshell-x64
+FROM cshell AS cshell-x64
 ENTRYPOINT ["/bin/vm-x64"]

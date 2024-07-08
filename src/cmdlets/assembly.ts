@@ -99,7 +99,7 @@ export class AssemblyCmdLet extends CmdLet {
 
   private isThumb(address: NativePointer): boolean {
     if (Process.arch !== 'arm') return false;
-    if (address.and(1) === ptr(0)) return false;
+    if (address.and(1).equals(ptr(0))) return false;
     return true;
   }
 

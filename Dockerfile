@@ -293,6 +293,7 @@ RUN arm-none-linux-gnueabihf-gcc \
     -no-pie \
     -shared \
     -fPIC \
+    -marm \
     -o module.so \
     /root/module.c
 RUN arm-none-linux-gnueabihf-gcc \
@@ -300,6 +301,7 @@ RUN arm-none-linux-gnueabihf-gcc \
     -Wall \
     -Werror \
     -no-pie \
+    -marm \
     -o target \
     /root/target.c
 RUN mkdir /root/arm64

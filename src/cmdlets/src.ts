@@ -63,6 +63,8 @@ export class SrcCmdLet extends CmdLet {
         Output.write(Output.bold(Input.PROMPT));
         Output.writeln(line);
 
+        if (line.trim().length === 0) continue;
+
         const parser = new Parser(line.toString());
         const tokens = parser.tokenize();
         const ret = Command.runSync(tokens);

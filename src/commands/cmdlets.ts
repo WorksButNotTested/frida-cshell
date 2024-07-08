@@ -39,6 +39,7 @@ import { FdCmdLet } from '../cmdlets/fd.js';
 import { JsCmdLet } from '../cmdlets/js.js';
 import { PrintCmdLet } from '../cmdlets/print.js';
 import { ShCmdLet } from '../cmdlets/sh.js';
+import { SrcCmdLet } from '../cmdlets/src.js';
 
 export class CmdLets {
   private static byName: Map<string, CmdLet> = new Map<string, CmdLet>();
@@ -60,6 +61,7 @@ export class CmdLets {
     this.registerCmdletType(HelpCmdLet);
     this.registerCmdletType(HistoryCmdLet);
     this.registerCmdletType(InsnBpCmdLet);
+    this.registerCmdletType(JsCmdLet);
     this.registerCmdletType(LdCmdLet);
     this.registerCmdletType(OrCmdLet);
     this.registerCmdletType(ReadCmdLet);
@@ -72,7 +74,7 @@ export class CmdLets {
     this.registerCmdletType(ShCmdLet);
     this.registerCmdletType(ShlCmdLet);
     this.registerCmdletType(ShrCmdLet);
-    this.registerCmdletType(JsCmdLet);
+    this.registerCmdletType(SrcCmdLet);
     this.registerCmdletType(SymCmdLet);
     this.registerCmdletType(ThreadCmdLet);
     this.registerCmdletType(VarCmdLet);

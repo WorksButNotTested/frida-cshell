@@ -65,7 +65,9 @@ export class SymCmdLet extends CmdLet {
     );
     if (debug.fileName !== null && debug.lineNumber !== null) {
       if (debug.fileName.length !== 0 && debug.lineNumber !== 0) {
-        Output.writeln(`\t${Output.blue(debug.fileName)}:${Output.blue(debug.lineNumber.toString())} `);
+        Output.writeln(
+          `\t${Output.blue(debug.fileName)}:${Output.blue(debug.lineNumber.toString())} `,
+        );
       }
     }
   }
@@ -161,8 +163,12 @@ export class SymCmdLet extends CmdLet {
 
     const values = Array.from(dict.values());
     if (values.length === 1) {
-      const value = values[0] as {name: string, type: string, address: NativePointer};
-      return new Var(uint64(value.address.toString()))
+      const value = values[0] as {
+        name: string;
+        type: string;
+        address: NativePointer;
+      };
+      return new Var(uint64(value.address.toString()));
     } else {
       return Var.ZERO;
     }
@@ -176,7 +182,9 @@ export class SymCmdLet extends CmdLet {
 
     const address = Module.findExportByName(null, name);
     if (address !== null) {
-      Output.writeln(`${Output.green(name.padEnd(40, '.'))} ${Output.yellow(Format.toHexString(address))}`);
+      Output.writeln(
+        `${Output.green(name.padEnd(40, '.'))} ${Output.yellow(Format.toHexString(address))}`,
+      );
       return new Var(uint64(address.toString()));
     }
 

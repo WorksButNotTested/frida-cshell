@@ -4,7 +4,7 @@ v p ret
 d p
 
 # load a new commandlet from a script file and execute
-src src.js
+js src.js
 test malloc
 
 # show the first instruction of exit

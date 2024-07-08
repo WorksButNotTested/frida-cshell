@@ -56,14 +56,14 @@ import { VarCmdLet } from './var.js';
 import { VmCmdLet } from './vm.js';
 import { WriteCmdLet } from './write.js';
 
-const USAGE: string = `Usage: src
+const USAGE: string = `Usage: js
 
-src path - load JS script
+js path - load JS script
   path      the absolute path of the script to load (note that paths with spaces must be quoted)
 `;
 
-export class SrcCmdLet extends CmdLet {
-  name = 'src';
+export class JsCmdLet extends CmdLet {
+  name = 'js';
   category = 'misc';
   help = 'load script';
 
@@ -127,7 +127,7 @@ export class SrcCmdLet extends CmdLet {
       Regs: Regs,
       ShlCmdLet: ShlCmdLet,
       ShrCmdLet: ShrCmdLet,
-      SrcCmdLet: SrcCmdLet,
+      SrcCmdLet: JsCmdLet,
       SubCmdLet: SubCmdLet,
       SymCmdLet: SymCmdLet,
       ThreadCmdLet: ThreadCmdLet,

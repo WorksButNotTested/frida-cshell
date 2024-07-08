@@ -36,7 +36,7 @@ import {
 import { RegCmdLet } from '../cmdlets/reg.js';
 import { LdCmdLet } from '../cmdlets/ld.js';
 import { FdCmdLet } from '../cmdlets/fd.js';
-import { SrcCmdLet } from '../cmdlets/src.js';
+import { JsCmdLet } from '../cmdlets/js.js';
 import { PrintCmdLet } from '../cmdlets/print.js';
 import { ShCmdLet } from '../cmdlets/sh.js';
 
@@ -72,7 +72,7 @@ export class CmdLets {
     this.registerCmdletType(ShCmdLet);
     this.registerCmdletType(ShlCmdLet);
     this.registerCmdletType(ShrCmdLet);
-    this.registerCmdletType(SrcCmdLet);
+    this.registerCmdletType(JsCmdLet);
     this.registerCmdletType(SymCmdLet);
     this.registerCmdletType(ThreadCmdLet);
     this.registerCmdletType(VarCmdLet);

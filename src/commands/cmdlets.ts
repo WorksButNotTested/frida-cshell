@@ -29,6 +29,7 @@ import { CopyCmdLet } from '../cmdlets/copy.js';
 import {
   FunctionEntryBpCmdLet,
   FunctionExitBpCmdLet,
+  FunctionTraceBpCmdLet,
   InsnBpCmdLet,
   ReadBpCmdLet,
   WriteBpCmdLet,
@@ -58,6 +59,7 @@ export class CmdLets {
     this.registerCmdletType(FdCmdLet);
     this.registerCmdletType(FunctionEntryBpCmdLet);
     this.registerCmdletType(FunctionExitBpCmdLet);
+    this.registerCmdletType(FunctionTraceBpCmdLet);
     this.registerCmdletType(HelpCmdLet);
     this.registerCmdletType(HistoryCmdLet);
     this.registerCmdletType(InsnBpCmdLet);

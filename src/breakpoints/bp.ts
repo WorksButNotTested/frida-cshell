@@ -20,6 +20,7 @@ export enum BpType {
   Instruction = 'instruction',
   FunctionEntry = 'function entry',
   FunctionExit = 'function exit',
+  FunctionTrace = 'function trace',
   MemoryRead = 'memory read',
   MemoryWrite = 'memory write',
 }
@@ -32,10 +33,12 @@ export class Bp {
   private _addr: Var | null;
   private _literal: string | null;
   private _length: number;
+  private _depth: number;
 
   private _lines: string[] = [];
   private _listener: InvocationListener | null;
   private _overlay: string | null = null;
+  private _trace: ArrayBuffer = new ArrayBuffer(0);
 
   public constructor(
     type: BpType,
@@ -44,6 +47,7 @@ export class Bp {
     addr: Var | null,
     literal: string | null,
     length: number = 0,
+    depth: number = 0,
   ) {
     this._type = type;
     this._idx = idx;
@@ -51,6 +55,7 @@ export class Bp {
     this._addr = addr;
     this._literal = literal;
     this._length = length;
+    this._depth = depth;
     this._listener = null;
   }
 
@@ -74,8 +79,8 @@ export class Bp {
       case BpType.Instruction:
       case BpType.FunctionEntry:
       case BpType.FunctionExit:
+      case BpType.FunctionTrace:
         return BpKind.Code;
-        break;
       case BpType.MemoryRead:
       case BpType.MemoryWrite:
         return BpKind.Memory;
@@ -116,9 +121,153 @@ export class Bp {
           },
         });
         break;
+      case BpType.FunctionTrace:
+        this._listener = Interceptor.attach(addr.toPointer(), {
+          onEnter() {
+            bp.startCoverage(this.threadId, this.context);
+          },
+          onLeave(_retVal) {
+            bp.stopCoverage(this.threadId, this.context);
+          },
+        });
     }
 
     Interceptor.flush();
+  }
+
+  private displayEvents() {
+    const events = Stalker.parse(this._trace, {
+      annotate: true,
+      stringify: false,
+    }) as StalkerEventFull[];
+
+    let currentDepth = 0;
+    let first = true;
+    for (const e of events) {
+      switch (e.length) {
+        case 3: {
+          const [kind, start, _end] = e;
+          if (currentDepth >= this._depth) break;
+          if (kind !== 'block') break;
+          const name = this.getAddressString(start as NativePointer);
+          if (name === null) break;
+          if (first) {
+            currentDepth = 0;
+            first = false;
+          }
+          if (currentDepth > 0) {
+            Output.write('\t'.repeat(currentDepth));
+          }
+          Output.writeln(name);
+          break;
+        }
+        case 4: {
+          const [kind, _from, _to, _depth] = e;
+          if (kind === 'call') {
+            currentDepth += 1;
+          } else if (kind === 'ret') {
+            if (currentDepth > 0) {
+              currentDepth -= 1;
+            }
+          }
+          break;
+        }
+        default:
+          break;
+      }
+    }
+  }
+
+  private getAddressString(address: NativePointer): string | null {
+    const debug = DebugSymbol.fromAddress(address);
+    if (debug === null || debug.name === null) {
+      const module = Process.findModuleByAddress(address);
+      if (module === null) {
+        return null;
+      }
+
+      const offset = address.sub(module.base);
+      const prefix = `${module.name}+0x${offset.toString(16)}`;
+      return `${Output.green(prefix.padEnd(40, '.'))} ${Output.yellow(Format.toHexString(address))}`;
+    }
+
+    const lookup = DebugSymbol.fromName(debug.name);
+    let offset = ptr(0);
+    if (lookup !== null && lookup.address.compare(debug.address) < 0) {
+      offset = debug.address.sub(lookup.address);
+    }
+    const OFFSET_MAX = 1024;
+    const prefix = debug.moduleName === null ? '' : `${debug.moduleName}!`;
+
+    let name = `${prefix}${debug.name}`;
+    if (offset !== ptr(0) || offset.compare(OFFSET_MAX) < 0) {
+      name = `${prefix}${debug.name}+0x${offset.toString(16)}`;
+    }
+
+    const symbol = `${Output.green(name.padEnd(40, '.'))} ${Output.yellow(Format.toHexString(debug.address))}`;
+    if (debug.fileName !== null && debug.lineNumber !== null) {
+      if (debug.fileName.length !== 0 && debug.lineNumber !== 0) {
+        return `${symbol} ${Output.blue(debug.fileName)}:${Output.blue(debug.lineNumber.toString())}`;
+      }
+    }
+    return symbol;
+  }
+
+  private startCoverage(threadId: ThreadId, ctx: CpuContext) {
+    if (this._hits === 0) return;
+    Output.clearLine();
+    Output.writeln(Output.yellow('-'.repeat(80)));
+    Output.write(`${Output.yellow('|')} Start Trace `);
+    Output.write(`${Output.green(`#${this._idx}`)} `);
+    Output.write(`[${this._type}] `);
+    Output.write(`${Output.yellow(this._literal ?? '')} `);
+    Output.write(`@ $pc=${Output.blue(Format.toHexString(ctx.pc))} `);
+    Output.write(`$tid=${threadId}, depth=${this._depth}`);
+    Output.writeln();
+    Output.writeln(Output.yellow('-'.repeat(80)));
+
+    this._trace = new ArrayBuffer(0);
+
+    Stalker.follow(threadId, {
+      events: {
+        call: true,
+        ret: true,
+        block: true,
+      },
+      onReceive: (events: ArrayBuffer) => {
+        const newBuffer = new Uint8Array(
+          this._trace.byteLength + events.byteLength,
+        );
+        newBuffer.set(new Uint8Array(this._trace), 0);
+        newBuffer.set(new Uint8Array(events), this._trace.byteLength);
+        this._trace = newBuffer.buffer as ArrayBuffer;
+      },
+    });
+  }
+
+  private stopCoverage(threadId: ThreadId, ctx: CpuContext) {
+    if (this._hits === 0) return;
+    else if (this._hits > 0) this._hits--;
+    try {
+      Stalker.unfollow(threadId);
+      Stalker.flush();
+      Output.writeln(Output.blue('-'.repeat(80)));
+      this.displayEvents();
+      Output.writeln(Output.blue('-'.repeat(80)));
+      Output.clearLine();
+      Output.writeln(Output.yellow('-'.repeat(80)));
+      Output.write(`${Output.yellow('|')} Stop Trace `);
+      Output.write(`${Output.green(`#${this._idx}`)} `);
+      Output.write(`[${this._type}] `);
+      Output.write(`${Output.yellow(this._literal ?? '')} `);
+      Output.write(`@ $pc=${Output.blue(Format.toHexString(ctx.pc))} `);
+      Output.write(`$tid=${threadId}`);
+      Output.writeln();
+      Output.writeln(Output.yellow('-'.repeat(80)));
+    } finally {
+      Input.prompt();
+      Regs.clear();
+    }
   }
 
   private breakCode(
@@ -310,6 +459,10 @@ export class Bp {
     return this._length;
   }
 
+  public get depth(): number | null {
+    return this._depth;
+  }
+
   public get hits(): number {
     return this._hits;
   }
@@ -327,6 +480,11 @@ export class Bp {
   public set length(length: number | null) {
     if (length === null) return;
     this._length = length;
+  }
+
+  public set depth(depth: number | null) {
+    if (depth === null) return;
+    this._depth = depth;
   }
 
   public set hits(hits: number) {

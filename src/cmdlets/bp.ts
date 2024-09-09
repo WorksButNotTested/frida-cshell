@@ -41,58 +41,102 @@ abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
   }
 
   private runWithIndexHitsAndAddr(tokens: Token[]): Var | null {
-    if (Bp.getBpKind(this.bpType) === BpKind.Code) {
-      if (tokens.length !== 3) return null;
-      const [a0, a1, a2] = tokens;
-      const [t0, t1, t2] = [a0 as Token, a1 as Token, a2 as Token];
+    switch (this.bpType) {
+      case BpType.Instruction:
+      case BpType.FunctionEntry:
+      case BpType.FunctionExit: {
+        if (tokens.length !== 3) return null;
+        const [a0, a1, a2] = tokens;
+        const [t0, t1, t2] = [a0 as Token, a1 as Token, a2 as Token];
 
-      const index = this.parseIndex(t0);
-      if (index === null) return null;
+        const index = this.parseIndex(t0);
+        if (index === null) return null;
 
-      const hits = this.parseHits(t1);
-      if (hits === null) return null;
+        const hits = this.parseHits(t1);
+        if (hits === null) return null;
 
-      const literal = t2.getLiteral();
-      const addr = t2.toVar();
-      if (addr === null) return null;
+        const literal = t2.getLiteral();
+        const addr = t2.toVar();
+        if (addr === null) return null;
 
-      const bp = Bps.modify(this.bpType, index, hits, addr, literal, BP_LENGTH);
-      Output.writeln(`Modified ${bp.toString()}`);
-    } else {
-      if (tokens.length !== 4) return null;
+        const bp = Bps.modify(
+          this.bpType,
+          index,
+          hits,
+          addr,
+          literal,
+          BP_LENGTH,
+        );
+        Output.writeln(`Modified ${bp.toString()}`);
+        this.addCommands();
+        return addr;
+      }
+      case BpType.FunctionTrace:
+      case BpType.MemoryRead:
+      case BpType.MemoryWrite: {
+        if (tokens.length !== 4) return null;
 
-      const [a0, a1, a2, a3] = tokens;
-      const [t0, t1, t2, t3] = [
-        a0 as Token,
-        a1 as Token,
-        a2 as Token,
-        a3 as Token,
-      ];
-      const [addr, length] = [t2.toVar(), t3.toVar()];
+        const [a0, a1, a2, a3] = tokens;
+        const [t0, t1, t2, t3] = [
+          a0 as Token,
+          a1 as Token,
+          a2 as Token,
+          a3 as Token,
+        ];
+        const [addr, extra] = [t2.toVar(), t3.toVar()];
 
-      if (addr === null) return null;
-      if (length === null) return null;
+        if (addr === null) return null;
+        if (extra === null) return null;
 
-      const index = this.parseIndex(t0);
-      if (index === null) return null;
+        const index = this.parseIndex(t0);
+        if (index === null) return null;
 
-      const hits = this.parseHits(t1);
-      if (hits === null) return null;
+        const hits = this.parseHits(t1);
+        if (hits === null) return null;
 
-      const literal = t2.getLiteral();
-      const bp = Bps.modify(
-        this.bpType,
-        index,
-        hits,
-        addr,
-        literal,
-        length.toU64().toNumber(),
-      );
-      Output.writeln(`Modified ${bp.toString()}`);
+        const literal = t2.getLiteral();
+
+        if (this.bpType == BpType.FunctionTrace) {
+          const bp = Bps.modify(
+            this.bpType,
+            index,
+            hits,
+            addr,
+            literal,
+            BP_LENGTH,
+            extra.toU64().toNumber(),
+          );
+          Output.writeln(`Modified ${bp.toString()}`);
+        } else {
+          const bp = Bps.modify(
+            this.bpType,
+            index,
+            hits,
+            addr,
+            literal,
+            extra.toU64().toNumber(),
+          );
+          Output.writeln(`Modified ${bp.toString()}`);
+        }
+        this.addCommands();
+        return addr;
+      }
     }
+  }
 
-    Input.setInterceptLine(this);
-    return Var.ZERO;
+  private addCommands() {
+    switch (this.bpType) {
+      case BpType.Instruction:
+      case BpType.FunctionEntry:
+      case BpType.FunctionExit:
+      case BpType.MemoryRead:
+      case BpType.MemoryWrite:
+        Input.setInterceptLine(this);
+        break;
+      case BpType.FunctionTrace:
+        this.done();
+        break;
+    }
   }
 
   private parseIndex(token: Token): number | null {
@@ -130,7 +174,7 @@ abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
 
     const bp = Bps.modify(this.bpType, index, hits);
     Output.writeln(`Modified ${bp.toString()}`);
-    Input.setInterceptLine(this);
+    this.addCommands();
 
     return Var.ZERO;
   }
@@ -174,50 +218,69 @@ abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
   }
 
   private runWithHitsAndAddr(tokens: Token[]): Var | null {
-    if (Bp.getBpKind(this.bpType) === BpKind.Code) {
-      if (tokens.length !== 2) return null;
-      const [a0, a1] = tokens;
-      const [t0, t1] = [a0 as Token, a1 as Token];
+    switch (this.bpType) {
+      case BpType.Instruction:
+      case BpType.FunctionEntry:
+      case BpType.FunctionExit: {
+        if (tokens.length !== 2) return null;
+        const [a0, a1] = tokens;
+        const [t0, t1] = [a0 as Token, a1 as Token];
 
-      const hits = this.parseHits(t0);
-      if (hits === null) return null;
+        const hits = this.parseHits(t0);
+        if (hits === null) return null;
 
-      const literal = t1.getLiteral();
-      const addr = t1.toVar();
-      if (addr === null) return null;
+        const literal = t1.getLiteral();
+        const addr = t1.toVar();
+        if (addr === null) return null;
 
-      const bp = Bps.create(this.bpType, hits, addr, literal, BP_LENGTH);
-      Output.writeln(`Created ${bp.toString()}`);
+        const bp = Bps.create(this.bpType, hits, addr, literal, BP_LENGTH);
+        Output.writeln(`Created ${bp.toString()}`);
 
-      Input.setInterceptLine(this);
+        this.addCommands();
 
-      return addr;
-    } else {
-      if (tokens.length !== 3) return null;
-      const [a0, a1, a2] = tokens;
-      const [t0, t1, t2] = [a0 as Token, a1 as Token, a2 as Token];
-      const [addr, length] = [t1.toVar(), t2.toVar()];
+        return addr;
+      }
+      case BpType.FunctionTrace:
+      case BpType.MemoryRead:
+      case BpType.MemoryWrite: {
+        if (tokens.length !== 3) return null;
+        const [a0, a1, a2] = tokens;
+        const [t0, t1, t2] = [a0 as Token, a1 as Token, a2 as Token];
+        const [addr, extra] = [t1.toVar(), t2.toVar()];
 
-      if (addr === null) return null;
-      if (length === null) return null;
+        if (addr === null) return null;
+        if (extra === null) return null;
 
-      const hits = this.parseHits(t0);
-      if (hits === null) return null;
+        const hits = this.parseHits(t0);
+        if (hits === null) return null;
 
-      const literal = t1.getLiteral();
+        const literal = t1.getLiteral();
 
-      const bp = Bps.create(
-        this.bpType,
-        hits,
-        addr,
-        literal,
-        length.toU64().toNumber(),
-      );
-      Output.writeln(`Created ${bp.toString()}`);
+        if (this.bpType == BpType.FunctionTrace) {
+          const bp = Bps.create(
+            this.bpType,
+            hits,
+            addr,
+            literal,
+            BP_LENGTH,
+            extra.toU64().toNumber(),
+          );
+          Output.writeln(`Created ${bp.toString()}`);
+        } else {
+          const bp = Bps.create(
+            this.bpType,
+            hits,
+            addr,
+            literal,
+            extra.toU64().toNumber(),
+          );
+          Output.writeln(`Created ${bp.toString()}`);
+        }
 
-      Input.setInterceptLine(this);
+        this.addCommands();
 
-      return addr;
+        return addr;
+      }
     }
   }
 
@@ -231,7 +294,7 @@ abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
 
     const bp = Bps.create(this.bpType, hits);
     Output.writeln(`Created ${bp.toString()}`);
-    Input.setInterceptLine(this);
+    this.addCommands();
 
     return Var.ZERO;
   }
@@ -251,10 +314,21 @@ abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
   public usage(): Var {
     const kind = Bp.getBpKind(this.bpType);
     const lenStr: string = kind === BpKind.Memory ? ' len ' : '';
-    const lenDesc: string =
-      kind === BpKind.Memory
-        ? 'len     the length of the memory region to watch\n'
-        : '';
+
+    let extraDesc = '';
+    switch (this.bpType) {
+      case BpType.Instruction:
+      case BpType.FunctionEntry:
+      case BpType.FunctionExit:
+        break;
+      case BpType.FunctionTrace:
+        extraDesc = 'depth   the maximum depth of callstack to follow\n';
+        break;
+      case BpType.MemoryRead:
+      case BpType.MemoryWrite:
+        extraDesc = 'len     the length of the memory region to watch\n';
+        break;
+    }
     const INSN_BP_USAGE: string = `Usage: ${this.name}
 ${Output.bold('show:')}
 
@@ -272,7 +346,7 @@ ${this.name} hits - create ${this.bpType} breakpoint without assigning an addres
 ${this.name} hits addr ${lenStr} - create ${this.bpType} breakpoint
    hits    the number of times the breakpoint should fire
    addr    the address to create the breakpoint
-   ${lenDesc}
+   ${extraDesc}
 ${Output.bold('modify:')}
 
 ${this.name} ${NUM_CHAR}n hits - modify a ${this.bpType} breakpoint
@@ -283,7 +357,7 @@ ${this.name} ${NUM_CHAR}n hits addr ${lenStr} - modify a ${this.bpType} breakpoi
    ${NUM_CHAR}n      the number of the breakpoint to modify
    hits    the number of times the breakpoint should fire
    addr    the address to move the breakpoint
-   ${lenDesc}
+   ${extraDesc}
 ${Output.bold('delete:')}
 
 ${this.name} ${NUM_CHAR}n # - delete a ${this.bpType} breakpoint
@@ -335,5 +409,11 @@ export class ReadBpCmdLet extends TypedBpCmdLet {
 export class WriteBpCmdLet extends TypedBpCmdLet {
   name = '@w';
   bpType = BpType.MemoryWrite;
+  help = `${this.bpType} breakpoint`;
+}
+
+export class FunctionTraceBpCmdLet extends TypedBpCmdLet {
+  name = '@t';
+  bpType = BpType.FunctionTrace;
   help = `${this.bpType} breakpoint`;
 }

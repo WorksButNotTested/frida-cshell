@@ -71,7 +71,9 @@ abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
         this.addCommands();
         return addr;
       }
-      case BpType.FunctionTrace:
+      case BpType.BlockTrace:
+      case BpType.CallTrace:
+      case BpType.UniqueBlockTrace:
       case BpType.MemoryRead:
       case BpType.MemoryWrite: {
         if (tokens.length !== 4) return null;
@@ -96,27 +98,35 @@ abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
 
         const literal = t2.getLiteral();
 
-        if (this.bpType == BpType.FunctionTrace) {
-          const bp = Bps.modify(
-            this.bpType,
-            index,
-            hits,
-            addr,
-            literal,
-            BP_LENGTH,
-            extra.toU64().toNumber(),
-          );
-          Output.writeln(`Modified ${bp.toString()}`);
-        } else {
-          const bp = Bps.modify(
-            this.bpType,
-            index,
-            hits,
-            addr,
-            literal,
-            extra.toU64().toNumber(),
-          );
-          Output.writeln(`Modified ${bp.toString()}`);
+        switch (this.bpType) {
+          case BpType.BlockTrace:
+          case BpType.CallTrace:
+          case BpType.UniqueBlockTrace: {
+            const bp = Bps.modify(
+              this.bpType,
+              index,
+              hits,
+              addr,
+              literal,
+              BP_LENGTH,
+              extra.toU64().toNumber(),
+            );
+            Output.writeln(`Modified ${bp.toString()}`);
+            break;
+          }
+          case BpType.MemoryRead:
+          case BpType.MemoryWrite: {
+            const bp = Bps.modify(
+              this.bpType,
+              index,
+              hits,
+              addr,
+              literal,
+              extra.toU64().toNumber(),
+            );
+            Output.writeln(`Modified ${bp.toString()}`);
+            break;
+          }
         }
         this.addCommands();
         return addr;
@@ -133,9 +143,13 @@ abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
       case BpType.MemoryWrite:
         Input.setInterceptLine(this);
         break;
-      case BpType.FunctionTrace:
+      case BpType.BlockTrace:
+      case BpType.CallTrace:
+      case BpType.UniqueBlockTrace:
         this.done();
         break;
+      default:
+        throw new Error(`unknown breakpoint type: ${this.bpType}`);
     }
   }
 
@@ -240,7 +254,9 @@ abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
 
         return addr;
       }
-      case BpType.FunctionTrace:
+      case BpType.BlockTrace:
+      case BpType.CallTrace:
+      case BpType.UniqueBlockTrace:
       case BpType.MemoryRead:
       case BpType.MemoryWrite: {
         if (tokens.length !== 3) return null;
@@ -256,25 +272,33 @@ abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
 
         const literal = t1.getLiteral();
 
-        if (this.bpType == BpType.FunctionTrace) {
-          const bp = Bps.create(
-            this.bpType,
-            hits,
-            addr,
-            literal,
-            BP_LENGTH,
-            extra.toU64().toNumber(),
-          );
-          Output.writeln(`Created ${bp.toString()}`);
-        } else {
-          const bp = Bps.create(
-            this.bpType,
-            hits,
-            addr,
-            literal,
-            extra.toU64().toNumber(),
-          );
-          Output.writeln(`Created ${bp.toString()}`);
+        switch (this.bpType) {
+          case BpType.BlockTrace:
+          case BpType.CallTrace:
+          case BpType.UniqueBlockTrace: {
+            const bp = Bps.create(
+              this.bpType,
+              hits,
+              addr,
+              literal,
+              BP_LENGTH,
+              extra.toU64().toNumber(),
+            );
+            Output.writeln(`Created ${bp.toString()}`);
+            break;
+          }
+          case BpType.MemoryRead:
+          case BpType.MemoryWrite: {
+            const bp = Bps.create(
+              this.bpType,
+              hits,
+              addr,
+              literal,
+              extra.toU64().toNumber(),
+            );
+            Output.writeln(`Created ${bp.toString()}`);
+            break;
+          }
         }
 
         this.addCommands();
@@ -321,7 +345,7 @@ abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
       case BpType.FunctionEntry:
       case BpType.FunctionExit:
         break;
-      case BpType.FunctionTrace:
+      case BpType.BlockTrace:
         extraDesc = 'depth   the maximum depth of callstack to follow\n';
         break;
       case BpType.MemoryRead:
@@ -412,8 +436,20 @@ export class WriteBpCmdLet extends TypedBpCmdLet {
   help = `${this.bpType} breakpoint`;
 }
 
-export class FunctionTraceBpCmdLet extends TypedBpCmdLet {
-  name = '@t';
-  bpType = BpType.FunctionTrace;
+export class BlockTraceBpCmdLet extends TypedBpCmdLet {
+  name = '@tb';
+  bpType = BpType.BlockTrace;
+  help = `${this.bpType} breakpoint`;
+}
+
+export class CallTraceBpCmdLet extends TypedBpCmdLet {
+  name = '@tc';
+  bpType = BpType.CallTrace;
+  help = `${this.bpType} breakpoint`;
+}
+
+export class UniqueBlockTraceBpCmdLet extends TypedBpCmdLet {
+  name = '@tbu';
+  bpType = BpType.UniqueBlockTrace;
   help = `${this.bpType} breakpoint`;
 }

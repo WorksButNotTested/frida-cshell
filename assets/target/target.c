@@ -93,13 +93,16 @@ void my_b(uint i)
 
 void my_a(uint i)
 {
-  if ((i % 2) == 0)
+  for (uint n = 0; n < 3; n++)
   {
-    my_b(1);
-  }
-  else
-  {
-    my_b(2);
+    if ((i % 2) == 0)
+    {
+      my_b(1);
+    }
+    else
+    {
+      my_b(2);
+    }
   }
 }
 

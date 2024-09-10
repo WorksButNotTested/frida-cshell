@@ -6,8 +6,11 @@ import { Overlay } from '../memory/overlay.js';
 import { Parser } from '../io/parser.js';
 import { Regs } from './regs.js';
 import { Format } from '../misc/format.js';
+import { BlockTrace } from '../traces/block.js';
+import { Trace, Traces } from '../traces/trace.js';
 import { Var } from '../vars/var.js';
 import { Vars } from '../vars/vars.js';
+import { CallTrace } from '../traces/call.js';
 
 export const BP_LENGTH: number = 16;
 
@@ -20,7 +23,9 @@ export enum BpType {
   Instruction = 'instruction',
   FunctionEntry = 'function entry',
   FunctionExit = 'function exit',
-  FunctionTrace = 'function trace',
+  BlockTrace = 'block trace',
+  CallTrace = 'call trace',
+  UniqueBlockTrace = 'unique block trace',
   MemoryRead = 'memory read',
   MemoryWrite = 'memory write',
 }
@@ -38,7 +43,7 @@ export class Bp {
   private _lines: string[] = [];
   private _listener: InvocationListener | null;
   private _overlay: string | null = null;
-  private _trace: ArrayBuffer = new ArrayBuffer(0);
+  private _trace: Trace | null = null;
 
   public constructor(
     type: BpType,
@@ -79,7 +84,9 @@ export class Bp {
       case BpType.Instruction:
       case BpType.FunctionEntry:
       case BpType.FunctionExit:
-      case BpType.FunctionTrace:
+      case BpType.BlockTrace:
+      case BpType.CallTrace:
+      case BpType.UniqueBlockTrace:
         return BpKind.Code;
       case BpType.MemoryRead:
       case BpType.MemoryWrite:
@@ -121,100 +128,53 @@ export class Bp {
           },
         });
         break;
-      case BpType.FunctionTrace:
+      case BpType.BlockTrace:
         this._listener = Interceptor.attach(addr.toPointer(), {
           onEnter() {
+            if (bp._hits === 0) return;
+            bp._trace = BlockTrace.create(this.threadId, bp._depth);
             bp.startCoverage(this.threadId, this.context);
           },
           onLeave(_retVal) {
+            if (bp._hits === 0) return;
             bp.stopCoverage(this.threadId, this.context);
           },
         });
+        break;
+      case BpType.CallTrace:
+        this._listener = Interceptor.attach(addr.toPointer(), {
+          onEnter() {
+            if (bp._hits === 0) return;
+            bp._trace = CallTrace.create(this.threadId, bp._depth);
+            bp.startCoverage(this.threadId, this.context);
+          },
+          onLeave(_retVal) {
+            if (bp._hits === 0) return;
+            bp.stopCoverage(this.threadId, this.context);
+          },
+        });
+        break;
+      case BpType.UniqueBlockTrace:
+        this._listener = Interceptor.attach(addr.toPointer(), {
+          onEnter() {
+            if (bp._hits === 0) return;
+            bp._trace = BlockTrace.create(this.threadId, bp._depth, true);
+            bp.startCoverage(this.threadId, this.context);
+          },
+          onLeave(_retVal) {
+            if (bp._hits === 0) return;
+            bp.stopCoverage(this.threadId, this.context);
+          },
+        });
+        break;
+      default:
+        throw new Error(`unknown code breakpoint type: ${this._type}`);
     }
 
     Interceptor.flush();
   }
 
-  private displayEvents() {
-    const events = Stalker.parse(this._trace, {
-      annotate: true,
-      stringify: false,
-    }) as StalkerEventFull[];
-
-    let currentDepth = 0;
-    let first = true;
-    for (const e of events) {
-      switch (e.length) {
-        case 3: {
-          const [kind, start, _end] = e;
-          if (currentDepth >= this._depth) break;
-          if (kind !== 'block') break;
-          const name = this.getAddressString(start as NativePointer);
-          if (name === null) break;
-          if (first) {
-            currentDepth = 0;
-            first = false;
-          }
-          if (currentDepth > 0) {
-            Output.write('\t'.repeat(currentDepth));
-          }
-          Output.writeln(name);
-          break;
-        }
-        case 4: {
-          const [kind, _from, _to, _depth] = e;
-          if (kind === 'call') {
-            currentDepth += 1;
-          } else if (kind === 'ret') {
-            if (currentDepth > 0) {
-              currentDepth -= 1;
-            }
-          }
-          break;
-        }
-        default:
-          break;
-      }
-    }
-  }
-
-  private getAddressString(address: NativePointer): string | null {
-    const debug = DebugSymbol.fromAddress(address);
-    if (debug === null || debug.name === null) {
-      const module = Process.findModuleByAddress(address);
-      if (module === null) {
-        return null;
-      }
-
-      const offset = address.sub(module.base);
-      const prefix = `${module.name}+0x${offset.toString(16)}`;
-      return `${Output.green(prefix.padEnd(40, '.'))} ${Output.yellow(Format.toHexString(address))}`;
-    }
-
-    const lookup = DebugSymbol.fromName(debug.name);
-    let offset = ptr(0);
-    if (lookup !== null && lookup.address.compare(debug.address) < 0) {
-      offset = debug.address.sub(lookup.address);
-    }
-    const OFFSET_MAX = 1024;
-    const prefix = debug.moduleName === null ? '' : `${debug.moduleName}!`;
-
-    let name = `${prefix}${debug.name}`;
-    if (offset !== ptr(0) || offset.compare(OFFSET_MAX) < 0) {
-      name = `${prefix}${debug.name}+0x${offset.toString(16)}`;
-    }
-
-    const symbol = `${Output.green(name.padEnd(40, '.'))} ${Output.yellow(Format.toHexString(debug.address))}`;
-    if (debug.fileName !== null && debug.lineNumber !== null) {
-      if (debug.fileName.length !== 0 && debug.lineNumber !== 0) {
-        return `${symbol} ${Output.blue(debug.fileName)}:${Output.blue(debug.lineNumber.toString())}`;
-      }
-    }
-    return symbol;
-  }
-
   private startCoverage(threadId: ThreadId, ctx: CpuContext) {
-    if (this._hits === 0) return;
     Output.clearLine();
     Output.writeln(Output.yellow('-'.repeat(80)));
     Output.write(`${Output.yellow('|')} Start Trace `);
@@ -225,36 +185,19 @@ export class Bp {
     Output.write(`$tid=${threadId}, depth=${this._depth}`);
     Output.writeln();
     Output.writeln(Output.yellow('-'.repeat(80)));
-
-    this._trace = new ArrayBuffer(0);
-
-    Stalker.follow(threadId, {
-      events: {
-        call: true,
-        ret: true,
-        block: true,
-      },
-      onReceive: (events: ArrayBuffer) => {
-        const newBuffer = new Uint8Array(
-          this._trace.byteLength + events.byteLength,
-        );
-        newBuffer.set(new Uint8Array(this._trace), 0);
-        newBuffer.set(new Uint8Array(events), this._trace.byteLength);
-        this._trace = newBuffer.buffer as ArrayBuffer;
-      },
-    });
   }
 
   private stopCoverage(threadId: ThreadId, ctx: CpuContext) {
-    if (this._hits === 0) return;
-    else if (this._hits > 0) this._hits--;
+    this._hits--;
     try {
-      Stalker.unfollow(threadId);
-      Stalker.flush();
+      if (this._trace === null) return;
+      this._trace.stop();
+
       Output.writeln(Output.blue('-'.repeat(80)));
-      this.displayEvents();
+      this._trace.display();
       Output.writeln(Output.blue('-'.repeat(80)));
       Output.clearLine();
+
       Output.writeln(Output.yellow('-'.repeat(80)));
       Output.write(`${Output.yellow('|')} Stop Trace `);
       Output.write(`${Output.green(`#${this._idx}`)} `);
@@ -264,6 +207,8 @@ export class Bp {
       Output.write(`$tid=${threadId}`);
       Output.writeln();
       Output.writeln(Output.yellow('-'.repeat(80)));
+
+      Traces.delete(threadId);
     } finally {
       Input.prompt();
       Regs.clear();

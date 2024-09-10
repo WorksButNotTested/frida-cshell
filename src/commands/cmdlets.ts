@@ -29,7 +29,9 @@ import { CopyCmdLet } from '../cmdlets/copy.js';
 import {
   FunctionEntryBpCmdLet,
   FunctionExitBpCmdLet,
-  FunctionTraceBpCmdLet,
+  BlockTraceBpCmdLet,
+  CallTraceBpCmdLet,
+  UniqueBlockTraceBpCmdLet,
   InsnBpCmdLet,
   ReadBpCmdLet,
   WriteBpCmdLet,
@@ -50,16 +52,17 @@ export class CmdLets {
     this.registerCmdletType(AndCmdLet);
     this.registerCmdletType(SubCmdLet);
     this.registerCmdletType(AssemblyCmdLet);
+    this.registerCmdletType(BlockTraceBpCmdLet);
     this.registerCmdletType(BtCmdLet);
-    this.registerCmdletType(DivCmdLet);
+    this.registerCmdletType(CallTraceBpCmdLet);
     this.registerCmdletType(CopyCmdLet);
+    this.registerCmdletType(DivCmdLet);
     this.registerCmdletType(DumpCmdLet);
     this.registerCmdletType(EndianCmdLet);
     this.registerCmdletType(ExitCmdLet);
     this.registerCmdletType(FdCmdLet);
     this.registerCmdletType(FunctionEntryBpCmdLet);
     this.registerCmdletType(FunctionExitBpCmdLet);
-    this.registerCmdletType(FunctionTraceBpCmdLet);
     this.registerCmdletType(HelpCmdLet);
     this.registerCmdletType(HistoryCmdLet);
     this.registerCmdletType(InsnBpCmdLet);
@@ -79,6 +82,7 @@ export class CmdLets {
     this.registerCmdletType(SrcCmdLet);
     this.registerCmdletType(SymCmdLet);
     this.registerCmdletType(ThreadCmdLet);
+    this.registerCmdletType(UniqueBlockTraceBpCmdLet);
     this.registerCmdletType(VarCmdLet);
     this.registerCmdletType(VmCmdLet);
     this.registerCmdletType(WriteCmdLet);

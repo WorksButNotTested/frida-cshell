@@ -7,8 +7,6 @@ export interface Trace {
 }
 
 export class Traces {
-  private static readonly OFFSET_MAX = 1024;
-
   private static byThreadId: Map<ThreadId, Trace> = new Map<ThreadId, Trace>();
 
   public static has(threadId: ThreadId): boolean {
@@ -43,18 +41,8 @@ export class Traces {
       return `${Output.green(prefix.padEnd(40, '.'))} ${Output.yellow(Format.toHexString(address))}`;
     }
 
-    const lookup = DebugSymbol.fromName(debug.name);
-    let offset = ptr(0);
-    if (lookup !== null && lookup.address.compare(debug.address) < 0) {
-      offset = debug.address.sub(lookup.address);
-    }
     const prefix = debug.moduleName === null ? '' : `${debug.moduleName}!`;
-
-    let name = `${prefix}${debug.name}`;
-    if (offset !== ptr(0) || offset.compare(Traces.OFFSET_MAX) < 0) {
-      name = `${prefix}${debug.name}+0x${offset.toString(16)}`;
-    }
-
+    const name = `${prefix}${debug.name}`;
     const symbol = `${Output.green(name.padEnd(40, '.'))} ${Output.yellow(Format.toHexString(debug.address))}`;
     if (debug.fileName !== null && debug.lineNumber !== null) {
       if (debug.fileName.length !== 0 && debug.lineNumber !== 0) {

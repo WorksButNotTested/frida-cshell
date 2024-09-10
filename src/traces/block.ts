@@ -63,8 +63,13 @@ export class BlockTrace implements Trace {
             currentDepth = 0;
             first = false;
           }
-          if (numOutput >= BlockTrace.MAX_BLOCKS) return;
+          if (numOutput >= BlockTrace.MAX_BLOCKS) {
+            Output.writeln(Output.red(`TRACE TRUNCATED`));
+            return;
+          }
           numOutput += 1;
+          const idx = `${numOutput.toString().padStart(4, ' ')}. `;
+          Output.write(Output.bold(idx));
           if (currentDepth > 0) {
             Output.write('\t'.repeat(currentDepth));
           }

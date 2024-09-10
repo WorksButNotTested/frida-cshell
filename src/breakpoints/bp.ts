@@ -11,6 +11,7 @@ import { Trace, Traces } from '../traces/trace.js';
 import { Var } from '../vars/var.js';
 import { Vars } from '../vars/vars.js';
 import { CallTrace } from '../traces/call.js';
+import { CoverageTrace } from '../traces/coverage/trace.js';
 
 export const BP_LENGTH: number = 16;
 
@@ -26,6 +27,7 @@ export enum BpType {
   BlockTrace = 'block trace',
   CallTrace = 'call trace',
   UniqueBlockTrace = 'unique block trace',
+  Coverage = 'coverage',
   MemoryRead = 'memory read',
   MemoryWrite = 'memory write',
 }
@@ -87,6 +89,7 @@ export class Bp {
       case BpType.BlockTrace:
       case BpType.CallTrace:
       case BpType.UniqueBlockTrace:
+      case BpType.Coverage:
         return BpKind.Code;
       case BpType.MemoryRead:
       case BpType.MemoryWrite:
@@ -159,6 +162,19 @@ export class Bp {
           onEnter() {
             if (bp._hits === 0) return;
             bp._trace = BlockTrace.create(this.threadId, bp._depth, true);
+            bp.startCoverage(this.threadId, this.context);
+          },
+          onLeave(_retVal) {
+            if (bp._hits === 0) return;
+            bp.stopCoverage(this.threadId, this.context);
+          },
+        });
+        break;
+      case BpType.Coverage:
+        this._listener = Interceptor.attach(addr.toPointer(), {
+          onEnter() {
+            if (bp._hits === 0) return;
+            bp._trace = CoverageTrace.create(this.threadId);
             bp.startCoverage(this.threadId, this.context);
           },
           onLeave(_retVal) {

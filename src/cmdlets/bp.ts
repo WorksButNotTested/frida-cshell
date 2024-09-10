@@ -44,7 +44,8 @@ abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
     switch (this.bpType) {
       case BpType.Instruction:
       case BpType.FunctionEntry:
-      case BpType.FunctionExit: {
+      case BpType.FunctionExit:
+      case BpType.Coverage: {
         if (tokens.length !== 3) return null;
         const [a0, a1, a2] = tokens;
         const [t0, t1, t2] = [a0 as Token, a1 as Token, a2 as Token];
@@ -146,6 +147,7 @@ abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
       case BpType.BlockTrace:
       case BpType.CallTrace:
       case BpType.UniqueBlockTrace:
+      case BpType.Coverage:
         this.done();
         break;
       default:
@@ -235,7 +237,8 @@ abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
     switch (this.bpType) {
       case BpType.Instruction:
       case BpType.FunctionEntry:
-      case BpType.FunctionExit: {
+      case BpType.FunctionExit:
+      case BpType.Coverage: {
         if (tokens.length !== 2) return null;
         const [a0, a1] = tokens;
         const [t0, t1] = [a0 as Token, a1 as Token];
@@ -451,5 +454,11 @@ export class CallTraceBpCmdLet extends TypedBpCmdLet {
 export class UniqueBlockTraceBpCmdLet extends TypedBpCmdLet {
   name = '@tbu';
   bpType = BpType.UniqueBlockTrace;
+  help = `${this.bpType} breakpoint`;
+}
+
+export class CoverageBpCmdLet extends TypedBpCmdLet {
+  name = '@c';
+  bpType = BpType.Coverage;
   help = `${this.bpType} breakpoint`;
 }

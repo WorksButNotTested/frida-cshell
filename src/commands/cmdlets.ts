@@ -32,6 +32,7 @@ import {
   BlockTraceBpCmdLet,
   CallTraceBpCmdLet,
   UniqueBlockTraceBpCmdLet,
+  CoverageBpCmdLet,
   InsnBpCmdLet,
   ReadBpCmdLet,
   WriteBpCmdLet,
@@ -56,6 +57,7 @@ export class CmdLets {
     this.registerCmdletType(BtCmdLet);
     this.registerCmdletType(CallTraceBpCmdLet);
     this.registerCmdletType(CopyCmdLet);
+    this.registerCmdletType(CoverageBpCmdLet);
     this.registerCmdletType(DivCmdLet);
     this.registerCmdletType(DumpCmdLet);
     this.registerCmdletType(EndianCmdLet);

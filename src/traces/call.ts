@@ -60,8 +60,13 @@ export class CallTrace implements Trace {
           currentDepth = 1;
           first = false;
         }
-        if (numOutput >= CallTrace.MAX_CALLS) return;
+        if (numOutput >= CallTrace.MAX_CALLS) {
+          Output.writeln(Output.red(`TRACE TRUNCATED`));
+          return;
+        }
         numOutput += 1;
+        const idx = `${numOutput.toString().padStart(4, ' ')}. `;
+        Output.write(Output.bold(idx));
         if (currentDepth > 0) {
           Output.write('\t'.repeat(currentDepth));
         }

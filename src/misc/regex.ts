@@ -7,7 +7,7 @@ export class Regex {
   }
 
   public static globToRegex(input: string): RegExp | null {
-    if (!Regex.isGlob(input)) return null;
+    if (!Regex.isGlob(input)) return new RegExp(`^${input}$`);
 
     const escaped = input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = escaped

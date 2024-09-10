@@ -1,5 +1,6 @@
 import { CmdLet } from './cmdlet.js';
 import { DumpCmdLet } from '../cmdlets/dump.js';
+import { DumpStringCmdLet } from '../cmdlets/string.js';
 import { ExitCmdLet } from '../cmdlets/exit.js';
 import { SymCmdLet } from '../cmdlets/sym.js';
 import { ReadCmdLet } from '../cmdlets/read.js';
@@ -60,6 +61,7 @@ export class CmdLets {
     this.registerCmdletType(CoverageBpCmdLet);
     this.registerCmdletType(DivCmdLet);
     this.registerCmdletType(DumpCmdLet);
+    this.registerCmdletType(DumpStringCmdLet);
     this.registerCmdletType(EndianCmdLet);
     this.registerCmdletType(ExitCmdLet);
     this.registerCmdletType(FdCmdLet);

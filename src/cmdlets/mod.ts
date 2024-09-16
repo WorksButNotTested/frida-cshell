@@ -22,30 +22,21 @@ export class ModCmdLet extends CmdLet {
   help = 'display module information';
 
   public runSync(tokens: Token[]): Var {
-    const retWithAddress = this.runWithAddress(tokens);
+    const retWithAddress = this.runShowAddress(tokens);
     if (retWithAddress !== null) return retWithAddress;
 
-    const retWithWildCard = this.runWithWildcard(tokens);
-    if (retWithWildCard !== null) return retWithWildCard;
-
-    const retWithName = this.runWithName(tokens);
+    const retWithName = this.runShowNamed(tokens);
     if (retWithName !== null) return retWithName;
-
-    const retWithoutName = this.runWithoutName(tokens);
-    if (retWithoutName !== null) return retWithoutName;
 
     return this.usage();
   }
 
-  private runWithAddress(tokens: Token[]): Var | null {
-    if (tokens.length !== 1) return null;
-
-    const t0 = tokens[0] as Token;
-    const v0 = t0.toVar();
-    if (v0 === null) return null;
+  private runShowAddress(tokens: Token[]): Var | null {
+    const vars = this.transform(tokens, [this.parseVar]);
+    if (vars === null) return null;
+    const [v0] = vars as [Var];
 
     const address = v0.toPointer();
-
     const matches = Process.enumerateModules().filter(
       m => m.base <= address && m.base.add(m.size) > address,
     );
@@ -74,54 +65,48 @@ export class ModCmdLet extends CmdLet {
     Output.writeln();
   }
 
-  private runWithWildcard(tokens: Token[]): Var | null {
-    if (tokens.length !== 1) return null;
+  private runShowNamed(tokens: Token[]): Var | null {
+    const vars = this.transformOptional(tokens, [], [this.parseLiteral]);
+    if (vars === null) return null;
+    const [[], [name]] = vars as [[], [string | null]];
 
-    const t0 = tokens[0] as Token;
-    const name = t0.getLiteral();
-    if (!Regex.isGlob(name)) return null;
-
-    const regex = Regex.globToRegex(name);
-    if (regex === null) return this.usage();
-
-    const modules = Process.enumerateModules().filter(m => m.name.match(regex));
-    modules.sort();
-    modules.forEach(m => {
-      this.printModule(m);
-    });
-    if (modules.length === 1) {
-      const module = modules[0] as Module;
-      return new Var(uint64(module.base.toString()));
-    } else {
+    if (name === null) {
+      const modules = Process.enumerateModules();
+      modules.sort((a, b) => a.base.compare(b.base));
+      modules.forEach(m => {
+        this.printModule(m);
+      });
       return Var.ZERO;
-    }
-  }
+    } else if (Regex.isGlob(name)) {
+      const regex = Regex.globToRegex(name);
+      if (regex === null) return this.usage();
 
-  private runWithName(tokens: Token[]): Var | null {
-    if (tokens.length !== 1) return null;
-
-    const t0 = tokens[0] as Token;
-    const name = t0.getLiteral();
-
-    const mod = Process.findModuleByName(name);
-    if (mod === null) {
-      Output.writeln(`Module: ${name} not found`);
-      return Var.ZERO;
+      const modules = Process.enumerateModules().filter(m =>
+        m.name.match(regex),
+      );
+      modules.sort();
+      modules.forEach(m => {
+        this.printModule(m);
+      });
+      if (modules.length === 1) {
+        const module = modules[0] as Module;
+        return new Var(
+          uint64(module.base.toString()),
+          `Module: ${module.name}`,
+        );
+      } else {
+        return Var.ZERO;
+      }
     } else {
-      this.printModule(mod);
-      return new Var(uint64(mod.base.toString()));
+      const mod = Process.findModuleByName(name);
+      if (mod === null) {
+        Output.writeln(`Module: ${name} not found`);
+        return Var.ZERO;
+      } else {
+        this.printModule(mod);
+        return new Var(uint64(mod.base.toString()), `Module: ${mod.name}`);
+      }
     }
-  }
-
-  private runWithoutName(tokens: Token[]): Var | null {
-    if (tokens.length !== 0) return null;
-
-    const modules = Process.enumerateModules();
-    modules.sort((a, b) => a.base.compare(b.base));
-    modules.forEach(m => {
-      this.printModule(m);
-    });
-    return Var.ZERO;
   }
 
   public usage(): Var {

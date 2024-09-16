@@ -20,10 +20,10 @@ export class Token {
       this.value.startsWith('"') &&
       this.value.endsWith('"')
     )
-      return new Var(this.value.slice(1, this.value.length - 1));
+      return new Var(this.value.slice(1, this.value.length - 1), this.value);
 
     const num = Numeric.parse(this.value);
-    if (num !== null) return new Var(num);
+    if (num !== null) return new Var(num, this.value);
 
     if (this.value.charAt(0) === '$') return Regs.get(this.value.slice(1));
 
@@ -32,12 +32,12 @@ export class Token {
 
     const address = Module.findExportByName(null, this.value);
     if (address !== null) {
-      return new Var(uint64(address.toString()));
+      return new Var(uint64(address.toString()), this.value);
     }
 
     const param = DebugSymbol.fromName(this.value);
     if (!param.address.isNull())
-      return new Var(uint64(param.address.toString()));
+      return new Var(uint64(param.address.toString()), this.value);
 
     return null;
   }

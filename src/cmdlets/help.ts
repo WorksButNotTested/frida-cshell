@@ -10,20 +10,11 @@ export class HelpCmdLet extends CmdLet {
   help = 'print this message';
 
   public runSync(tokens: Token[]): Var {
-    const retWithName = this.runWithName(tokens);
-    if (retWithName !== null) return retWithName;
-
-    return this.usage();
-  }
-
-  private runWithName(tokens: Token[]): Var | null {
-    if (tokens.length !== 1) return null;
-
-    const t0 = tokens[0] as Token;
-    const name = t0.getLiteral();
-
+    const vars = this.transform(tokens, [this.parseLiteral]);
+    if (vars === null) return this.usage();
+    const [name] = vars as [string];
     const cmdlet = CmdLets.getByName(name);
-    if (cmdlet === null) return null;
+    if (cmdlet === null) return this.usage();
 
     return cmdlet.usage();
   }

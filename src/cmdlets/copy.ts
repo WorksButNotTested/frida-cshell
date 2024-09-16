@@ -19,15 +19,13 @@ export class CopyCmdLet extends CmdLet {
   help = 'copy data in memory';
 
   public runSync(tokens: Token[]): Var {
-    if (tokens.length !== 3) return this.usage();
-
-    const [a0, a1, a2] = tokens;
-    const [t0, t1, t2] = [a0 as Token, a1 as Token, a2 as Token];
-    const [v0, v1, v2] = [t0.toVar(), t1.toVar(), t2.toVar()];
-
-    if (v0 === null) return this.usage();
-    if (v1 === null) return this.usage();
-    if (v2 === null) return this.usage();
+    const vars = this.transform(tokens, [
+      this.parseVar,
+      this.parseVar,
+      this.parseVar,
+    ]);
+    if (vars === null) return this.usage();
+    const [v0, v1, v2] = vars as [Var, Var, Var];
 
     const dst = v0.toPointer();
     const src = v1.toPointer();

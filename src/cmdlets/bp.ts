@@ -1,4 +1,4 @@
-import { BP_LENGTH, Bp, BpKind, BpType } from '../breakpoints/bp.js';
+import { BP_LENGTH, BpType } from '../breakpoints/bp.js';
 import { Bps } from '../breakpoints/bps.js';
 import { CmdLet } from '../commands/cmdlet.js';
 import { Input, InputInterceptLine } from '../io/input.js';
@@ -6,156 +6,35 @@ import { Output } from '../io/output.js';
 import { Token } from '../io/token.js';
 import { Var } from '../vars/var.js';
 
-const DELETE_CHAR: string = '#';
 const NUM_CHAR: string = '#';
 const UNLIMITED_CHAR: string = '*';
 
 abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
   public abstract readonly bpType: BpType;
+  protected abstract runCreate(tokens: Token[]): Var | null;
+  protected abstract runModify(tokens: Token[]): Var | null;
+  protected abstract usageCreate(): string;
+  protected abstract usageModify(): string;
 
   category = 'breakpoints';
 
   public runSync(tokens: Token[]): Var {
-    const retWithIndexHitsAndAddress = this.runWithIndexHitsAndAddr(tokens);
-    if (retWithIndexHitsAndAddress !== null) return retWithIndexHitsAndAddress;
+    const retModify = this.runModify(tokens);
+    if (retModify !== null) return retModify;
 
-    const retWithIndexAndHits = this.runWithIndexAndHits(tokens);
-    if (retWithIndexAndHits !== null) return retWithIndexAndHits;
+    const retCreate = this.runCreate(tokens);
+    if (retCreate !== null) return retCreate;
 
-    const retWithIndexAndHash = this.runWithIndexAndHash(tokens);
-    if (retWithIndexAndHash !== null) return retWithIndexAndHash;
+    const retShow = this.runShow(tokens);
+    if (retShow !== null) return retShow;
 
-    const retWithIndex = this.runWithIndex(tokens);
-    if (retWithIndex !== null) return retWithIndex;
-
-    const retWithHitsAndAddr = this.runWithHitsAndAddr(tokens);
-    if (retWithHitsAndAddr !== null) return retWithHitsAndAddr;
-
-    const retWithHits = this.runWithHits(tokens);
-    if (retWithHits !== null) return retWithHits;
-
-    const retWithoutParams = this.runWithoutParams(tokens);
-    if (retWithoutParams !== null) return retWithoutParams;
+    const retDelete = this.runDelete(tokens);
+    if (retDelete !== null) return retDelete;
 
     return this.usage();
   }
 
-  private runWithIndexHitsAndAddr(tokens: Token[]): Var | null {
-    switch (this.bpType) {
-      case BpType.Instruction:
-      case BpType.FunctionEntry:
-      case BpType.FunctionExit:
-      case BpType.Coverage: {
-        if (tokens.length !== 3) return null;
-        const [a0, a1, a2] = tokens;
-        const [t0, t1, t2] = [a0 as Token, a1 as Token, a2 as Token];
-
-        const index = this.parseIndex(t0);
-        if (index === null) return null;
-
-        const hits = this.parseHits(t1);
-        if (hits === null) return null;
-
-        const literal = t2.getLiteral();
-        const addr = t2.toVar();
-        if (addr === null) return null;
-
-        const bp = Bps.modify(
-          this.bpType,
-          index,
-          hits,
-          addr,
-          literal,
-          BP_LENGTH,
-        );
-        Output.writeln(`Modified ${bp.toString()}`);
-        this.addCommands();
-        return addr;
-      }
-      case BpType.BlockTrace:
-      case BpType.CallTrace:
-      case BpType.UniqueBlockTrace:
-      case BpType.MemoryRead:
-      case BpType.MemoryWrite: {
-        if (tokens.length !== 4) return null;
-
-        const [a0, a1, a2, a3] = tokens;
-        const [t0, t1, t2, t3] = [
-          a0 as Token,
-          a1 as Token,
-          a2 as Token,
-          a3 as Token,
-        ];
-        const [addr, extra] = [t2.toVar(), t3.toVar()];
-
-        if (addr === null) return null;
-        if (extra === null) return null;
-
-        const index = this.parseIndex(t0);
-        if (index === null) return null;
-
-        const hits = this.parseHits(t1);
-        if (hits === null) return null;
-
-        const literal = t2.getLiteral();
-
-        switch (this.bpType) {
-          case BpType.BlockTrace:
-          case BpType.CallTrace:
-          case BpType.UniqueBlockTrace: {
-            const bp = Bps.modify(
-              this.bpType,
-              index,
-              hits,
-              addr,
-              literal,
-              BP_LENGTH,
-              extra.toU64().toNumber(),
-            );
-            Output.writeln(`Modified ${bp.toString()}`);
-            break;
-          }
-          case BpType.MemoryRead:
-          case BpType.MemoryWrite: {
-            const bp = Bps.modify(
-              this.bpType,
-              index,
-              hits,
-              addr,
-              literal,
-              extra.toU64().toNumber(),
-            );
-            Output.writeln(`Modified ${bp.toString()}`);
-            break;
-          }
-        }
-        this.addCommands();
-        return addr;
-      }
-    }
-  }
-
-  private addCommands() {
-    switch (this.bpType) {
-      case BpType.Instruction:
-      case BpType.FunctionEntry:
-      case BpType.FunctionExit:
-      case BpType.MemoryRead:
-      case BpType.MemoryWrite:
-        Input.setInterceptLine(this);
-        break;
-      case BpType.BlockTrace:
-      case BpType.CallTrace:
-      case BpType.UniqueBlockTrace:
-      case BpType.Coverage:
-        this.done();
-        break;
-      default:
-        throw new Error(`unknown breakpoint type: ${this.bpType}`);
-    }
-  }
-
-  private parseIndex(token: Token): number | null {
+  protected parseIndex(token: Token): number | null {
     const literal = token.getLiteral();
     if (!literal.startsWith(NUM_CHAR)) return null;
 
@@ -166,7 +45,7 @@ abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
     return val;
   }
 
-  private parseHits(token: Token): number | null {
+  protected parseHits(token: Token): number | null {
     if (token.getLiteral() === UNLIMITED_CHAR) return -1;
 
     const v = token.toVar();
@@ -176,186 +55,41 @@ abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
     return hits;
   }
 
-  private runWithIndexAndHits(tokens: Token[]): Var | null {
-    if (tokens.length !== 2) return null;
-
-    const [a0, a1] = tokens;
-    const [t0, t1] = [a0 as Token, a1 as Token];
-
-    const index = this.parseIndex(t0);
-    if (index === null) return null;
-
-    const hits = this.parseHits(t1);
-    if (hits === null) return null;
-
-    const bp = Bps.modify(this.bpType, index, hits);
-    Output.writeln(`Modified ${bp.toString()}`);
-    this.addCommands();
-
-    return Var.ZERO;
-  }
-
-  private runWithIndexAndHash(tokens: Token[]): Var | null {
-    if (tokens.length !== 2) return null;
-
-    const [a0, a1] = tokens;
-    const [t0, t1] = [a0 as Token, a1 as Token];
-
-    const index = this.parseIndex(t0);
-    if (index === null) return null;
-
-    const hash = this.parseDelete(t1);
-    if (!hash) return null;
+  private runDelete(tokens: Token[]): Var | null {
+    const vars = this.transform(tokens, [this.parseIndex, this.parseDelete]);
+    if (vars === null) return null;
+    const [index, _] = vars as [number, string];
 
     const bp = Bps.delete(this.bpType, index);
     Output.writeln(`Deleted ${bp.toString()}`);
     return bp.address ?? Var.ZERO;
   }
 
-  private parseDelete(token: Token): boolean {
-    const literal = token.getLiteral();
-    if (literal !== DELETE_CHAR) return false;
+  private runShow(tokens: Token[]): Var | null {
+    const vars = this.transformOptional(tokens, [], [this.parseIndex]);
+    if (vars === null) return null;
+    const [[], [index]] = vars as [[], [number | null]];
 
-    return true;
-  }
+    if (index === null) {
+      Output.writeln(
+        `${Output.blue(this.bpType)} ${Output.blue('breakpoints')}:`,
+      );
+      Bps.all()
+        .filter(bp => bp.type === this.bpType)
+        .forEach(bp => Output.writeln(bp.toString(true)));
+      return Var.ZERO;
+    } else {
+      const bp = Bps.get(this.bpType, index);
+      if (bp === null) throw new Error(`breakpoint #${index} not found`);
 
-  private runWithIndex(tokens: Token[]): Var | null {
-    if (tokens.length !== 1) return null;
-
-    const t0 = tokens[0] as Token;
-    const index = this.parseIndex(t0);
-    if (index === null) return null;
-
-    const bp = Bps.get(this.bpType, index);
-    if (bp === null) throw new Error(`breakpoint #${index} not found`);
-
-    Output.writeln(bp.toString());
-    return bp.address;
-  }
-
-  private runWithHitsAndAddr(tokens: Token[]): Var | null {
-    switch (this.bpType) {
-      case BpType.Instruction:
-      case BpType.FunctionEntry:
-      case BpType.FunctionExit:
-      case BpType.Coverage: {
-        if (tokens.length !== 2) return null;
-        const [a0, a1] = tokens;
-        const [t0, t1] = [a0 as Token, a1 as Token];
-
-        const hits = this.parseHits(t0);
-        if (hits === null) return null;
-
-        const literal = t1.getLiteral();
-        const addr = t1.toVar();
-        if (addr === null) return null;
-
-        const bp = Bps.create(this.bpType, hits, addr, literal, BP_LENGTH);
-        Output.writeln(`Created ${bp.toString()}`);
-
-        this.addCommands();
-
-        return addr;
-      }
-      case BpType.BlockTrace:
-      case BpType.CallTrace:
-      case BpType.UniqueBlockTrace:
-      case BpType.MemoryRead:
-      case BpType.MemoryWrite: {
-        if (tokens.length !== 3) return null;
-        const [a0, a1, a2] = tokens;
-        const [t0, t1, t2] = [a0 as Token, a1 as Token, a2 as Token];
-        const [addr, extra] = [t1.toVar(), t2.toVar()];
-
-        if (addr === null) return null;
-        if (extra === null) return null;
-
-        const hits = this.parseHits(t0);
-        if (hits === null) return null;
-
-        const literal = t1.getLiteral();
-
-        switch (this.bpType) {
-          case BpType.BlockTrace:
-          case BpType.CallTrace:
-          case BpType.UniqueBlockTrace: {
-            const bp = Bps.create(
-              this.bpType,
-              hits,
-              addr,
-              literal,
-              BP_LENGTH,
-              extra.toU64().toNumber(),
-            );
-            Output.writeln(`Created ${bp.toString()}`);
-            break;
-          }
-          case BpType.MemoryRead:
-          case BpType.MemoryWrite: {
-            const bp = Bps.create(
-              this.bpType,
-              hits,
-              addr,
-              literal,
-              extra.toU64().toNumber(),
-            );
-            Output.writeln(`Created ${bp.toString()}`);
-            break;
-          }
-        }
-
-        this.addCommands();
-
-        return addr;
-      }
+      Output.writeln(bp.toString());
+      return bp.address;
     }
-  }
-
-  private runWithHits(tokens: Token[]): Var | null {
-    if (tokens.length !== 1) return null;
-
-    const t0 = tokens[0] as Token;
-
-    const hits = this.parseHits(t0);
-    if (hits === null) return null;
-
-    const bp = Bps.create(this.bpType, hits);
-    Output.writeln(`Created ${bp.toString()}`);
-    this.addCommands();
-
-    return Var.ZERO;
-  }
-
-  private runWithoutParams(tokens: Token[]): Var | null {
-    if (tokens.length !== 0) return null;
-
-    Output.writeln(
-      `${Output.blue(this.bpType)} ${Output.blue('breakpoints')}:`,
-    );
-    Bps.all()
-      .filter(bp => bp.type === this.bpType)
-      .forEach(bp => Output.writeln(bp.toString(true)));
-    return Var.ZERO;
   }
 
   public usage(): Var {
-    const kind = Bp.getBpKind(this.bpType);
-    const lenStr: string = kind === BpKind.Memory ? ' len ' : '';
-
-    let extraDesc = '';
-    switch (this.bpType) {
-      case BpType.Instruction:
-      case BpType.FunctionEntry:
-      case BpType.FunctionExit:
-        break;
-      case BpType.BlockTrace:
-        extraDesc = 'depth   the maximum depth of callstack to follow\n';
-        break;
-      case BpType.MemoryRead:
-      case BpType.MemoryWrite:
-        extraDesc = 'len     the length of the memory region to watch\n';
-        break;
-    }
+    const create = this.usageCreate();
+    const modify = this.usageModify();
     const INSN_BP_USAGE: string = `Usage: ${this.name}
 ${Output.bold('show:')}
 
@@ -364,27 +98,12 @@ ${this.name} - show all ${this.bpType} breakpoints
 ${this.name} ${NUM_CHAR}n - show a ${this.bpType} breakpoint
    ${NUM_CHAR}n      the number of the breakpoint to show
 
-
 ${Output.bold('create:')}
+${create}
 
-${this.name} hits - create ${this.bpType} breakpoint without assigning an address
-   hits    the number of times the breakpoint should fire
-
-${this.name} hits addr ${lenStr} - create ${this.bpType} breakpoint
-   hits    the number of times the breakpoint should fire
-   addr    the address to create the breakpoint
-   ${extraDesc}
 ${Output.bold('modify:')}
+${modify}
 
-${this.name} ${NUM_CHAR}n hits - modify a ${this.bpType} breakpoint
-   ${NUM_CHAR}n      the number of the breakpoint to modify
-   hits    the number of times the breakpoint should fire
-
-${this.name} ${NUM_CHAR}n hits addr ${lenStr} - modify a ${this.bpType} breakpoint
-   ${NUM_CHAR}n      the number of the breakpoint to modify
-   hits    the number of times the breakpoint should fire
-   addr    the address to move the breakpoint
-   ${extraDesc}
 ${Output.bold('delete:')}
 
 ${this.name} ${NUM_CHAR}n # - delete a ${this.bpType} breakpoint
@@ -409,56 +128,301 @@ ${Output.bold('NOTE:')} Set hits to '*' for unlimited breakpoint.
   }
 }
 
-export class InsnBpCmdLet extends TypedBpCmdLet {
+abstract class CodeBpCmdLet
+  extends TypedBpCmdLet
+  implements InputInterceptLine
+{
+  protected runCreate(tokens: Token[]): Var | null {
+    const vars = this.transformOptional(
+      tokens,
+      [this.parseHits],
+      [this.parseVar],
+    );
+    if (vars === null) return null;
+    const [[hits], [addr]] = vars as [[number], [Var | null]];
+
+    const bp = Bps.create(
+      this.bpType,
+      hits,
+      addr,
+      addr === null ? 0 : BP_LENGTH,
+    );
+    Output.writeln(`Created ${bp.toString()}`);
+    this.addCommands();
+    return addr ?? Var.ZERO;
+  }
+
+  protected runModify(tokens: Token[]): Var | null {
+    const vars = this.transformOptional(
+      tokens,
+      [this.parseIndex, this.parseHits],
+      [this.parseVar],
+    );
+    if (vars === null) return null;
+    const [[index, hits], [addr]] = vars as [[number, number], [Var | null]];
+
+    const bp = Bps.modify(
+      this.bpType,
+      index,
+      hits,
+      addr,
+      addr === null ? 0 : BP_LENGTH,
+    );
+    Output.writeln(`Modified ${bp.toString()}`);
+    this.addCommands();
+    return addr ?? Var.ZERO;
+  }
+
+  protected addCommands(): void {
+    Input.setInterceptLine(this);
+  }
+
+  protected override usageCreate(): string {
+    const USAGE: string = `
+${this.name} hits - create ${this.bpType} breakpoint without assigning an address
+   hits    the number of times the breakpoint should fire
+
+${this.name} hits addr - create ${this.bpType} breakpoint
+   hits    the number of times the breakpoint should fire
+   addr    the address to create the breakpoint`;
+
+    return USAGE;
+  }
+
+  protected override usageModify(): string {
+    const USAGE: string = `
+${this.name} ${NUM_CHAR}n hits - modify a ${this.bpType} breakpoint
+   ${NUM_CHAR}n      the number of the breakpoint to modify
+   hits    the number of times the breakpoint should fire
+
+${this.name} ${NUM_CHAR}n hits addr - modify a ${this.bpType} breakpoint
+   ${NUM_CHAR}n      the number of the breakpoint to modify
+   hits    the number of times the breakpoint should fire
+   addr    the address to move the breakpoint`;
+    return USAGE;
+  }
+}
+
+abstract class MemoryBpCmdLet
+  extends TypedBpCmdLet
+  implements InputInterceptLine
+{
+  protected runCreate(tokens: Token[]): Var | null {
+    const vars = this.transformOptional(
+      tokens,
+      [this.parseHits],
+      [this.parseVar, this.parseVar],
+    );
+    if (vars === null) return null;
+    const [[hits], [addr, length]] = vars as [
+      [number],
+      [Var | null, Var | null],
+    ];
+    if (addr !== null && length === null) return null;
+    const bp = Bps.create(
+      this.bpType,
+      hits,
+      addr,
+      length === null ? 0 : length.toU64().toNumber(),
+    );
+
+    Output.writeln(`Created ${bp.toString()}`);
+    Input.setInterceptLine(this);
+    return addr ?? Var.ZERO;
+  }
+
+  protected runModify(tokens: Token[]): Var | null {
+    const vars = this.transformOptional(
+      tokens,
+      [this.parseIndex, this.parseHits],
+      [this.parseVar, this.parseVar],
+    );
+    if (vars === null) return null;
+    const [[index, hits], [addr, length]] = vars as [
+      [number, number],
+      [Var | null, Var | null],
+    ];
+
+    if (addr !== null && length === null) return null;
+
+    const bp = Bps.modify(
+      this.bpType,
+      index,
+      hits,
+      addr,
+      length === null ? 0 : length.toU64().toNumber(),
+    );
+
+    Output.writeln(`Modified ${bp.toString()}`);
+    Input.setInterceptLine(this);
+    return addr ?? Var.ZERO;
+  }
+
+  protected override usageCreate(): string {
+    const USAGE: string = `
+${this.name} hits - create ${this.bpType} breakpoint without assigning an address
+   hits    the number of times the breakpoint should fire
+
+${this.name} hits addr len - create ${this.bpType} breakpoint
+   hits    the number of times the breakpoint should fire
+   addr    the address to create the breakpoint
+   len     the length of the memory region to watch`;
+    return USAGE;
+  }
+
+  protected override usageModify(): string {
+    const USAGE: string = `
+${this.name} ${NUM_CHAR}n hits - modify a ${this.bpType} breakpoint
+   ${NUM_CHAR}n      the number of the breakpoint to modify
+   hits    the number of times the breakpoint should fire
+
+${this.name} ${NUM_CHAR}n hits addr len - modify a ${this.bpType} breakpoint
+   ${NUM_CHAR}n      the number of the breakpoint to modify
+   hits    the number of times the breakpoint should fire
+   addr    the address to move the breakpoint
+   len     the length of the memory region to watch`;
+    return USAGE;
+  }
+}
+
+abstract class TraceBpCmdLet
+  extends TypedBpCmdLet
+  implements InputInterceptLine
+{
+  protected runCreate(tokens: Token[]): Var | null {
+    const vars = this.transformOptional(
+      tokens,
+      [this.parseHits],
+      [this.parseVar, this.parseVar],
+    );
+    if (vars === null) return null;
+    const [[hits], [addr, depth]] = vars as [
+      [number],
+      [Var | null, Var | null],
+    ];
+    if (addr !== null && depth === null) return null;
+    const bp = Bps.create(
+      this.bpType,
+      hits,
+      addr,
+      BP_LENGTH,
+      depth === null ? 0 : depth.toU64().toNumber(),
+    );
+
+    Output.writeln(`Created ${bp.toString()}`);
+    this.done();
+    return addr ?? Var.ZERO;
+  }
+
+  protected runModify(tokens: Token[]): Var | null {
+    const vars = this.transformOptional(
+      tokens,
+      [this.parseIndex, this.parseHits],
+      [this.parseVar, this.parseVar],
+    );
+    if (vars === null) return null;
+    const [[index, hits], [addr, depth]] = vars as [
+      [number, number],
+      [Var, Var],
+    ];
+
+    if (addr !== null && depth === null) return null;
+
+    const bp = Bps.modify(
+      this.bpType,
+      index,
+      hits,
+      addr,
+      BP_LENGTH,
+      depth === null ? 0 : depth.toU64().toNumber(),
+    );
+
+    Output.writeln(`Modified ${bp.toString()}`);
+    this.done();
+    return addr ?? Var.ZERO;
+  }
+
+  protected override usageCreate(): string {
+    const USAGE: string = `
+${this.name} hits - create ${this.bpType} breakpoint without assigning an address
+   hits    the number of times the breakpoint should fire
+
+${this.name} hits addr depth - create ${this.bpType} breakpoint
+   hits    the number of times the breakpoint should fire
+   addr    the address to create the breakpoint
+   depth   the maximum depth of callstack to follow`;
+    return USAGE;
+  }
+
+  protected override usageModify(): string {
+    const USAGE: string = `
+${this.name} ${NUM_CHAR}n hits - modify a ${this.bpType} breakpoint
+   ${NUM_CHAR}n      the number of the breakpoint to modify
+   hits    the number of times the breakpoint should fire
+
+${this.name} ${NUM_CHAR}n hits addr depth - modify a ${this.bpType} breakpoint
+   ${NUM_CHAR}n      the number of the breakpoint to modify
+   hits    the number of times the breakpoint should fire
+   addr    the address to move the breakpoint
+   depth   the maximum depth of callstack to follow`;
+    return USAGE;
+  }
+}
+
+export class InsnBpCmdLet extends CodeBpCmdLet {
   name = '@i';
   bpType = BpType.Instruction;
   help = `${this.bpType} breakpoint`;
 }
 
-export class FunctionEntryBpCmdLet extends TypedBpCmdLet {
+export class FunctionEntryBpCmdLet extends CodeBpCmdLet {
   name = '@f';
   bpType = BpType.FunctionEntry;
   help = `${this.bpType} breakpoint`;
 }
 
-export class FunctionExitBpCmdLet extends TypedBpCmdLet {
+export class FunctionExitBpCmdLet extends CodeBpCmdLet {
   name = '@F';
   bpType = BpType.FunctionExit;
   help = `${this.bpType} breakpoint`;
 }
 
-export class ReadBpCmdLet extends TypedBpCmdLet {
+export class ReadBpCmdLet extends MemoryBpCmdLet {
   name = '@r';
   bpType = BpType.MemoryRead;
   help = `${this.bpType} breakpoint`;
 }
 
-export class WriteBpCmdLet extends TypedBpCmdLet {
+export class WriteBpCmdLet extends MemoryBpCmdLet {
   name = '@w';
   bpType = BpType.MemoryWrite;
   help = `${this.bpType} breakpoint`;
 }
 
-export class BlockTraceBpCmdLet extends TypedBpCmdLet {
+export class BlockTraceBpCmdLet extends TraceBpCmdLet {
   name = '@tb';
   bpType = BpType.BlockTrace;
   help = `${this.bpType} breakpoint`;
 }
 
-export class CallTraceBpCmdLet extends TypedBpCmdLet {
+export class CallTraceBpCmdLet extends TraceBpCmdLet {
   name = '@tc';
   bpType = BpType.CallTrace;
   help = `${this.bpType} breakpoint`;
 }
 
-export class UniqueBlockTraceBpCmdLet extends TypedBpCmdLet {
+export class UniqueBlockTraceBpCmdLet extends TraceBpCmdLet {
   name = '@tbu';
   bpType = BpType.UniqueBlockTrace;
   help = `${this.bpType} breakpoint`;
 }
 
-export class CoverageBpCmdLet extends TypedBpCmdLet {
+export class CoverageBpCmdLet extends CodeBpCmdLet {
   name = '@c';
   bpType = BpType.Coverage;
   help = `${this.bpType} breakpoint`;
+
+  protected override addCommands(): void {
+    this.done();
+  }
 }

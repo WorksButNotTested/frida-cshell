@@ -24,27 +24,21 @@ export class SymCmdLet extends CmdLet {
   help = 'look up a symbol information';
 
   public runSync(tokens: Token[]): Var {
-    const retWithAddress = this.runWithAddress(tokens);
+    const retWithAddress = this.runShowAddress(tokens);
     if (retWithAddress !== null) return retWithAddress;
 
-    const retWithWildCard = this.runWithWildcard(tokens);
+    const retWithWildCard = this.runShowNamed(tokens);
     if (retWithWildCard !== null) return retWithWildCard;
-
-    const retWithName = this.runWithName(tokens);
-    if (retWithName !== null) return retWithName;
 
     return this.usage();
   }
 
-  private runWithAddress(tokens: Token[]): Var | null {
-    if (tokens.length !== 1) return null;
-
-    const t0 = tokens[0] as Token;
-    const v0 = t0.toVar();
-    if (v0 === null) return null;
+  private runShowAddress(tokens: Token[]): Var | null {
+    const vars = this.transform(tokens, [this.parseVar]);
+    if (vars === null) return null;
+    const [v0] = vars as [Var];
 
     const address = v0.toPointer();
-
     const debug = DebugSymbol.fromAddress(address);
     if (!debug.address.isNull() && debug.name !== null) {
       this.printDebugSymbol(debug);
@@ -72,14 +66,7 @@ export class SymCmdLet extends CmdLet {
     }
   }
 
-  private runWithWildcard(tokens: Token[]): Var | null {
-    if (tokens.length !== 1) return null;
-
-    const t0 = tokens[0] as Token;
-    const name = t0.getLiteral();
-
-    if (!Regex.isGlob(name)) return null;
-
+  private splitName(name: string): [RegExp, RegExp] | null {
     const fileNameRegex =
       /^((?<module>[[\]?!*\w .-]+?)!)?(?<symbol>[[?*a-zA-Z_][[\]?!*a-zA-Z0-9_]*)$/;
     const m = name.match(fileNameRegex);
@@ -88,114 +75,113 @@ export class SymCmdLet extends CmdLet {
     const g = m.groups;
     if (g === undefined) return null;
 
-    const module = g['module'] ?? null;
-    const symbol = g['symbol'] ?? null;
-
-    Output.writeln(`module: ${module}`, true);
-    Output.writeln(`symbol: ${symbol}`, true);
-
-    let modRegex = Regex.MatchAll;
-    if (module !== null) {
-      const regex = Regex.globToRegex(module);
-      if (regex === null) return this.usage();
-      modRegex = regex;
-    }
-
-    const modules = Process.enumerateModules().filter(m =>
-      m.name.match(modRegex),
+    const result = [g['module'], g['symbol']].map(s =>
+      s === undefined ? Regex.MatchAll : Regex.globToRegex(s),
     );
 
-    if (modules.length === 0) {
-      Output.writeln('No modules found');
-      return Var.ZERO;
-    }
+    if (result.some(r => r === null)) return null;
 
-    let symRegex = Regex.MatchAll;
-    if (symbol !== null) {
-      const regex = Regex.globToRegex(symbol);
-      if (regex === null) return this.usage();
-      symRegex = regex;
-    }
-
-    const exports = modules
-      .map(m =>
-        m
-          .enumerateExports()
-          .filter(s => s.name.match(symRegex))
-          .map(s => ({
-            name: `${m.name}!${s.name}`,
-            type: 'E',
-            address: s.address,
-          })),
-      )
-      .flat();
-
-    const symbols = modules
-      .map(m =>
-        m
-          .enumerateSymbols()
-          .filter(s => s.name.match(symRegex))
-          .map(s => ({
-            name: `${m.name}!${s.name}`,
-            type: 'D',
-            address: s.address,
-          })),
-      )
-      .flat();
-
-    const dict = new Map(exports.map(s => [s.name, s]));
-
-    symbols.forEach(s => {
-      if (!dict.has(s.name)) {
-        dict.set(s.name, s);
-      }
-    });
-
-    const all = Array.from(dict.entries()).sort((a, b) =>
-      a[0].localeCompare(b[0]),
-    );
-
-    Array.from(
-      all,
-      ([key, value], index) =>
-        `${index.toString().padStart(3, ' ')}: ${Output.green(key.padEnd(40, '.'))} ${Output.yellow(Format.toHexString(value.address))} [${Output.blue(value.type)}]`,
-    ).forEach(s => Output.writeln(s));
-
-    const values = Array.from(dict.values());
-    if (values.length === 1) {
-      const value = values[0] as {
-        name: string;
-        type: string;
-        address: NativePointer;
-      };
-      return new Var(uint64(value.address.toString()));
-    } else {
-      return Var.ZERO;
-    }
+    return result as [RegExp, RegExp];
   }
 
-  private runWithName(tokens: Token[]): Var | null {
-    if (tokens.length !== 1) return null;
+  private runShowNamed(tokens: Token[]): Var | null {
+    const vars = this.transform(tokens, [this.parseLiteral]);
+    if (vars === null) return null;
+    const [name] = vars as [string];
 
-    const t0 = tokens[0] as Token;
-    const name = t0.getLiteral();
+    if (Regex.isGlob(name)) {
+      const regexes = this.splitName(name);
+      if (regexes === null) return null;
+      const [moduleRegex, symbolRegex] = regexes;
 
-    const address = Module.findExportByName(null, name);
-    if (address !== null) {
-      Output.writeln(
-        `${Output.green(name.padEnd(40, '.'))} ${Output.yellow(Format.toHexString(address))}`,
+      const modules = Process.enumerateModules().filter(m =>
+        m.name.match(moduleRegex),
       );
-      return new Var(uint64(address.toString()));
-    }
 
-    const debug = DebugSymbol.fromName(name);
-    if (!debug.address.isNull()) {
-      this.printDebugSymbol(debug);
-      return new Var(uint64(debug.address.toString()));
-    }
+      if (modules.length === 0) {
+        Output.writeln('No modules found');
+        return Var.ZERO;
+      }
 
-    Output.writeln(`Symbol ${Output.bold(name)} not found`);
-    return Var.ZERO;
+      const exports = modules
+        .map(m =>
+          m
+            .enumerateExports()
+            .filter(s => s.name.match(symbolRegex))
+            .map(s => ({
+              name: `${m.name}!${s.name}`,
+              type: 'E',
+              address: s.address,
+            })),
+        )
+        .flat();
+
+      const symbols = modules
+        .map(m =>
+          m
+            .enumerateSymbols()
+            .filter(s => s.name.match(symbolRegex))
+            .map(s => ({
+              name: `${m.name}!${s.name}`,
+              type: 'D',
+              address: s.address,
+            })),
+        )
+        .flat();
+
+      const dict = new Map(exports.map(s => [s.name, s]));
+
+      symbols.forEach(s => {
+        if (!dict.has(s.name)) {
+          dict.set(s.name, s);
+        }
+      });
+
+      const all = Array.from(dict.entries()).sort((a, b) =>
+        a[0].localeCompare(b[0]),
+      );
+
+      Array.from(all, ([key, value], index) =>
+        [
+          `${index.toString().padStart(3, ' ')}:`,
+          Output.green(key.padEnd(40, '.')),
+          Output.yellow(Format.toHexString(value.address)),
+          `[${Output.blue(value.type)}]`,
+        ].join(' '),
+      ).forEach(s => Output.writeln(s));
+
+      const values = Array.from(dict.values());
+      if (values.length === 1) {
+        const value = values[0] as {
+          name: string;
+          type: string;
+          address: NativePointer;
+        };
+        return new Var(
+          uint64(value.address.toString()),
+          `Symbol: ${value.name}`,
+        );
+      } else {
+        return Var.ZERO;
+      }
+    } else {
+      const address = Module.findExportByName(null, name);
+      if (address !== null) {
+        Output.writeln(
+          `${Output.green(name.padEnd(40, '.'))} ${Output.yellow(Format.toHexString(address))}`,
+        );
+        return new Var(uint64(address.toString()), `Symbol: ${name}`);
+      }
+
+      const debug = DebugSymbol.fromName(name);
+      if (!debug.address.isNull()) {
+        this.printDebugSymbol(debug);
+        return new Var(uint64(debug.address.toString()), `Symbol: ${name}`);
+      }
+
+      Output.writeln(`Symbol ${Output.bold(name)} not found`);
+      return Var.ZERO;
+    }
   }
 
   public usage(): Var {

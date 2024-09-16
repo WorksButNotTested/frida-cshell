@@ -11,16 +11,10 @@ export class ReadCmdLet extends CmdLet {
   help = 'read data from memory';
 
   public runSync(tokens: Token[]): Var {
-    if (tokens.length !== 2) return this.usage();
+    const vars = this.transform(tokens, [this.parseWidth, this.parseVar]);
+    if (vars === null) return this.usage();
+    const [length, v1] = vars as [number, Var];
 
-    const [a0, a1] = tokens;
-    const [t0, t1] = [a0 as Token, a1 as Token];
-
-    const length = this.getLength(t0);
-    if (length === null) return this.usage();
-
-    const v1 = t1.toVar();
-    if (v1 == null) return this.usage();
     const address = v1.toPointer();
 
     const buff = Mem.readBytes(address, length);
@@ -28,22 +22,6 @@ export class ReadCmdLet extends CmdLet {
     Mem.writeBytes(copy, buff);
 
     return new Var(this.read(copy, length));
-  }
-
-  private getLength(token: Token): number | null {
-    const literal = token.getLiteral();
-    switch (literal) {
-      case '1':
-        return 1;
-      case '2':
-        return 2;
-      case '4':
-        return 4;
-      case '8':
-        return 8;
-      default:
-        return null;
-    }
   }
 
   private read(address: NativePointer, length: number): UInt64 {

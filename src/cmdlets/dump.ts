@@ -25,67 +25,19 @@ export class DumpCmdLet extends CmdLet {
   help = 'dump data from memory';
 
   public runSync(tokens: Token[]): Var {
-    const retWithLengthAndWidth = this.runWithLengthAndWidth(tokens);
-    if (retWithLengthAndWidth !== null) return retWithLengthAndWidth;
-
-    const retWithLength = this.runWithLength(tokens);
-    if (retWithLength !== null) return retWithLength;
-
-    const retWithoutLength = this.runWithoutLength(tokens);
-    if (retWithoutLength !== null) return retWithoutLength;
-
-    return this.usage();
-  }
-
-  private runWithLength(tokens: Token[]): Var | null {
-    if (tokens.length !== 2) return null;
-
-    const [a0, a1] = tokens;
-    const [t0, t1] = [a0 as Token, a1 as Token];
-    const [v0, v1] = [t0.toVar(), t1.toVar()];
-
-    if (v0 === null) return null;
-    if (v1 === null) return null;
+    const vars = this.transformOptional(
+      tokens,
+      [this.parseVar],
+      [this.parseVar, this.parseWidth],
+    );
+    if (vars === null) return this.usage();
+    const [[v0], [v1, v2]] = vars as [[Var], [Var | null, number | null]];
 
     const address = v0.toPointer();
-    const count = v1.toU64().toNumber();
-    this.dump(address, count);
-    return v0;
-  }
-
-  private runWithLengthAndWidth(tokens: Token[]): Var | null {
-    if (tokens.length !== 3) return null;
-
-    const [a0, a1, a2] = tokens;
-    const [t0, t1, t2] = [a0 as Token, a1 as Token, a2 as Token];
-
-    const [v0, v1] = [t0.toVar(), t1.toVar()];
-    const width = this.getWidth(t2);
-
-    if (v0 === null) return null;
-    if (v1 === null) return null;
-    if (width === null) return null;
-
-    const address = v0.toPointer();
-    const count = v1.toU64().toNumber();
+    const count = v1 === null ? DEFAULT_COUNT : v1.toU64().toNumber();
+    const width = v2 === null ? 1 : v2;
     this.dump(address, count, width);
     return v0;
-  }
-
-  private getWidth(token: Token): number | null {
-    const literal = token.getLiteral();
-    switch (literal) {
-      case '1':
-        return 1;
-      case '2':
-        return 2;
-      case '4':
-        return 4;
-      case '8':
-        return 8;
-      default:
-        return null;
-    }
   }
 
   private dump(address: NativePointer, count: number, width: number = 1) {
@@ -157,20 +109,6 @@ export class DumpCmdLet extends CmdLet {
         `failed to read ${Format.toHexString(count)} bytes from ${Format.toHexString(address)}, ${error}`,
       );
     }
-  }
-
-  private runWithoutLength(tokens: Token[]): Var | null {
-    if (tokens.length !== 1) return null;
-
-    const t0 = tokens[0] as Token;
-    const v0 = t0.toVar();
-    if (v0 === null) return null;
-
-    const address = v0.toPointer();
-    if (address === undefined) return null;
-
-    this.dump(address, DEFAULT_COUNT);
-    return v0;
   }
 
   public usage(): Var {

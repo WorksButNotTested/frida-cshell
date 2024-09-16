@@ -44,30 +44,25 @@ export class FdCmdLet extends CmdLet {
   private pFcntl: NativePointer | null = null;
 
   public runSync(tokens: Token[]): Var {
-    const retWithId = this.runWithId(tokens);
-    if (retWithId !== null) return retWithId;
+    const vars = this.transformOptional(tokens, [], [this.parseVar]);
+    if (vars === null) return this.usage();
+    const [[], [v0]] = vars as [[], [Var | null]];
 
-    const retWithoutParams = this.runWithoutParams(tokens);
-    if (retWithoutParams !== null) return retWithoutParams;
+    if (v0 === null) {
+      const fds = this.readFds();
+      for (const [fd, path] of Object.entries(fds)) {
+        Output.writeln(`Fd: ${fd.toString().padStart(3, ' ')}, Path: ${path}`);
+      }
+      return Var.ZERO;
+    } else {
+      const fd = v0.toU64().toNumber();
+      const path = this.readFds()[fd];
+      if (path === undefined) throw new Error(`fd: ${fd} not found`);
 
-    return this.usage();
-  }
+      Output.writeln(`Fd: ${fd.toString().padStart(3, ' ')}, Path: ${path}`);
 
-  private runWithId(tokens: Token[]): Var | null {
-    if (tokens.length !== 1) return null;
-
-    const t0 = tokens[0] as Token;
-    const v0 = t0.toVar();
-    if (v0 === null) return null;
-
-    const fd = v0.toU64().toNumber();
-
-    const path = this.readFds()[fd];
-    if (path === undefined) throw new Error(`fd: ${fd} not found`);
-
-    Output.writeln(`Fd: ${fd.toString().padStart(3, ' ')}, Path: ${path}`);
-
-    return new Var(uint64(fd));
+      return new Var(uint64(fd), `Fd: ${fd}`);
+    }
   }
 
   private readFds(): Fds {
@@ -220,17 +215,6 @@ export class FdCmdLet extends CmdLet {
     }
 
     return result;
-  }
-
-  private runWithoutParams(tokens: Token[]): Var | null {
-    if (tokens.length !== 0) return null;
-
-    const fds = this.readFds();
-    for (const [fd, path] of Object.entries(fds)) {
-      Output.writeln(`Fd: ${fd.toString().padStart(3, ' ')}, Path: ${path}`);
-    }
-
-    return Var.ZERO;
   }
 
   public usage(): Var {

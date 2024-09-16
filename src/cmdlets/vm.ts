@@ -22,27 +22,19 @@ export class VmCmdLet extends CmdLet {
   help = 'display virtual memory ranges';
 
   public runSync(tokens: Token[]): Var {
-    const retWithAddress = this.runWithAddress(tokens);
+    const retWithAddress = this.runShowAddress(tokens);
     if (retWithAddress !== null) return retWithAddress;
 
-    const retWithWildCard = this.runWithWildcard(tokens);
+    const retWithWildCard = this.runShowNamed(tokens);
     if (retWithWildCard !== null) return retWithWildCard;
-
-    const retWithName = this.runWithName(tokens);
-    if (retWithName !== null) return retWithName;
-
-    const retWithoutParams = this.runWithoutParams(tokens);
-    if (retWithoutParams !== null) return retWithoutParams;
 
     return this.usage();
   }
 
-  private runWithAddress(tokens: Token[]): Var | null {
-    if (tokens.length !== 1) return null;
-
-    const t0 = tokens[0] as Token;
-    const v0 = t0.toVar();
-    if (v0 === null) return null;
+  private runShowAddress(tokens: Token[]): Var | null {
+    const vars = this.transform(tokens, [this.parseVar]);
+    if (vars === null) return null;
+    const [v0] = vars as [Var];
 
     const address = v0.toPointer();
 
@@ -100,56 +92,50 @@ export class VmCmdLet extends CmdLet {
     Output.writeln();
   }
 
-  private runWithWildcard(tokens: Token[]): Var | null {
-    if (tokens.length !== 1) return null;
+  private runShowNamed(tokens: Token[]): Var | null {
+    const vars = this.transformOptional(tokens, [], [this.parseLiteral]);
+    if (vars === null) return null;
+    const [[], [name]] = vars as [[], [string | null]];
 
-    const t0 = tokens[0] as Token;
-    const name = t0.getLiteral();
-    if (!Regex.isGlob(name)) return null;
-
-    const regex = Regex.globToRegex(name);
-    if (regex === null) return this.usage();
-
-    const modules = Process.enumerateModules().filter(m => m.name.match(regex));
-    modules.sort();
-    modules.forEach(m => {
-      m.enumerateRanges('---').forEach(r => {
+    if (name === null) {
+      Process.enumerateRanges('---').forEach(r => {
         this.printMapping(r);
       });
-    });
-    if (modules.length === 1) {
-      const module = modules[0] as Module;
-      return new Var(uint64(module.base.toString()));
+      return Var.ZERO;
+    } else if (Regex.isGlob(name)) {
+      const regex = Regex.globToRegex(name);
+      if (regex === null) return this.usage();
+
+      const modules = Process.enumerateModules().filter(m =>
+        m.name.match(regex),
+      );
+      modules.sort();
+      modules.forEach(m => {
+        m.enumerateRanges('---').forEach(r => {
+          this.printMapping(r);
+        });
+      });
+      if (modules.length === 1) {
+        const module = modules[0] as Module;
+        return new Var(
+          uint64(module.base.toString()),
+          `Module: ${module.name}`,
+        );
+      } else {
+        return Var.ZERO;
+      }
     } else {
-      return Var.ZERO;
+      const mod = Process.findModuleByName(name);
+      if (mod === null) {
+        Output.writeln(`Module: ${name} not found`);
+        return Var.ZERO;
+      }
+
+      mod.enumerateRanges('---').forEach(r => {
+        this.printMapping(r);
+      });
+      return new Var(uint64(mod.base.toString()), `Module: ${mod.name}`);
     }
-  }
-
-  private runWithName(tokens: Token[]): Var | null {
-    if (tokens.length !== 1) return null;
-
-    const t0 = tokens[0] as Token;
-    const name = t0.getLiteral();
-
-    const mod = Process.findModuleByName(name);
-    if (mod === null) {
-      Output.writeln(`Module: ${name} not found`);
-      return Var.ZERO;
-    }
-
-    mod.enumerateRanges('---').forEach(r => {
-      this.printMapping(r);
-    });
-    return new Var(uint64(mod.base.toString()));
-  }
-
-  private runWithoutParams(tokens: Token[]): Var | null {
-    if (tokens.length !== 0) return null;
-
-    Process.enumerateRanges('---').forEach(r => {
-      this.printMapping(r);
-    });
-    return Var.ZERO;
   }
 
   public usage(): Var {

@@ -11,17 +11,13 @@ export class WriteCmdLet extends CmdLet {
   help = 'write data to memory';
 
   public runSync(tokens: Token[]): Var {
-    if (tokens.length !== 3) return this.usage();
-
-    const [a0, a1, a2] = tokens;
-    const [t0, t1, t2] = [a0 as Token, a1 as Token, a2 as Token];
-    const [v1, v2] = [t1.toVar(), t2.toVar()];
-
-    if (v1 === null) return this.usage();
-    if (v2 === null) return this.usage();
-
-    const length = this.getLength(t0);
-    if (length === null) return this.usage();
+    const vars = this.transform(tokens, [
+      this.getLength,
+      this.parseVar,
+      this.parseVar,
+    ]);
+    if (vars === null) return this.usage();
+    const [length, v1, v2] = vars as [number, Var, Var];
 
     const address = v1.toPointer();
     const val = v2.toU64();

@@ -8,8 +8,8 @@ import { Mem } from '../memory/mem.js';
 const MAX_STRING_LENGTH: number = 1024;
 const USAGE: string = `Usage: ds
 
-d address <bytes> - show string
-  adress   the address/symbol to read from
+ds address <bytes> - show string
+  adress   the address/symbol to show
 `;
 
 export class DumpStringCmdLet extends CmdLet {
@@ -18,21 +18,16 @@ export class DumpStringCmdLet extends CmdLet {
   help = 'dump string';
 
   public runSync(tokens: Token[]): Var {
-    if (tokens.length !== 1) return this.usage();
-
-    const t0 = tokens[0] as Token;
-    const v0 = t0.toVar();
-    if (v0 === null) return this.usage();
-
-    const address = v0.toPointer();
-    if (address === undefined) return this.usage();
-
-    const name = t0.getLiteral();
-    this.dump(name, address);
-    return v0;
+    const vars = this.transform(tokens, [this.parseVar]);
+    if (vars === null) return this.usage();
+    const [arg] = vars as [Var];
+    this.dump(arg);
+    return arg;
   }
 
-  private dump(name: string, address: NativePointer) {
+  private dump(arg: Var) {
+    const name = arg.getLiteral();
+    const address = arg.toPointer();
     const length = MAX_STRING_LENGTH;
     let bytes: Uint8Array = new Uint8Array(0);
     let lastError: Error | null = null;

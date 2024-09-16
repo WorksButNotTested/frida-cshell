@@ -19,27 +19,16 @@ export class AssemblyCmdLet extends CmdLet {
   help = 'disassembly listing';
 
   public runSync(tokens: Token[]): Var {
-    const retWithLength = this.runWithLength(tokens);
-    if (retWithLength !== null) return retWithLength;
-
-    const retWithoutLength = this.runWithoutLength(tokens);
-    if (retWithoutLength !== null) return retWithoutLength;
-
-    return this.usage();
-  }
-
-  private runWithLength(tokens: Token[]): Var | null {
-    if (tokens.length !== 2) return null;
-
-    const [a0, a1] = tokens;
-    const [t0, t1] = [a0 as Token, a1 as Token];
-    const [v0, v1] = [t0.toVar(), t1.toVar()];
-
-    if (v0 === null) return null;
-    if (v1 === null) return null;
+    const vars = this.transformOptional(
+      tokens,
+      [this.parseVar],
+      [this.parseVar],
+    );
+    if (vars === null) return this.usage();
+    const [[v0], [v1]] = vars as [[Var], [Var | null]];
 
     const address = v0.toPointer();
-    const length = v1.toU64().toNumber();
+    const length = v1 === null ? DEFAULT_LENGTH : v1.toU64().toNumber();
 
     if (length > 100) throw new Error(`too many instructions: ${length}`);
 
@@ -133,18 +122,6 @@ export class AssemblyCmdLet extends CmdLet {
     concatenatedBuffer.set(buffer1, 0);
     concatenatedBuffer.set(buffer2, buffer1.byteLength);
     return concatenatedBuffer;
-  }
-
-  private runWithoutLength(tokens: Token[]): Var | null {
-    if (tokens.length !== 1) return null;
-
-    const t0 = tokens[0] as Token;
-    const v0 = t0.toVar();
-    if (v0 === null) return null;
-
-    const address = v0.toPointer();
-
-    return this.list(address, DEFAULT_LENGTH);
   }
 
   public usage(): Var {

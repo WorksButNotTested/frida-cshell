@@ -12,7 +12,6 @@ export class Bps {
     type: BpType,
     hits: number = -1,
     addr: Var | null = null,
-    literal: string | null = null,
     length: number = 0,
     depth: number = 0,
   ): Bp {
@@ -23,7 +22,7 @@ export class Bps {
       this.checkOverlaps(type, addr.toPointer(), length);
     }
 
-    const bp = new Bp(type, idx, hits, addr, literal, length, depth);
+    const bp = new Bp(type, idx, hits, addr, length, depth);
     this.byIndex.set(key, bp);
     this.last = bp;
     this.lines = [];
@@ -70,7 +69,6 @@ export class Bps {
     idx: number,
     hits: number,
     addr: Var | null = null,
-    literal: string | null = null,
     length: number = 0,
     depth: number = 0,
   ): Bp {
@@ -88,7 +86,6 @@ export class Bps {
     bp.disable();
     bp.hits = hits;
     bp.address = addr;
-    bp.literal = literal;
     bp.length = length;
     bp.depth = depth;
     this.last = bp;

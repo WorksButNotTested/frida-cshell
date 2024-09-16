@@ -26,30 +26,22 @@ export class VarCmdLet extends CmdLet {
   help = 'variable management';
 
   public runSync(tokens: Token[]): Var {
-    const retWithNameAndHash = this.runWithNameAndHash(tokens);
+    const retWithNameAndHash = this.runDelete(tokens);
     if (retWithNameAndHash !== null) return retWithNameAndHash;
 
-    const retWithNameAndPointer = this.runWithNameAndPointer(tokens);
+    const retWithNameAndPointer = this.runSet(tokens);
     if (retWithNameAndPointer !== null) return retWithNameAndPointer;
 
-    const retWithName = this.runWithName(tokens);
+    const retWithName = this.runShow(tokens);
     if (retWithName !== null) return retWithName;
-
-    const retWithoutParams = this.runWithoutParams(tokens);
-    if (retWithoutParams !== null) return retWithoutParams;
 
     return this.usage();
   }
 
-  private runWithNameAndHash(tokens: Token[]): Var | null {
-    if (tokens.length !== 2) return null;
-
-    const [a0, a1] = tokens;
-    const [t0, t1] = [a0 as Token, a1 as Token];
-
-    const name = t0.getLiteral();
-    const value = t1.getLiteral();
-    if (value !== DELETE_CHAR) return null;
+  private runDelete(tokens: Token[]): Var | null {
+    const vars = this.transform(tokens, [this.parseLiteral, this.parseDelete]);
+    if (vars === null) return null;
+    const [name, _] = vars as [string, string];
 
     const val = Vars.delete(name);
     if (val === null) {
@@ -60,45 +52,45 @@ export class VarCmdLet extends CmdLet {
     }
   }
 
-  private runWithNameAndPointer(tokens: Token[]): Var | null {
-    if (tokens.length !== 2) return null;
-
-    const [a0, a1] = tokens;
-    const [t0, t1] = [a0 as Token, a1 as Token];
-
-    const name = t0.getLiteral();
-
-    const value = t1.toVar();
-    if (value === null) return null;
-
+  private runSet(tokens: Token[]): Var | null {
+    const vars = this.transform(tokens, [this.parseLiteral, this.parseVar]);
+    if (vars === null) return null;
+    const [name, value] = vars as [string, Var];
     Vars.set(name, value);
     return value;
   }
 
-  private runWithName(tokens: Token[]): Var | null {
-    if (tokens.length !== 1) return null;
+  private runShow(tokens: Token[]): Var | null {
+    const vars = this.transformOptional(tokens, [], [this.parseLiteral]);
+    if (vars === null) return null;
+    const [[], [name]] = vars as [[], [string | null]];
 
-    const t0 = tokens[0] as Token;
-    const name = t0.getLiteral();
-
-    const val = Vars.get(name);
-    if (val === null) {
-      Output.writeln(`Variable ${name} not assigned`);
-      return Var.ZERO;
+    if (name === null) {
+      Output.writeln('Vars:');
+      for (const [key, value] of Vars.all()) {
+        Output.writeln(
+          [
+            `${Output.green(key.padEnd(25, ' '))}:`,
+            `${Output.yellow(value.toString())}`,
+          ].join(' '),
+        );
+      }
+      return Vars.getRet();
     } else {
-      Output.writeln(`Varaible ${name}, value: ${val.toString()}`);
-      return val;
+      const val = Vars.get(name);
+      if (val === null) {
+        Output.writeln(`Variable ${Output.green(name)} not assigned`);
+        return Var.ZERO;
+      } else {
+        Output.writeln(
+          [
+            `Variable ${Output.green(name)}`,
+            `value: ${Output.yellow(val.toString())}`,
+          ].join(' '),
+        );
+        return val;
+      }
     }
-  }
-
-  private runWithoutParams(tokens: Token[]): Var | null {
-    if (tokens.length !== 0) return null;
-
-    Output.writeln('Vars:');
-    for (const [key, value] of Vars.all()) {
-      Output.writeln(`${key.padEnd(25, ' ')}: ${value.toString()}`);
-    }
-    return Vars.getRet();
   }
 
   public usage(): Var {

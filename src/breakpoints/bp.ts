@@ -38,7 +38,6 @@ export class Bp {
 
   private _hits: number;
   private _addr: Var | null;
-  private _literal: string | null;
   private _length: number;
   private _depth: number;
 
@@ -52,7 +51,6 @@ export class Bp {
     idx: number,
     hits: number,
     addr: Var | null,
-    literal: string | null,
     length: number = 0,
     depth: number = 0,
   ) {
@@ -60,7 +58,6 @@ export class Bp {
     this._idx = idx;
     this._hits = hits;
     this._addr = addr;
-    this._literal = literal;
     this._length = length;
     this._depth = depth;
     this._listener = null;
@@ -196,7 +193,7 @@ export class Bp {
     Output.write(`${Output.yellow('|')} Start Trace `);
     Output.write(`${Output.green(`#${this._idx}`)} `);
     Output.write(`[${this._type}] `);
-    Output.write(`${Output.yellow(this._literal ?? '')} `);
+    Output.write(`${Output.yellow(this.literal)} `);
     Output.write(`@ $pc=${Output.blue(Format.toHexString(ctx.pc))} `);
     Output.write(`$tid=${threadId}, depth=${this._depth}`);
     Output.writeln();
@@ -218,7 +215,7 @@ export class Bp {
       Output.write(`${Output.yellow('|')} Stop Trace `);
       Output.write(`${Output.green(`#${this._idx}`)} `);
       Output.write(`[${this._type}] `);
-      Output.write(`${Output.yellow(this._literal ?? '')} `);
+      Output.write(`${Output.yellow(this.literal)} `);
       Output.write(`@ $pc=${Output.blue(Format.toHexString(ctx.pc))} `);
       Output.write(`$tid=${threadId}`);
       Output.writeln();
@@ -244,7 +241,7 @@ export class Bp {
     Output.write(`${Output.yellow('|')} Break `);
     Output.write(`${Output.green(`#${this._idx}`)} `);
     Output.write(`[${this._type}] `);
-    Output.write(`${Output.yellow(this._literal ?? '')} `);
+    Output.write(`${Output.yellow(this.literal)} `);
     Output.write(`@ $pc=${Output.blue(Format.toHexString(ctx.pc))} `);
     Output.write(`$tid=${threadId}`);
     Output.writeln();
@@ -330,7 +327,7 @@ export class Bp {
     Output.write(`${Output.yellow('|')} Break `);
     Output.write(`${Output.green(`#${this._idx}`)} `);
     Output.write(`[${this._type}] `);
-    Output.write(`${Output.yellow(this._literal ?? '')} `);
+    Output.write(`${Output.yellow(this.literal)} `);
     Output.write(`@ $pc=${Output.blue(Format.toHexString(details.from))} `);
     Output.write(`$addr=${Output.blue(Format.toHexString(details.address))}`);
     Output.writeln();
@@ -364,7 +361,7 @@ export class Bp {
   public toString(short: boolean = false): string {
     const idxString = Output.green(`#${this._idx.toString()}.`.padEnd(4, ' '));
     const typeString = `[${this._type.toString()}]`;
-    const literalString = Output.yellow(this._literal ?? '');
+    const literalString = Output.yellow(this.literal);
     const addString = `@ $pc=${Output.blue(this.addrString)}`;
     const hitsString = `[hits:${this.hitsString}]`;
     const lengthString = this.lengthString;
@@ -416,6 +413,10 @@ export class Bp {
     return this._addr;
   }
 
+  public get literal(): string {
+    return this._addr?.getLiteral() ?? '';
+  }
+
   public get length(): number | null {
     return this._length;
   }
@@ -431,11 +432,6 @@ export class Bp {
   public set address(addr: Var | null) {
     if (addr === null) return;
     this._addr = addr;
-  }
-
-  public set literal(literal: string | null) {
-    if (literal === null) return;
-    this._literal = literal;
   }
 
   public set length(length: number | null) {

@@ -22,58 +22,44 @@ export class RegCmdLet extends CmdLet {
   help = 'register management';
 
   public runSync(tokens: Token[]): Var {
-    const retWithNameAndPointer = this.runWithNameAndPointer(tokens);
-    if (retWithNameAndPointer !== null) return retWithNameAndPointer;
+    const vars = this.transformOptional(
+      tokens,
+      [],
+      [this.parseRegister, this.parseVar],
+    );
+    if (vars === null) return this.usage();
+    const [[], [name, address]] = vars as [[], [string | null, Var | null]];
 
-    const retWithName = this.runWithName(tokens);
-    if (retWithName !== null) return retWithName;
-
-    const retWithoutParams = this.runWithoutParams(tokens);
-    if (retWithoutParams !== null) return retWithoutParams;
-
-    return this.usage();
-  }
-
-  private runWithNameAndPointer(tokens: Token[]): Var | null {
-    if (tokens.length !== 2) return null;
-
-    const [a0, a1] = tokens;
-    const [t0, t1] = [a0 as Token, a1 as Token];
-
-    let name = t0.getLiteral();
-
-    if (name.startsWith('$')) name = name.slice(1);
-
-    const value = t1.toVar();
-    if (value === null) return null;
-
-    Regs.set(name, value);
-    Output.writeln(`Register ${name}, set to value: ${value.toString()}`);
-    return value;
-  }
-
-  private runWithName(tokens: Token[]): Var | null {
-    if (tokens.length !== 1) return null;
-
-    const t0 = tokens[0] as Token;
-    let name = t0.getLiteral();
-    if (name === null) return null;
-
-    if (name.startsWith('$')) name = name.slice(1);
-
-    const val = Regs.get(name);
-    Output.writeln(`Register ${name}, value: ${val.toString()}`);
-    return val;
-  }
-
-  private runWithoutParams(tokens: Token[]): Var | null {
-    if (tokens.length !== 0) return null;
-
-    Output.writeln('Registers:');
-    for (const [key, value] of Regs.all()) {
-      Output.writeln(`${Output.bold(key.padEnd(4, ' '))}: ${value.toString()}`);
+    if (address === null) {
+      if (name === null) {
+        Output.writeln('Registers:');
+        for (const [key, value] of Regs.all()) {
+          Output.writeln(
+            `${Output.bold(key.padEnd(4, ' '))}: ${value.toString()}`,
+          );
+        }
+        return Vars.getRet();
+      } else {
+        const val = Regs.get(name);
+        Output.writeln(`Register ${name}, value: ${val.toString()}`);
+        return val;
+      }
+    } else {
+      if (name === null) throw new Error('argument parsing error');
+      Regs.set(name, address);
+      Output.writeln(`Register ${name}, set to value: ${address.toString()}`);
+      return address;
     }
-    return Vars.getRet();
+  }
+
+  protected parseRegister(token: Token): string | null {
+    if (token === null) return null;
+    const literal = token.getLiteral();
+    if (literal.startsWith('$')) {
+      return literal.slice(1);
+    } else {
+      return literal;
+    }
   }
 
   public usage(): Var {

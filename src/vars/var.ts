@@ -3,11 +3,17 @@ import { Format } from '../misc/format.js';
 export class Var {
   private val: string | UInt64;
   private p: NativePointer;
+  private readonly literal: string;
 
-  public constructor(val: string | UInt64) {
+  public constructor(val: string | UInt64, literal: string | null = null) {
     this.val = val;
     if (this.val instanceof UInt64) this.p = ptr(val.toString());
     else this.p = Memory.allocUtf8String(val as string);
+    this.literal = literal ?? this.val.toString();
+  }
+
+  public getLiteral(): string {
+    return this.literal;
   }
 
   public toPointer(): NativePointer {
@@ -29,5 +35,5 @@ export class Var {
     else return `${Format.toHexString(this.p)} "${this.val}"`;
   }
 
-  public static ZERO: Var = new Var(uint64(0));
+  public static ZERO: Var = new Var(uint64(0), 'ZERO');
 }

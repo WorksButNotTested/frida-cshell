@@ -68,20 +68,13 @@ export class JsCmdLet extends CmdLet {
   help = 'load script';
 
   public runSync(tokens: Token[]): Var {
-    const retWithName = this.runWithName(tokens);
-    if (retWithName !== null) return retWithName;
+    const vars = this.transform(tokens, [this.parseLiteral]);
+    if (vars === null) return this.usage();
+    let [name] = vars as [string];
 
-    return this.usage();
-  }
-
-  private runWithName(tokens: Token[]): Var | null {
-    if (tokens.length !== 1) return null;
-
-    const t0 = tokens[0] as Token;
-    let name = t0.getLiteral();
-
-    if (name.length > 1 && name.startsWith('"') && name.endsWith('"'))
+    if (name.length > 1 && name.startsWith('"') && name.endsWith('"')) {
       name = name.slice(1, name.length - 1);
+    }
 
     Output.writeln(`Loading: ${name}`);
 

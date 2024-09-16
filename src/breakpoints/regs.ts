@@ -20,27 +20,30 @@ export class Regs {
     if (name === THREAD_ID_NAME) {
       if (this.threadId === null)
         throw new Error('thread ID not available outside of a breakpoint');
-      return new Var(uint64(this.threadId));
+      return new Var(uint64(this.threadId), THREAD_ID_NAME);
     } else if (name === RETURN_ADDRESS_NAME) {
       if (this.returnAddress === null)
         throw new Error('return address not available outside of a breakpoint');
-      return new Var(uint64(this.returnAddress.toString()));
+      return new Var(
+        uint64(this.returnAddress.toString()),
+        RETURN_ADDRESS_NAME,
+      );
     } else if (name === ADDR_NAME) {
       if (this.addr === null)
         throw new Error('addr not available outside of a breakpoint');
-      return new Var(uint64(this.addr.toString()));
+      return new Var(uint64(this.addr.toString()), ADDR_NAME);
     } else if (name === RETVAL_NAME) {
       if (this.retVal === null)
         throw new Error(
           'return Value not available outside of a function exit breakpoint',
         );
-      return new Var(uint64(this.retVal.toString()));
+      return new Var(uint64(this.retVal.toString()), RETVAL_NAME);
     } else if (this.ctx === null) {
       if (name === PC_NAME) {
         if (this.pc === null) {
           throw new Error('pc not available outside of a breakpoint');
         }
-        return new Var(uint64(this.pc.toString()));
+        return new Var(uint64(this.pc.toString()), PC_NAME);
       } else {
         throw new Error('registers not available outside of a breakpoint');
       }
@@ -58,98 +61,98 @@ export class Regs {
       case 'ia32': {
         const ctx = cpuContext as Ia32CpuContext;
         return new Map([
-          ['eax', new Var(uint64(ctx.eax.toString()))],
-          ['ecx', new Var(uint64(ctx.ecx.toString()))],
-          ['edx', new Var(uint64(ctx.edx.toString()))],
-          ['ebx', new Var(uint64(ctx.ebx.toString()))],
-          ['esp', new Var(uint64(ctx.esp.toString()))],
-          ['ebp', new Var(uint64(ctx.ebp.toString()))],
-          ['esi', new Var(uint64(ctx.esi.toString()))],
-          ['edi', new Var(uint64(ctx.edi.toString()))],
-          ['eip', new Var(uint64(ctx.eip.toString()))],
+          ['eax', new Var(uint64(ctx.eax.toString()), 'eax')],
+          ['ecx', new Var(uint64(ctx.ecx.toString()), 'ecx')],
+          ['edx', new Var(uint64(ctx.edx.toString()), 'edx')],
+          ['ebx', new Var(uint64(ctx.ebx.toString()), 'ebx')],
+          ['esp', new Var(uint64(ctx.esp.toString()), 'esp')],
+          ['ebp', new Var(uint64(ctx.ebp.toString()), 'ebp')],
+          ['esi', new Var(uint64(ctx.esi.toString()), 'esi')],
+          ['edi', new Var(uint64(ctx.edi.toString()), 'edi')],
+          ['eip', new Var(uint64(ctx.eip.toString()), 'eip')],
         ]);
       }
       case 'x64': {
         const ctx = cpuContext as X64CpuContext;
         return new Map([
-          ['rax', new Var(uint64(ctx.rax.toString()))],
-          ['rcx', new Var(uint64(ctx.rcx.toString()))],
-          ['rdx', new Var(uint64(ctx.rdx.toString()))],
-          ['rbx', new Var(uint64(ctx.rbx.toString()))],
-          ['rsp', new Var(uint64(ctx.rsp.toString()))],
-          ['rbp', new Var(uint64(ctx.rbp.toString()))],
-          ['rsi', new Var(uint64(ctx.rsi.toString()))],
-          ['rdi', new Var(uint64(ctx.rdi.toString()))],
-          ['r8', new Var(uint64(ctx.r8.toString()))],
-          ['r9', new Var(uint64(ctx.r9.toString()))],
-          ['r10', new Var(uint64(ctx.r10.toString()))],
-          ['r11', new Var(uint64(ctx.r11.toString()))],
-          ['r12', new Var(uint64(ctx.r12.toString()))],
-          ['r13', new Var(uint64(ctx.r13.toString()))],
-          ['r14', new Var(uint64(ctx.r14.toString()))],
-          ['r15', new Var(uint64(ctx.r15.toString()))],
-          ['rip', new Var(uint64(ctx.rip.toString()))],
+          ['rax', new Var(uint64(ctx.rax.toString()), 'rax')],
+          ['rcx', new Var(uint64(ctx.rcx.toString()), 'rcx')],
+          ['rdx', new Var(uint64(ctx.rdx.toString()), 'rdx')],
+          ['rbx', new Var(uint64(ctx.rbx.toString()), 'rbx')],
+          ['rsp', new Var(uint64(ctx.rsp.toString()), 'rsp')],
+          ['rbp', new Var(uint64(ctx.rbp.toString()), 'rbp')],
+          ['rsi', new Var(uint64(ctx.rsi.toString()), 'rsi')],
+          ['rdi', new Var(uint64(ctx.rdi.toString()), 'rdi')],
+          ['r8', new Var(uint64(ctx.r8.toString()), 'r8')],
+          ['r9', new Var(uint64(ctx.r9.toString()), 'r9')],
+          ['r10', new Var(uint64(ctx.r10.toString()), 'r10')],
+          ['r11', new Var(uint64(ctx.r11.toString()), 'r11')],
+          ['r12', new Var(uint64(ctx.r12.toString()), 'r12')],
+          ['r13', new Var(uint64(ctx.r13.toString()), 'r13')],
+          ['r14', new Var(uint64(ctx.r14.toString()), 'r14')],
+          ['r15', new Var(uint64(ctx.r15.toString()), 'r15')],
+          ['rip', new Var(uint64(ctx.rip.toString()), 'rip')],
         ]);
       }
       case 'arm': {
         const ctx = cpuContext as ArmCpuContext;
         return new Map([
-          ['cpsr', new Var(uint64(ctx.cpsr.toString()))],
-          ['r0', new Var(uint64(ctx.r0.toString()))],
-          ['r1', new Var(uint64(ctx.r1.toString()))],
-          ['r2', new Var(uint64(ctx.r2.toString()))],
-          ['r3', new Var(uint64(ctx.r3.toString()))],
-          ['r4', new Var(uint64(ctx.r4.toString()))],
-          ['r5', new Var(uint64(ctx.r5.toString()))],
-          ['r6', new Var(uint64(ctx.r6.toString()))],
-          ['r7', new Var(uint64(ctx.r7.toString()))],
-          ['r8', new Var(uint64(ctx.r8.toString()))],
-          ['r9', new Var(uint64(ctx.r9.toString()))],
-          ['r10', new Var(uint64(ctx.r10.toString()))],
-          ['r11', new Var(uint64(ctx.r11.toString()))],
-          ['r12', new Var(uint64(ctx.r12.toString()))],
-          ['lr', new Var(uint64(ctx.lr.toString()))],
-          ['pc', new Var(uint64(ctx.pc.toString()))],
-          ['sp', new Var(uint64(ctx.sp.toString()))],
+          ['cpsr', new Var(uint64(ctx.cpsr.toString()), 'cpsr')],
+          ['r0', new Var(uint64(ctx.r0.toString()), 'r0')],
+          ['r1', new Var(uint64(ctx.r1.toString()), 'r1')],
+          ['r2', new Var(uint64(ctx.r2.toString()), 'r2')],
+          ['r3', new Var(uint64(ctx.r3.toString()), 'r3')],
+          ['r4', new Var(uint64(ctx.r4.toString()), 'r4')],
+          ['r5', new Var(uint64(ctx.r5.toString()), 'r5')],
+          ['r6', new Var(uint64(ctx.r6.toString()), 'r6')],
+          ['r7', new Var(uint64(ctx.r7.toString()), 'r7')],
+          ['r8', new Var(uint64(ctx.r8.toString()), 'r8')],
+          ['r9', new Var(uint64(ctx.r9.toString()), 'r9')],
+          ['r10', new Var(uint64(ctx.r10.toString()), 'r10')],
+          ['r11', new Var(uint64(ctx.r11.toString()), 'r11')],
+          ['r12', new Var(uint64(ctx.r12.toString()), 'r12')],
+          ['lr', new Var(uint64(ctx.lr.toString()), 'lr')],
+          ['pc', new Var(uint64(ctx.pc.toString()), 'pc')],
+          ['sp', new Var(uint64(ctx.sp.toString()), 'sp')],
         ]);
       }
       case 'arm64': {
         const ctx = cpuContext as Arm64CpuContext;
         return new Map([
-          ['nzcv', new Var(uint64(ctx.nzcv.toString()))],
-          ['x0', new Var(uint64(ctx.x0.toString()))],
-          ['x1', new Var(uint64(ctx.x1.toString()))],
-          ['x2', new Var(uint64(ctx.x2.toString()))],
-          ['x3', new Var(uint64(ctx.x3.toString()))],
-          ['x4', new Var(uint64(ctx.x4.toString()))],
-          ['x5', new Var(uint64(ctx.x5.toString()))],
-          ['x6', new Var(uint64(ctx.x6.toString()))],
-          ['x7', new Var(uint64(ctx.x7.toString()))],
-          ['x8', new Var(uint64(ctx.x8.toString()))],
-          ['x9', new Var(uint64(ctx.x9.toString()))],
-          ['x10', new Var(uint64(ctx.x10.toString()))],
-          ['x11', new Var(uint64(ctx.x11.toString()))],
-          ['x12', new Var(uint64(ctx.x12.toString()))],
-          ['x13', new Var(uint64(ctx.x13.toString()))],
-          ['x14', new Var(uint64(ctx.x14.toString()))],
-          ['x15', new Var(uint64(ctx.x15.toString()))],
-          ['x16', new Var(uint64(ctx.x16.toString()))],
-          ['x17', new Var(uint64(ctx.x17.toString()))],
-          ['x18', new Var(uint64(ctx.x18.toString()))],
-          ['x19', new Var(uint64(ctx.x19.toString()))],
-          ['x20', new Var(uint64(ctx.x20.toString()))],
-          ['x21', new Var(uint64(ctx.x21.toString()))],
-          ['x22', new Var(uint64(ctx.x22.toString()))],
-          ['x23', new Var(uint64(ctx.x23.toString()))],
-          ['x24', new Var(uint64(ctx.x24.toString()))],
-          ['x25', new Var(uint64(ctx.x25.toString()))],
-          ['x26', new Var(uint64(ctx.x26.toString()))],
-          ['x27', new Var(uint64(ctx.x27.toString()))],
-          ['x28', new Var(uint64(ctx.x28.toString()))],
-          ['fp', new Var(uint64(ctx.fp.toString()))],
-          ['lr', new Var(uint64(ctx.lr.toString()))],
-          ['pc', new Var(uint64(ctx.pc.toString()))],
-          ['sp', new Var(uint64(ctx.sp.toString()))],
+          ['nzcv', new Var(uint64(ctx.nzcv.toString()), 'nzcv')],
+          ['x0', new Var(uint64(ctx.x0.toString()), 'x0')],
+          ['x1', new Var(uint64(ctx.x1.toString()), 'x1')],
+          ['x2', new Var(uint64(ctx.x2.toString()), 'x2')],
+          ['x3', new Var(uint64(ctx.x3.toString()), 'x3')],
+          ['x4', new Var(uint64(ctx.x4.toString()), 'x4')],
+          ['x5', new Var(uint64(ctx.x5.toString()), 'x5')],
+          ['x6', new Var(uint64(ctx.x6.toString()), 'x6')],
+          ['x7', new Var(uint64(ctx.x7.toString()), 'x7')],
+          ['x8', new Var(uint64(ctx.x8.toString()), 'x8')],
+          ['x9', new Var(uint64(ctx.x9.toString()), 'x9')],
+          ['x10', new Var(uint64(ctx.x10.toString()), 'x10')],
+          ['x11', new Var(uint64(ctx.x11.toString()), 'x11')],
+          ['x12', new Var(uint64(ctx.x12.toString()), 'x12')],
+          ['x13', new Var(uint64(ctx.x13.toString()), 'x13')],
+          ['x14', new Var(uint64(ctx.x14.toString()), 'x14')],
+          ['x15', new Var(uint64(ctx.x15.toString()), 'x15')],
+          ['x16', new Var(uint64(ctx.x16.toString()), 'x16')],
+          ['x17', new Var(uint64(ctx.x17.toString()), 'x17')],
+          ['x18', new Var(uint64(ctx.x18.toString()), 'x18')],
+          ['x19', new Var(uint64(ctx.x19.toString()), 'x19')],
+          ['x20', new Var(uint64(ctx.x20.toString()), 'x20')],
+          ['x21', new Var(uint64(ctx.x21.toString()), 'x21')],
+          ['x22', new Var(uint64(ctx.x22.toString()), 'x22')],
+          ['x23', new Var(uint64(ctx.x23.toString()), 'x23')],
+          ['x24', new Var(uint64(ctx.x24.toString()), 'x24')],
+          ['x25', new Var(uint64(ctx.x25.toString()), 'x25')],
+          ['x26', new Var(uint64(ctx.x26.toString()), 'x26')],
+          ['x27', new Var(uint64(ctx.x27.toString()), 'x27')],
+          ['x28', new Var(uint64(ctx.x28.toString()), 'x28')],
+          ['fp', new Var(uint64(ctx.fp.toString()), 'fp')],
+          ['lr', new Var(uint64(ctx.lr.toString()), 'lr')],
+          ['pc', new Var(uint64(ctx.pc.toString()), 'pc')],
+          ['sp', new Var(uint64(ctx.sp.toString()), 'sp')],
         ]);
       }
       case 'mips':
@@ -297,7 +300,7 @@ export class Regs {
 
     if (this.ctx === null) {
       if (this.pc !== null) {
-        result.push([PC_NAME, new Var(uint64(this.pc.toString()))]);
+        result.push([PC_NAME, new Var(uint64(this.pc.toString()), PC_NAME)]);
       }
     } else {
       const regs = Array.from(this.getRegs(this.ctx).entries());
@@ -305,22 +308,31 @@ export class Regs {
     }
 
     if (this.threadId !== null) {
-      result.push([THREAD_ID_NAME, new Var(uint64(this.threadId))]);
+      result.push([
+        THREAD_ID_NAME,
+        new Var(uint64(this.threadId), THREAD_ID_NAME),
+      ]);
     }
 
     if (this.returnAddress !== null) {
       result.push([
         RETURN_ADDRESS_NAME,
-        new Var(uint64(this.returnAddress.toString())),
+        new Var(uint64(this.returnAddress.toString()), RETURN_ADDRESS_NAME),
       ]);
     }
 
     if (this.addr !== null) {
-      result.push([ADDR_NAME, new Var(uint64(this.addr.toString()))]);
+      result.push([
+        ADDR_NAME,
+        new Var(uint64(this.addr.toString()), ADDR_NAME),
+      ]);
     }
 
     if (this.retVal !== null) {
-      result.push([RETVAL_NAME, new Var(uint64(this.retVal.toString()))]);
+      result.push([
+        RETVAL_NAME,
+        new Var(uint64(this.retVal.toString()), RETVAL_NAME),
+      ]);
     }
 
     return result;

@@ -17,40 +17,26 @@ export class HistoryCmdLet extends CmdLet {
   category = 'misc';
   help = 'command history';
 
-  public runSync(tokens: Token[]): Var {
+  public runSync(_tokens: Token[]): Var {
     throw new Error('not supported');
   }
 
   public override async run(tokens: Token[]): Promise<Var> {
-    const retWithId = await this.runWithId(tokens);
-    if (retWithId !== null) return retWithId;
+    const vars = this.transformOptional(tokens, [], [this.parseVar]);
+    if (vars === null) return this.usage();
+    const [[], [v0]] = vars as [[], [Var | null]];
 
-    const retWithoutId = this.runWithoutId(tokens);
-    if (retWithoutId !== null) return retWithoutId;
+    if (v0 === null) {
+      const history = Array.from(History.all());
+      for (const [i, value] of history.entries()) {
+        Output.writeln(`${i.toString().padStart(3, ' ')}: ${value}`);
+      }
+      return Var.ZERO;
+    } else {
+      const id = v0.toU64().toNumber();
 
-    return this.usage();
-  }
-
-  private async runWithId(tokens: Token[]): Promise<Var | null> {
-    if (tokens.length !== 1) return null;
-
-    const t0 = tokens[0] as Token;
-    const v0 = t0.toVar();
-    if (v0 === null) return null;
-
-    const id = v0.toU64().toNumber();
-
-    return History.rerun(id);
-  }
-
-  private runWithoutId(tokens: Token[]): Var | null {
-    if (tokens.length !== 0) return null;
-
-    const history = Array.from(History.all());
-    for (const [i, value] of history.entries()) {
-      Output.writeln(`${i.toString().padStart(3, ' ')}: ${value}`);
+      return History.rerun(id);
     }
-    return Var.ZERO;
   }
 
   public usage(): Var {

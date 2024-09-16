@@ -14,14 +14,9 @@ abstract class BinaryOpCmdLet extends CmdLet {
   protected abstract op(op0: UInt64, op1: UInt64): UInt64;
 
   public runSync(tokens: Token[]): Var {
-    if (tokens.length !== 2) return this.usage();
-
-    const [a0, a1] = tokens;
-    const [t0, t1] = [a0 as Token, a1 as Token];
-    const [v0, v1] = [t0.toVar(), t1.toVar()];
-
-    if (v0 === null) return this.usage();
-    if (v1 === null) return this.usage();
+    const vars = this.transform(tokens, [this.parseVar, this.parseVar]);
+    if (vars === null) return this.usage();
+    const [v0, v1] = vars as [Var, Var];
 
     const op0 = v0.toU64();
     const op1 = v1.toU64();
@@ -91,11 +86,9 @@ abstract class UnaryOpCmdLet extends CmdLet {
   protected abstract op(op0: UInt64): UInt64;
 
   public runSync(tokens: Token[]): Var {
-    if (tokens.length !== 1) return this.usage();
-
-    const t0 = tokens[0] as Token;
-    const v0 = t0.toVar();
-    if (v0 === null) return this.usage();
+    const vars = this.transform(tokens, [this.parseVar]);
+    if (vars === null) return this.usage();
+    const [v0] = vars as [Var];
 
     const op = v0.toU64();
 

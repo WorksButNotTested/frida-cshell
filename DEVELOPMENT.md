@@ -109,31 +109,26 @@ export class Var {
 Similarly, the `run` method of each commandlet is expected to return a `Var` type which can subsequently be referenced by the user using the `ret` keyword in the execution of the next command.
 
 # Parsing
-Below is snippet of the `dump` commandlet showing how it parses it's two arguments. The first is the address which to dump and the second is the length. Note that the first argument is also used as the return value for this commandlet. Note also that the second argument is also converted from a `UInt64` to a `number` type, since this is what is reqired by the `hexdump` function called by `this.dump`. This is used in many commands where the parameter is likely to be a small number and therefore loss of precision is not a concern.
+Below is snippet of the `dump` commandlet showing how it parses it's three arguments. The first is the address which to dump and the second is the length, and the fourth the width. Note that the first argument is also used as the return value for this commandlet. Note also that the second argument is also converted from a `UInt64` to a `number` type, since this is what is reqired by the `hexdump` function called by `this.dump`. This is used in many commands where the parameter is likely to be a small number and therefore loss of precision is not a concern.
 ```js
-  private runWithLength(tokens: Token[]): Var | null {
-    if (tokens.length !== 2) return null;
-
-    const [a0, a1] = tokens;
-    const [t0, t1] = [a0 as Token, a1 as Token];
-    const [v0, v1] = [t0.toVar(), t1.toVar()];
-
-    if (v0 === null) return null;
-    if (v1 === null) return null;
+  public runSync(tokens: Token[]): Var {
+    const vars = this.transformOptional(
+      tokens,
+      [this.parseVar],
+      [this.parseVar, this.parseWidth],
+    );
+    if (vars === null) return this.usage();
+    const [[v0], [v1, v2]] = vars as [[Var], [Var | null, number | null]];
 
     const address = v0.toPointer();
-    const length = v1.toU64().toNumber();
-    this.dump(address, length);
+    const count = v1 === null ? DEFAULT_COUNT : v1.toU64().toNumber();
+    const width = v2 === null ? 1 : v2;
+    this.dump(address, count, width);
     return v0;
   }
 
-  public run(tokens: Token[]): Var {
-    const retWithLength = this.runWithLength(tokens);
-    if (retWithLength !== null) return retWithLength;
-
-    ...
-
-    return this.usage();
+  private dump(address: NativePointer, count: number, width: number = 1) {
+        ...
   }
 ```
 # Scripts

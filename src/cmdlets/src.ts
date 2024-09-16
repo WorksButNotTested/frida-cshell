@@ -27,29 +27,26 @@ export class SrcCmdLet extends CmdLet {
   }
 
   public runSync(tokens: Token[]): Var {
-    const retWithName = this.runWithName(tokens);
-    if (retWithName !== null) return retWithName;
+    const vars = this.transformOptional(tokens, [], [this.parseLiteral]);
+    if (vars === null) return this.usage();
+    let [[], [name]] = vars as [[], [string | null]];
+    if (name === null) {
+      if (SrcCmdLet.lastPath === null) throw new Error('path not initialized');
 
-    const retWithoutName = this.runWithoutName(tokens);
-    if (retWithoutName !== null) return retWithoutName;
+      Output.writeln(`Loading: ${SrcCmdLet.lastPath}`);
+      this.runScript(SrcCmdLet.lastPath);
+      return Var.ZERO;
+    } else {
+      if (name.length > 1 && name.startsWith('"') && name.endsWith('"')) {
+        name = name.slice(1, name.length - 1);
+      }
 
-    return this.usage();
-  }
+      Output.writeln(`Loading: ${name}`);
+      SrcCmdLet.lastPath = name;
+      this.runScript(name);
 
-  private runWithName(tokens: Token[]): Var | null {
-    if (tokens.length !== 1) return null;
-
-    const t0 = tokens[0] as Token;
-    let name = t0.getLiteral();
-
-    if (name.length > 1 && name.startsWith('"') && name.endsWith('"'))
-      name = name.slice(1, name.length - 1);
-
-    Output.writeln(`Loading: ${name}`);
-    SrcCmdLet.lastPath = name;
-    this.runScript(name);
-
-    return Var.ZERO;
+      return Var.ZERO;
+    }
   }
 
   private runScript(path: string) {
@@ -73,16 +70,6 @@ export class SrcCmdLet extends CmdLet {
         Output.writeln();
       }
     } catch (_) {}
-  }
-
-  private runWithoutName(tokens: Token[]): Var | null {
-    if (tokens.length !== 0) return null;
-
-    if (SrcCmdLet.lastPath === null) throw new Error('path not initialized');
-
-    Output.writeln(`Loading: ${SrcCmdLet.lastPath}`);
-    this.runScript(SrcCmdLet.lastPath);
-    return Var.ZERO;
   }
 
   public usage(): Var {

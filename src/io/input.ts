@@ -11,6 +11,7 @@ enum InputState {
 
 const QUIT_CHAR: string = 'q';
 const ABORT_CHAR: string = 'x';
+const CLEAR_CHAR: string = 'c';
 
 export class Input {
   public static readonly PROMPT: string = '-> ';
@@ -162,6 +163,14 @@ export class Input {
         this.interceptLine = null;
       }
       Output.writeRet();
+    } else if (line === CLEAR_CHAR) {
+      /* Notify the commandlet we cleared and exit edit mode */
+      try {
+        edit.clear();
+      } finally {
+        this.interceptLine = null;
+      }
+      Output.writeRet();
     } else if (line === ABORT_CHAR) {
       /* Notify the commandlet we aborted and exit edit mode */
       try {
@@ -169,7 +178,6 @@ export class Input {
       } finally {
         this.interceptLine = null;
       }
-      this.interceptLine = null;
       Output.writeRet();
     } else {
       /* Notify the commandlet of the line */
@@ -251,7 +259,7 @@ export class Input {
         this.interceptRaw = null;
       }
       Output.writeln(
-        `Type '${QUIT_CHAR}' to finish, or '${ABORT_CHAR}' to abort`,
+        `Type '${QUIT_CHAR}' to finish, '${CLEAR_CHAR}' to clear, or '${ABORT_CHAR}' to abort`,
       );
       this.interceptLine = interceptLine;
     }
@@ -276,6 +284,7 @@ export class Input {
 
 export interface InputInterceptLine {
   addLine(line: string): void;
+  clear(): void;
   done(): void;
   abort(): void;
 }

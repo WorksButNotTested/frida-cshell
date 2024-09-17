@@ -119,6 +119,10 @@ ${Output.bold('NOTE:')} Set hits to '*' for unlimited breakpoint.
     Bps.addCommandLine(line);
   }
 
+  clear() {
+    Bps.clear();
+  }
+
   done() {
     Bps.done();
   }
@@ -135,40 +139,47 @@ abstract class CodeBpCmdLet
   protected runCreate(tokens: Token[]): Var | null {
     const vars = this.transformOptional(
       tokens,
-      [this.parseHits],
       [this.parseVar],
+      [this.parseHits],
     );
     if (vars === null) return null;
-    const [[hits], [addr]] = vars as [[number], [Var | null]];
+    const [[addr], [hits]] = vars as [[Var], [number | null]];
 
-    const bp = Bps.create(
-      this.bpType,
-      hits,
-      addr,
-      addr === null ? 0 : BP_LENGTH,
-    );
-    Output.writeln(`Created ${bp.toString()}`);
+    if (addr.isNull()) {
+      const bp = Bps.create(this.bpType, 0, null, 0);
+      Output.writeln(`Created ${bp.toString()}`);
+    } else if (hits === null) {
+      const bp = Bps.create(this.bpType, -1, addr, BP_LENGTH);
+      Output.writeln(`Created ${bp.toString()}`);
+    } else {
+      const bp = Bps.create(this.bpType, hits, addr, BP_LENGTH);
+      Output.writeln(`Created ${bp.toString()}`);
+    }
+
     this.addCommands();
-    return addr ?? Var.ZERO;
+    return addr;
   }
 
   protected runModify(tokens: Token[]): Var | null {
     const vars = this.transformOptional(
       tokens,
-      [this.parseIndex, this.parseHits],
-      [this.parseVar],
+      [this.parseIndex, this.parseVar],
+      [this.parseHits],
     );
     if (vars === null) return null;
-    const [[index, hits], [addr]] = vars as [[number, number], [Var | null]];
+    const [[index, addr], [hits]] = vars as [[number, Var], [number | null]];
 
-    const bp = Bps.modify(
-      this.bpType,
-      index,
-      hits,
-      addr,
-      addr === null ? 0 : BP_LENGTH,
-    );
-    Output.writeln(`Modified ${bp.toString()}`);
+    if (addr.isNull()) {
+      const bp = Bps.modify(this.bpType, index, 0, null, 0);
+      Output.writeln(`Modified ${bp.toString()}`);
+    } else if (hits === null) {
+      const bp = Bps.modify(this.bpType, index, -1, addr, BP_LENGTH);
+      Output.writeln(`Modified ${bp.toString()}`);
+    } else {
+      const bp = Bps.modify(this.bpType, index, hits, addr, BP_LENGTH);
+      Output.writeln(`Modified ${bp.toString()}`);
+    }
+
     this.addCommands();
     return addr ?? Var.ZERO;
   }
@@ -179,26 +190,28 @@ abstract class CodeBpCmdLet
 
   protected override usageCreate(): string {
     const USAGE: string = `
-${this.name} hits - create ${this.bpType} breakpoint without assigning an address
-   hits    the number of times the breakpoint should fire
+${this.name} 0 - create ${this.bpType} breakpoint without assigning an address
 
-${this.name} hits addr - create ${this.bpType} breakpoint
-   hits    the number of times the breakpoint should fire
-   addr    the address to create the breakpoint`;
+${this.name} addr - create ${this.bpType} breakpoint without a hit limit
+   addr    the address to create the breakpoint
+
+${this.name} addr hits - create ${this.bpType} breakpoint
+   addr    the address to create the breakpoint
+   hits    the number of times the breakpoint should fire`;
 
     return USAGE;
   }
 
   protected override usageModify(): string {
     const USAGE: string = `
-${this.name} ${NUM_CHAR}n hits - modify a ${this.bpType} breakpoint
+${this.name} ${NUM_CHAR}n addr - modify a ${this.bpType} breakpoint without a hit limit
    ${NUM_CHAR}n      the number of the breakpoint to modify
-   hits    the number of times the breakpoint should fire
+   addr    the address to move the breakpoint
 
-${this.name} ${NUM_CHAR}n hits addr - modify a ${this.bpType} breakpoint
+${this.name} ${NUM_CHAR}n addr hits - modify a ${this.bpType} breakpoint
    ${NUM_CHAR}n      the number of the breakpoint to modify
-   hits    the number of times the breakpoint should fire
-   addr    the address to move the breakpoint`;
+   addr    the address to move the breakpoint
+   hits    the number of times the breakpoint should fire`;
     return USAGE;
   }
 }
@@ -210,23 +223,24 @@ abstract class MemoryBpCmdLet
   protected runCreate(tokens: Token[]): Var | null {
     const vars = this.transformOptional(
       tokens,
-      [this.parseHits],
       [this.parseVar, this.parseVar],
+      [this.parseHits],
     );
     if (vars === null) return null;
-    const [[hits], [addr, length]] = vars as [
-      [number],
-      [Var | null, Var | null],
-    ];
-    if (addr !== null && length === null) return null;
-    const bp = Bps.create(
-      this.bpType,
-      hits,
-      addr,
-      length === null ? 0 : length.toU64().toNumber(),
-    );
+    const [[addr, length], [hits]] = vars as [[Var, Var], [number | null]];
 
-    Output.writeln(`Created ${bp.toString()}`);
+    if (addr.isNull()) {
+      const bp = Bps.create(this.bpType, 0, null, 0);
+      Output.writeln(`Created ${bp.toString()}`);
+    } else if (hits === null) {
+      const bp = Bps.create(this.bpType, -1, addr, length.toU64().toNumber());
+      Output.writeln(`Created ${bp.toString()}`);
+    } else {
+      const bp = Bps.create(this.bpType, hits, addr, length.toU64().toNumber());
+
+      Output.writeln(`Created ${bp.toString()}`);
+    }
+
     Input.setInterceptLine(this);
     return addr ?? Var.ZERO;
   }
@@ -234,53 +248,71 @@ abstract class MemoryBpCmdLet
   protected runModify(tokens: Token[]): Var | null {
     const vars = this.transformOptional(
       tokens,
-      [this.parseIndex, this.parseHits],
-      [this.parseVar, this.parseVar],
+      [this.parseIndex, this.parseVar, this.parseVar],
+      [this.parseHits],
     );
     if (vars === null) return null;
-    const [[index, hits], [addr, length]] = vars as [
-      [number, number],
-      [Var | null, Var | null],
+    const [[index, addr, length], [hits]] = vars as [
+      [number, Var, Var],
+      [number | null],
     ];
 
-    if (addr !== null && length === null) return null;
+    if (addr.isNull()) {
+      const bp = Bps.modify(this.bpType, index, 0, null, 0);
 
-    const bp = Bps.modify(
-      this.bpType,
-      index,
-      hits,
-      addr,
-      length === null ? 0 : length.toU64().toNumber(),
-    );
+      Output.writeln(`Modified ${bp.toString()}`);
+    } else if (hits === null) {
+      const bp = Bps.modify(
+        this.bpType,
+        index,
+        -1,
+        addr,
+        length.toU64().toNumber(),
+      );
 
-    Output.writeln(`Modified ${bp.toString()}`);
+      Output.writeln(`Modified ${bp.toString()}`);
+    } else {
+      const bp = Bps.modify(
+        this.bpType,
+        index,
+        hits,
+        addr,
+        length.toU64().toNumber(),
+      );
+
+      Output.writeln(`Modified ${bp.toString()}`);
+    }
     Input.setInterceptLine(this);
     return addr ?? Var.ZERO;
   }
 
   protected override usageCreate(): string {
     const USAGE: string = `
-${this.name} hits - create ${this.bpType} breakpoint without assigning an address
-   hits    the number of times the breakpoint should fire
+${this.name} 0 0 - create ${this.bpType} breakpoint without assigning an address
 
-${this.name} hits addr len - create ${this.bpType} breakpoint
-   hits    the number of times the breakpoint should fire
+${this.name} addr len - create ${this.bpType} breakpoint without a hit limit
    addr    the address to create the breakpoint
-   len     the length of the memory region to watch`;
+   len     the length of the memory region to watch
+
+${this.name} addr len hits - create ${this.bpType} breakpoint without a hit limit
+   addr    the address to create the breakpoint
+   len     the length of the memory region to watch
+   hits    the number of times the breakpoint should fire`;
     return USAGE;
   }
 
   protected override usageModify(): string {
     const USAGE: string = `
-${this.name} ${NUM_CHAR}n hits - modify a ${this.bpType} breakpoint
+${this.name} ${NUM_CHAR}n addr len - modify a ${this.bpType} breakpoint without a hit limit
    ${NUM_CHAR}n      the number of the breakpoint to modify
-   hits    the number of times the breakpoint should fire
-
-${this.name} ${NUM_CHAR}n hits addr len - modify a ${this.bpType} breakpoint
-   ${NUM_CHAR}n      the number of the breakpoint to modify
-   hits    the number of times the breakpoint should fire
    addr    the address to move the breakpoint
-   len     the length of the memory region to watch`;
+   len     the length of the memory region to watch
+
+${this.name} ${NUM_CHAR}n addr len hits - modify a ${this.bpType} breakpoint
+   ${NUM_CHAR}n      the number of the breakpoint to modify
+   addr    the address to move the breakpoint
+   len     the length of the memory region to watch
+   hits    the number of times the breakpoint should fire`;
     return USAGE;
   }
 }
@@ -292,24 +324,34 @@ abstract class TraceBpCmdLet
   protected runCreate(tokens: Token[]): Var | null {
     const vars = this.transformOptional(
       tokens,
-      [this.parseHits],
       [this.parseVar, this.parseVar],
+      [this.parseHits],
     );
     if (vars === null) return null;
-    const [[hits], [addr, depth]] = vars as [
-      [number],
-      [Var | null, Var | null],
-    ];
-    if (addr !== null && depth === null) return null;
-    const bp = Bps.create(
-      this.bpType,
-      hits,
-      addr,
-      BP_LENGTH,
-      depth === null ? 0 : depth.toU64().toNumber(),
-    );
+    const [[addr, depth], [hits]] = vars as [[Var, Var], [number | null]];
 
-    Output.writeln(`Created ${bp.toString()}`);
+    if (addr.isNull()) return null;
+
+    if (hits === null) {
+      const bp = Bps.create(
+        this.bpType,
+        -1,
+        addr,
+        BP_LENGTH,
+        depth.toU64().toNumber(),
+      );
+      Output.writeln(`Created ${bp.toString()}`);
+    } else {
+      const bp = Bps.create(
+        this.bpType,
+        hits,
+        addr,
+        BP_LENGTH,
+        depth.toU64().toNumber(),
+      );
+      Output.writeln(`Created ${bp.toString()}`);
+    }
+
     this.done();
     return addr ?? Var.ZERO;
   }
@@ -317,37 +359,52 @@ abstract class TraceBpCmdLet
   protected runModify(tokens: Token[]): Var | null {
     const vars = this.transformOptional(
       tokens,
-      [this.parseIndex, this.parseHits],
-      [this.parseVar, this.parseVar],
+      [this.parseIndex, this.parseVar, this.parseVar],
+      [this.parseHits],
     );
     if (vars === null) return null;
-    const [[index, hits], [addr, depth]] = vars as [
-      [number, number],
-      [Var, Var],
+    const [[index, addr, depth], [hits]] = vars as [
+      [number, Var, Var],
+      [number | null],
     ];
 
-    if (addr !== null && depth === null) return null;
+    if (addr.isNull()) return null;
 
-    const bp = Bps.modify(
-      this.bpType,
-      index,
-      hits,
-      addr,
-      BP_LENGTH,
-      depth === null ? 0 : depth.toU64().toNumber(),
-    );
+    if (hits === null) {
+      const bp = Bps.modify(
+        this.bpType,
+        index,
+        -1,
+        addr,
+        BP_LENGTH,
+        depth.toU64().toNumber(),
+      );
 
-    Output.writeln(`Modified ${bp.toString()}`);
+      Output.writeln(`Modified ${bp.toString()}`);
+    } else {
+      const bp = Bps.modify(
+        this.bpType,
+        index,
+        hits,
+        addr,
+        BP_LENGTH,
+        depth.toU64().toNumber(),
+      );
+
+      Output.writeln(`Modified ${bp.toString()}`);
+    }
+
     this.done();
     return addr ?? Var.ZERO;
   }
 
   protected override usageCreate(): string {
     const USAGE: string = `
-${this.name} hits - create ${this.bpType} breakpoint without assigning an address
-   hits    the number of times the breakpoint should fire
+${this.name} addr depth - create ${this.bpType} breakpoint without a hit limit
+   addr    the address to create the breakpoint
+   depth   the maximum depth of callstack to follow
 
-${this.name} hits addr depth - create ${this.bpType} breakpoint
+${this.name} addr depth hits - create ${this.bpType} breakpoint
    hits    the number of times the breakpoint should fire
    addr    the address to create the breakpoint
    depth   the maximum depth of callstack to follow`;
@@ -356,15 +413,16 @@ ${this.name} hits addr depth - create ${this.bpType} breakpoint
 
   protected override usageModify(): string {
     const USAGE: string = `
-${this.name} ${NUM_CHAR}n hits - modify a ${this.bpType} breakpoint
+${this.name} ${NUM_CHAR}n addr depth - modify a ${this.bpType} breakpoint without a hit limit
    ${NUM_CHAR}n      the number of the breakpoint to modify
-   hits    the number of times the breakpoint should fire
-
-${this.name} ${NUM_CHAR}n hits addr depth - modify a ${this.bpType} breakpoint
-   ${NUM_CHAR}n      the number of the breakpoint to modify
-   hits    the number of times the breakpoint should fire
    addr    the address to move the breakpoint
-   depth   the maximum depth of callstack to follow`;
+   depth   the maximum depth of callstack to follow
+
+${this.name} ${NUM_CHAR}n addr depth hits - modify a ${this.bpType} breakpoint
+   ${NUM_CHAR}n      the number of the breakpoint to modify
+   addr    the address to move the breakpoint
+   depth   the maximum depth of callstack to follow
+   hits    the number of times the breakpoint should fire`;
     return USAGE;
   }
 }

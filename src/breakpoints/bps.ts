@@ -114,17 +114,28 @@ export class Bps {
     this.lines.push(line);
   }
 
-  public static done() {
+  private static exitEdit(callback: (bp: Bp) => void) {
     if (this.last === null) throw new Error('no breakpoint to modify');
-    this.last.lines = this.lines;
+    callback(this.last);
     this.last.enable();
     this.last = null;
+    this.lines = [];
+  }
+
+  public static done() {
+    this.exitEdit(bp => {
+      bp.lines = this.lines;
+    });
+  }
+
+  public static clear() {
+    this.exitEdit(bp => {
+      bp.lines = [];
+    });
   }
 
   public static abort() {
-    if (this.last === null) throw new Error('no breakpoint to modify');
-    this.last.enable();
-    this.last = null;
+    this.exitEdit(_bp => {});
   }
 
   public static all(): Bp[] {

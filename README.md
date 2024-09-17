@@ -373,113 +373,130 @@ int main(int argc, char **argv, char **envp)
 ```
 First, lets see who calls `malloc`:
 ```
--> @f 1 malloc
-Created #1  . function entry 0x00007f21`6f2970a0: malloc [hits:1]
+-> @f malloc 1
+Created #1.  [function entry] malloc @ $pc=0x00007f58`767df0a0 [hits:1]
 
-Type 'q' to finish, or 'x' to abort
+Type 'q' to finish, 'c' to clear, or 'x' to abort
 - bt
 - q
 
-ret: 0x00007f21`6f2970a0 139781575635104
-Break #1 [function entry] @ $pc=0x00007f21`6f2970a0, $tid=1150000
-
-0x4012bc target!main /workspaces/frida-cshell/target.c:27:8
-0x4012bc target!main /workspaces/frida-cshell/target.c:27:8
-0x7f216f21bd90 libc.so.6!0x29d90
-0x7f216f21be40 libc.so.6!__libc_start_main+0x80
-0x401155 target!_start+0x25
-
-
-ret: 0x00000000`00000000 0
+ret: 0x00007f58`767df0a0 140017921814688
+--------------------------------------------------------------------------------
+| Break #1 [function entry] malloc @ $pc=0x00007f58`767df0a0 $tid=261570
+--------------------------------------------------------------------------------
+|
+| -> bt
+| target64!main........................... 0x00000000`004014a5|         /root/target.c:124 |
+| target64!main........................... 0x00000000`004014a5|         /root/target.c:124 |
+| libc.so.6!0x29d90....................... 0x00007f58`76763d90|
+| libc.so.6!__libc_start_main+0x80........ 0x00007f58`76763e40|
+| target64!_start+0x25.................... 0x00000000`00401195|
+|
+| ret: 0x00000000`00000000 0
+|
+--------------------------------------------------------------------------------
 ->
 ```
 
 Let's see how many bytes are being allocated, we will set a function entry break-point to show it. Note here we use the new `r` commandlet and we will use the value `1` to our command so our breakpoint only fires the once. Note that we could have used `*` in its place to set a breakpoint which fires repeatedly:
 ```
--> @f 1 malloc
-Created #1  . function entry 0x00007f00`18dbb0a0: malloc [hits:1]
+-> @f malloc 1
+Created #2.  [function entry] malloc @ $pc=0x00007f58`767df0a0 [hits:1]
 
-Type 'q' to finish, or 'x' to abort
+Type 'q' to finish, 'c' to clear, or 'x' to abort
 - R rdi
 - q
 
-ret: 0x00007f00`18dbb0a0 139638393778336
-Break #1 [function entry] @ $pc=0x00007f00`18dbb0a0, $tid=1140600
-
-Register rdi, value: 0x00000000`0000000c 12
-
-
-ret: 0x00000000`0000000c 12
+ret: 0x00007f58`767df0a0 140017921814688
+--------------------------------------------------------------------------------
+| Break #2 [function entry] malloc @ $pc=0x00007f58`767df0a0 $tid=261570
+--------------------------------------------------------------------------------
+|
+| -> R rdi
+| Register rdi, value: 0x00000000`0000000c 12
+|
+| ret: 0x00000000`0000000c 12
+|
+--------------------------------------------------------------------------------
+->
 ```
 
 Now let's see the data in the buffer when it has been allocated, for this we will use a function exit breakpoint:
 ```
--> @F 1 malloc
-Created #1  . function exit 0x00007f00`18dbb0a0: malloc [hits:1]
+-> @F malloc 1
+Created #1.  [function exit] malloc @ $pc=0x00007f58`767df0a0 [hits:1]
 
-Type 'q' to finish, or 'x' to abort
+Type 'q' to finish, 'c' to clear, or 'x' to abort
 - d $rax
 - q
 
-ret: 0x00007f00`18dbb0a0 139638393778336
-Break #1 [function exit] @ $pc=0x00007f00`18dbb0a0, $tid=1140600
-
-           0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F  0123456789ABCDEF
-01df2420  f2 1d 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-01df2430  00 00 00 00 00 00 00 00 d1 fb 01 00 00 00 00 00  ................
-
-
-ret: 0x00000000`01df2420 31400992
+ret: 0x00007f58`767df0a0 140017921814688
+--------------------------------------------------------------------------------
+| Break #1 [function exit] malloc @ $pc=0x00007f58`767df0a0 $tid=261570
+--------------------------------------------------------------------------------
+|
+| -> d $rax
+|              0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F  0123456789ABCDEF
+| 0x022593d0  59 22 00 00 00 00 00 00 00 00 00 00 00 00 00 00  Y"..............
+| 0x022593e0  00 00 00 00 00 00 00 00 21 fc 01 00 00 00 00 00  ........!.......
+|
+| ret: 0x00000000`022593d0 36017104
+|
+--------------------------------------------------------------------------------
 ->
 ```
 Now let's try an instruction breakpoint. We can set those at any address, not just the start of a function. Here we we can see that the 4th instruction copies `rdi` into `rbp`. Lets inspect that shall we?
 ```
 -> l malloc
-  #1: 0x00007fe2`821090a4: endbr64                                  f3 0f 1e fa
-  #2: 0x00007fe2`821090a6: push r12                                 41 54
-  #3: 0x00007fe2`821090a7: push rbp                                 55
-  #4: 0x00007fe2`821090aa: mov rbp, rdi                             48 89 fd
-  #5: 0x00007fe2`821090ab: push rbx                                 53
-  #6: 0x00007fe2`821090af: sub rsp, 0x10                            48 83 ec 10
-  #7: 0x00007fe2`821090b6: cmp byte ptr [rip + 0x17c432], 0         80 3d 32 c4 17 00 00
-  #8: 0x00007fe2`821090bc: je 0x7f63c678f81a                        0f 84 14 02 00 00
-  #9: 0x00007fe2`821090bf: test rbp, rbp                            48 85 ed
- #10: 0x00007fe2`821090c2: js 0x7f63c678f81f                        0f 88 19 02 00 00
+  #1: 0x00007f58`767df0a0: endbr64                                  f3 0f 1e fa
+  #2: 0x00007f58`767df0a4: push r12                                 41 54
+  #3: 0x00007f58`767df0a6: push rbp                                 55
+  #4: 0x00007f58`767df0a7: mov rbp, rdi                             48 89 fd
+  #5: 0x00007f58`767df0aa: push rbx                                 53
+  #6: 0x00007f58`767df0ab: sub rsp, 0x10                            48 83 ec 10
+  #7: 0x00007f58`767df0af: cmp byte ptr [rip + 0x17c432], 0         80 3d 32 c4 17 00 00
+  #8: 0x00007f58`767df0b6: je 0x7f58741c621a                        0f 84 14 02 00 00
+  #9: 0x00007f58`767df0bc: test rbp, rbp                            48 85 ed
+ #10: 0x00007f58`767df0bf: js 0x7f58741c621f                        0f 88 19 02 00 00
 
-ret: 0x00007fe2`821090c9 140610821460169
--> @i 1 0x00007fe2`821090c9
-Created #1  . instruction 0x00007fe2`821090ab: 0x00007fe2`821090ab [hits:1]
+ret: 0x00007f58`767df0c5 140017921814725
+-> @i 0x00007f58`767df0a7 1
+Created #1.  [instruction] 0x00007f58`767df0a7 @ $pc=0x00007f58`767df0a7 [hits:1]
 
-Type 'q' to finish, or 'x' to abort
+Type 'q' to finish, 'c' to clear, or 'x' to abort
 - R
 - q
 
-ret: 0x00007fe2`821090ab 140610821460139
-Break #1 [instruction] @ $pc=0x00007fe2`821090ab, $tid=1141330
-
-Registers:
-rax : 0x00000000`00000000 0
-rcx : 0x00007fe2`821497f8 140610821724152
-rdx : 0x00000000`00000000 0
-rbx : 0x00000000`00000000 0
-rsp : 0x00007ffe`174a82d0 140729289179856
-rbp : 0x00000000`0000000c 12
-rsi : 0x00000000`00000000 0
-rdi : 0x00000000`0000000c 12
-r8  : 0x00000000`00000000 0
-r9  : 0x00000000`019353e0 26432480
-r10 : 0x00000000`00000000 0
-r11 : 0x00000000`00000293 659
-r12 : 0x00007ffe`174a8438 140729289180216
-r13 : 0x00000000`00401248 4198984
-r14 : 0x00000000`00403e18 4210200
-r15 : 0x00007fe2`822cd040 140610823311424
-rip : 0x00007fe2`821090ab 140610821460139
-tid : 0x00000000`00116a52 1141330
-ra  : 0x00007fe2`821090ab 140610821460139
-
-
-ret: 0x00007fe2`821090ab 140610821460139
+ret: 0x00007f58`767df0a7 140017921814695
+--------------------------------------------------------------------------------
+| Break #1 [instruction] 0x00007f58`767df0a7 @ $pc=0x00007f58`767df0a7 $tid=261570
+--------------------------------------------------------------------------------
+|
+| -> R
+| Registers:
+| rax : 0x00000000`00000009 9
+| rcx : 0x00000000`00000001 1
+| rdx : 0x00000000`00000000 0
+| rbx : 0x00000000`00000000 0
+| rsp : 0x00007ffd`22c2dcb8 140725186649272
+| rbp : 0x00007ffd`22c2dd00 140725186649344
+| rsi : 0x00000000`0040201d 4202525
+| rdi : 0x00000000`0000000c 12
+| r8  : 0x00000000`00000000 0
+| r9  : 0x00007ffd`22c2da97 140725186648727
+| r10 : 0x00000000`00000000 0
+| r11 : 0x00000000`00000001 1
+| r12 : 0x00007ffd`22c2de18 140725186649624
+| r13 : 0x00000000`00401425 4199461
+| r14 : 0x00000000`00403e18 4210200
+| r15 : 0x00007f58`769a8040 140017923686464
+| rip : 0x00007f58`767df0a7 140017921814695
+| tid : 0x00000000`0003fdc2 261570
+| ra  : 0x00007f58`767df0a7 140017921814695
+|
+| ret: 0x00007f58`767df0a7 140017921814695
+|
+--------------------------------------------------------------------------------
 ->
 ```
 
@@ -487,8 +504,8 @@ Now let's display that last breakpoint:
 ```
 -> @i
 instruction breakpoints:
-#1  .  0x00007fe2`821090ab: 0x00007fe2`821090ab [hits:disabled]
-  - r
+#1.  [instruction] 0x00007f58`767df0a7 @ $pc=0x00007f58`767df0a7 [hits:disabled]
+  - R
 
 
 ret: 0x00000000`00000000 0
@@ -498,11 +515,12 @@ ret: 0x00000000`00000000 0
 We can delete our breakpoint like so:
 ```
 -> @i #1 #
-Deleted #1  . instruction 0x00007fe2`821090ab: 0x00007fe2`821090ab [hits:disabled]
-  - r
+Deleted #1.  [instruction] 0x00007f58`767df0a7 @ $pc=0x00007f58`767df0a7 [hits:disabled]
+  - R
 
 
-ret: 0x00007fe2`821090ab 140610821460139
+ret: 0x00007f58`767df0a7 140017921814695
+->
 ```
 ```
 -> @i
@@ -518,67 +536,87 @@ In this first example, we will test modifying the return value from a function:
 First, we will allocate 16 pages of memory (as it is unlikely that this buffer will be re-used by our application once freed).
 ```
 -> * 4096 16
-0x00000000`00001000 * 0x00000000`00000010 = 0x00000000`00010000
-4096 * 16 = 65536
+
+          HEXADECIMAL           DECIMAL
+  0x00000000`00001000              4096
+* 0x00000000`00000010     *          16
+---------------------     -------------
+  0x00000000`00010000             65536
+---------------------     -------------
+
 
 ret: 0x00000000`00010000 65536
 -> malloc ret
+
+ret: 0x00007f58`5c000c90 140017477356688
+->
 ```
 Let's call our buffer `p`:
 ```
-ret: 0x00007fe2`68000c90 140610384170128
 -> v p ret
+
+ret: 0x00007f58`5c000c90 140017477356688
+->
 ```
 Now let's set a function exit breakpoint for `malloc` which is triggered only once, and replaces the return value with our buffer:
 ```
-ret: 0x00007fe2`68000c90 140610384170128
--> @F 1 malloc
-Created #1  . function exit 0x00007fe2`821090a0: malloc [hits:1]
+-> @F malloc 1
+Created #2.  [function exit] malloc @ $pc=0x00007f58`767df0a0 [hits:1]
 
-Type 'q' to finish, or 'x' to abort
+Type 'q' to finish, 'c' to clear, or 'x' to abort
 - R ret p
 - q
 
-ret: 0x00007fe2`821090a0 140610821460128
-Break #1 [function exit] @ $pc=0x00007fe2`821090a0, $tid=1141330
-
-Register ret, set to value: 0x00007fe2`68000c90 140610384170128
-
-
-ret: 0x00007fe2`68000c90 140610384170128
+ret: 0x00007f58`767df0a0 140017921814688
+--------------------------------------------------------------------------------
+| Break #2 [function exit] malloc @ $pc=0x00007f58`767df0a0 $tid=261570
+--------------------------------------------------------------------------------
+|
+| -> R ret p
+| Register ret, set to value: 0x00007f58`5c000c90 140017477356688
+|
+| ret: 0x00007f58`5c000c90 140017477356688
+|
+--------------------------------------------------------------------------------
+->
 ```
 Now we can inspect out buffer to see what the program did with it:
 ```
 -> d p
-               0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F  0123456789ABCDEF
-7fe268000c90  54 45 53 54 5f 53 54 52 49 4e 47 00 00 00 00 00  TEST_STRING.....
-7fe268000ca0  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+                 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F  0123456789ABCDEF
+0x7f585c000c90  54 45 53 54 5f 53 54 52 49 4e 47 00 00 00 00 00  TEST_STRING.....
+0x7f585c000ca0  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
 
-ret: 0x00007fe2`68000c90 140610384170128
+ret: 0x00007f58`5c000c90 140017477356688
 ->
 ```
 ## #11 Advanced Breakpoints (#2)
 In this example, we will use breakpoints to see where our allocated buffer is written. We set our function exit breakpoint on malloc, then in it's command list, we use the `@w` command to set a breakpoint which fires when memory is written on the return value for a length of 16-bytes.
 ```
--> @F 1 malloc
-Created #1  . function exit 0x00007f2b`4cba00a0: malloc [hits:1]
+-> @F malloc 1
+Created #2.  [function exit] malloc @ $pc=0x00007f88`7bcd90a0 [hits:1]
 
-Type 'q' to finish, or 'x' to abort
-- @w 1 $ret 16
+Type 'q' to finish, 'c' to clear, or 'x' to abort
+- @w $ret 16 1
 - q
 
-ret: 0x00007f2b`4cba00a0 139823947579552
-Break #1 [function exit] @ $pc=0x00007f2b`4cba00a0, $tid=1143546
-
-Created #1  . memory write 0x00000000`0143e3c0: $ret [hits:1] [length:16]
-
-
-
-ret: 0x00000000`0143e3c0 21226432
-Break #1 [memory write] @ $pc=0x00007f2b`4cca9e48, $addr=0x00000000`0143e3c0
-
-
-ret: 0x00000000`0143e3c0 21226432
+ret: 0x00007f88`7bcd90a0 140224169349280
+--------------------------------------------------------------------------------
+| Break #2 [function exit] malloc @ $pc=0x00007f88`7bcd90a0 $tid=263577
+--------------------------------------------------------------------------------
+|
+| -> @w $ret 16 1
+| Created #1.  [memory write] ret @ $pc=0x00000000`00f453d0 [hits:1] [length:16]
+|
+|
+| ret: 0x00000000`00f453d0 16012240
+|
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+| Break #1 [memory write] ret @ $pc=0x00007f88`7bde2e48 $addr=0x00000000`00f453d0
+--------------------------------------------------------------------------------
+|
+--------------------------------------------------------------------------------
 ->
 ```
 We can see in our output the program counter at the point the buffer was modified. But what if we want more details?
@@ -588,44 +626,57 @@ Here we will continue where our previous example left off. Note that since the C
 
 First, we will create a memory write breakpoint without assigning an address. Note that we set the hit count to `0` so that it doesn't fire. We omit an address from the command altogether. For our command list, we assign the command `l $pc` to display the code at the point the breakpoint fires.
 ```
--> @w 0
-Created #1  . memory write unassigned:  [hits:disabled] [length:0]
+-> @w 0 0
+Created #1.  [memory write]  @ $pc=unassigned [hits:disabled] [length:0]
 
-Type 'q' to finish, or 'x' to abort
+Type 'q' to finish, 'c' to clear, or 'x' to abort
 - l $pc
 - q
 
 ret: 0x00000000`00000000 0
+->
 ```
 Now we set a function exit breakpoint on `malloc`, in it's command list, we set a single command `@w #1 1 $ret 16`. This command modifies the memory write breakpoint with index `#1`, configuring it to fire once, when the 16 byte region starting at the return value (`$ret`) is written.
 ```
--> @F 1 malloc
-Created #1  . function exit 0x00007fab`70e770a0: malloc [hits:1]
+-> @F malloc 1
+Created #1.  [function exit] malloc @ $pc=0x00007f73`ce5980a0 [hits:1]
 
-Type 'q' to finish, or 'x' to abort
-- @w #1 1 $ret 16
+Type 'q' to finish, 'c' to clear, or 'x' to abort
+- @w #1 $ret 16 1
 - q
 
-ret: 0x00007fab`70e770a0 140374310351008
-Break #1 [function exit] @ $pc=0x00007fab`70e770a0, $tid=1152420
-
-Modified #1  . memory write 0x00000000`00b1f3c0: $ret [hits:1] [length:16]
-  - l $pc
-
-
-
-ret: 0x00000000`00000000 0
-Break #1 [memory write] @ $pc=0x00007fab`70f80e48, $addr=0x00000000`00b1f3c0
-
-0x00007fab`70f80e4b: mov qword ptr [rdi], rsi
-0x00007fab`70f80e50: mov qword ptr [rdi + rdx - 8], rcx
-0x00007fab`70f80e51: ret
-0x00007fab`70f80e59: vmovdqu64 ymm18, ymmword ptr [rsi + rdx - 0x20]
-0x00007fab`70f80e61: vmovdqu64 ymm19, ymmword ptr [rsi + rdx - 0x40]
-0x00007fab`70f80e67: vmovdqu64 ymmword ptr [rdi], ymm16
-ERROR: Failed to read 0x00000000`00000020 bytes from 0x00007fab`70f80e48, Error: invalid instruction
-
-ret: 0x00000000`00000000 0
+ret: 0x00007f73`ce5980a0 140135359938720
+--------------------------------------------------------------------------------
+| Break #1 [function exit] malloc @ $pc=0x00007f73`ce5980a0 $tid=264154
+--------------------------------------------------------------------------------
+|
+| -> @w #1 $ret 16 1
+| Modified #1.  [memory write] ret @ $pc=0x00000000`00d363d0 [hits:1] [length:16]
+|   - l $pc
+|
+|
+| ret: 0x00000000`00d363d0 13853648
+|
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+| Break #1 [memory write] ret @ $pc=0x00007f73`ce6a1e48 $addr=0x00000000`00d363d0
+--------------------------------------------------------------------------------
+|
+| -> l $pc
+|   #1: 0x00007f73`ce6a1e48: mov qword ptr [rdi], rsi                 48 89 37
+|   #2: 0x00007f73`ce6a1e4b: mov qword ptr [rdi + rdx - 8], rcx       48 89 4c 17 f8
+|   #3: 0x00007f73`ce6a1e50: ret                                      c3
+|   #4: 0x00007f73`ce6a1e51: vmovdqu64 ymm18, ymmword ptr [rsi + rdx - 0x20] 62 e1 fe 28 6f 54 16 ff
+|   #5: 0x00007f73`ce6a1e59: vmovdqu64 ymm19, ymmword ptr [rsi + rdx - 0x40] 62 e1 fe 28 6f 5c 16 fe
+|   #6: 0x00007f73`ce6a1e61: vmovdqu64 ymmword ptr [rdi], ymm16       62 e1 fe 28 7f 07
+|   #7: 0x00007f73`ce6a1e67: vmovdqu64 ymmword ptr [rdi + 0x20], ymm17 62 e1 fe 28 7f 4f 01
+|   #8: 0x00007f73`ce6a1e6e: vmovdqu64 ymmword ptr [rdi + rdx - 0x20], ymm18 62 e1 fe 28 7f 54 17 ff
+|   #9: 0x00007f73`ce6a1e76: vmovdqu64 ymmword ptr [rdi + rdx - 0x40], ymm19 62 e1 fe 28 7f 5c 17 fe
+|  #10: 0x00007f73`ce6a1e7e: ret                                      c3
+|
+| ret: 0x00007f73`ce6a1e7f 140135361027711
+|
+--------------------------------------------------------------------------------
 ->
 ```
 Unfortunately, here, we are limited somewhat by the capabilities of FRIDA, since the  `MemoryAccessMonitor` doesn't expose the register values at the point of a memory access. But we can use it to set a code breakpoint where we can get this detail.
@@ -635,62 +686,76 @@ We will do this therefore using a combination of 3 breakpoints. Our first breakp
 First we will create an unassigned instruction breakpoint and set it's commands to show a backtrace:
 ```
 -> @i 0
-Created #1  . instruction unassigned:  [hits:disabled]
+Created #1.  [instruction]  @ $pc=unassigned [hits:disabled]
 
-Type 'q' to finish, or 'x' to abort
+Type 'q' to finish, 'c' to clear, or 'x' to abort
 - bt
 - q
 
 ret: 0x00000000`00000000 0
+->
 ```
 Next we will set an unassigned memory write breakpoint, its command list contains a single command `@i #1 1 $pc`. It will set instruction breakpoint number `#1` to first a single time at the address `$pc` (e.g. the exact same location that the memory breakpoint fired).
 ```
--> @w 0
-Created #1  . memory write unassigned:  [hits:disabled] [length:0]
+-> @w 0 0
+Created #1.  [memory write]  @ $pc=unassigned [hits:disabled] [length:0]
 
-Type 'q' to finish, or 'x' to abort
-- @i #1 1 $pc
+Type 'q' to finish, 'c' to clear, or 'x' to abort
+- @i #1 $pc 1
 - q
 
 ret: 0x00000000`00000000 0
+->
 ```
 Lastly, just like before, we can configure our function exit breakpoint for `malloc` to configure our memory write breakpoint to fire once if the 16-byte region at the start of the returned buffer is written.
 ```
--> @F 1 malloc
-Created #1  . function exit 0x00007f36`fd7750a0: malloc [hits:1]
+-> @F malloc 1
+Created #1.  [function exit] malloc @ $pc=0x00007fd8`ee1d40a0 [hits:1]
 
-Type 'q' to finish, or 'x' to abort
-- @w #1 1 $ret 16
+Type 'q' to finish, 'c' to clear, or 'x' to abort
+- @w #1 $ret 16 1
 - q
 
-ret: 0x00007f36`fd7750a0 139874157416608
-Break #1 [function exit] @ $pc=0x00007f36`fd7750a0, $tid=1163391
-
-Modified #1  . memory write 0x00000000`010833c0: $ret [hits:1] [length:16]
-  - @i #1 1 $pc
-
-
-
-ret: 0x00000000`00000000 0
-Break #1 [memory write] @ $pc=0x00007f36`fd87ee48, $addr=0x00000000`010833c0
-
-Modified #1  . instruction 0x00007f36`fd87ee48: $pc [hits:1]
-  - bt
-
-
-
-ret: 0x00000000`00000000 0
-Break #1 [instruction] @ $pc=0x00007f36`fd87ee48, $tid=1163391
-
-0x401245 target!my_memcpy /workspaces/frida-cshell/target.c:11:1
-0x401245 target!my_memcpy /workspaces/frida-cshell/target.c:11:1
-0x4012e2 target!main /workspaces/frida-cshell/target.c:32:5
-0x7f36fd6f9d90 libc.so.6!0x29d90
-0x7f36fd6f9e40 libc.so.6!__libc_start_main+0x80
-0x401155 target!_start+0x25
-
-
-ret: 0x00000000`00000000 0
+ret: 0x00007fd8`ee1d40a0 140569684557984
+--------------------------------------------------------------------------------
+| Break #1 [function exit] malloc @ $pc=0x00007fd8`ee1d40a0 $tid=264959
+--------------------------------------------------------------------------------
+|
+| -> @w #1 $ret 16 1
+| Modified #1.  [memory write] ret @ $pc=0x00000000`00a483d0 [hits:1] [length:16]
+|   - @i #1 $pc 1
+|
+|
+| ret: 0x00000000`00a483d0 10781648
+|
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+| Break #1 [memory write] ret @ $pc=0x00007fd8`ee2dde48 $addr=0x00000000`00a483d0
+--------------------------------------------------------------------------------
+|
+| -> @i #1 $pc 1
+| Modified #1.  [instruction] pc @ $pc=0x00007fd8`ee2dde48 [hits:1]
+|   - bt
+|
+|
+| ret: 0x00007fd8`ee2dde48 140569685646920
+|
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+| Break #1 [instruction] pc @ $pc=0x00007fd8`ee2dde48 $tid=264959
+--------------------------------------------------------------------------------
+|
+| -> bt
+| target64!my_memcpy...................... 0x00000000`00401285|         /root/target.c:13 |
+| target64!my_memcpy...................... 0x00000000`00401285|         /root/target.c:13 |
+| target64!main........................... 0x00000000`004014cb|         /root/target.c:129 |
+| libc.so.6!0x29d90....................... 0x00007fd8`ee158d90|
+| libc.so.6!__libc_start_main+0x80........ 0x00007fd8`ee158e40|
+| target64!_start+0x25.................... 0x00000000`00401195|
+|
+| ret: 0x00000000`00000000 0
+|
+--------------------------------------------------------------------------------
 ->
 ```
 # Commands

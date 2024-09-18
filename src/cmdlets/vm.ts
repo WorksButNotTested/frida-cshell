@@ -13,8 +13,7 @@ vm address - show mapping for address
   address   the address/symbol to show mapping information for
 
 vm module - show mappings for a module
-  module    the name of the module to show mapping information for
-`;
+  module    the name of the module to show mapping information for`;
 
 export class VmCmdLet extends CmdLet {
   name = 'vm';
@@ -76,20 +75,24 @@ export class VmCmdLet extends CmdLet {
     return v0;
   }
 
-  private printMapping(r: RangeDetails) {
+  private printMapping(r: RangeDetails, filter: boolean = true) {
     const limit = r.base.add(r.size);
-    Output.write(
-      `\t${Output.green(Format.toHexString(r.base))}-${Output.green(Format.toHexString(limit))} `,
-    );
-    Output.write(`${Output.bold(Output.yellow(r.protection))} `);
-    Output.write(`${Output.bold(Format.toSize(r.size))} `);
+    let fileInfo = '';
     if (r.file !== undefined) {
-      Output.write(
-        `offset: ${Output.bold(Format.toHexString(r.file.offset))}, `,
-      );
-      Output.write(`name: ${Output.blue(r.file.path)}`);
+      fileInfo = [
+        `offset: ${Output.yellow(Format.toHexString(r.file.offset))},`,
+        `name: ${Output.blue(r.file.path)}`,
+      ].join(' ');
     }
-    Output.writeln();
+    Output.writeln(
+      [
+        `\t${Output.green(Format.toHexString(r.base))}-${Output.green(Format.toHexString(limit))}`,
+        `${Output.bold(Output.yellow(r.protection))}`,
+        `${Output.bold(Format.toSize(r.size))}`,
+        fileInfo,
+      ].join(' '),
+      filter,
+    );
   }
 
   private runShowNamed(tokens: Token[]): Var | null {
@@ -99,7 +102,7 @@ export class VmCmdLet extends CmdLet {
 
     if (name === null) {
       Process.enumerateRanges('---').forEach(r => {
-        this.printMapping(r);
+        this.printMapping(r, true);
       });
       return Var.ZERO;
     } else if (Regex.isGlob(name)) {
@@ -112,7 +115,7 @@ export class VmCmdLet extends CmdLet {
       modules.sort();
       modules.forEach(m => {
         m.enumerateRanges('---').forEach(r => {
-          this.printMapping(r);
+          this.printMapping(r, true);
         });
       });
       if (modules.length === 1) {
@@ -132,14 +135,14 @@ export class VmCmdLet extends CmdLet {
       }
 
       mod.enumerateRanges('---').forEach(r => {
-        this.printMapping(r);
+        this.printMapping(r, true);
       });
       return new Var(uint64(mod.base.toString()), `Module: ${mod.name}`);
     }
   }
 
   public usage(): Var {
-    Output.write(USAGE);
+    Output.writeln(USAGE);
     return Var.ZERO;
   }
 }

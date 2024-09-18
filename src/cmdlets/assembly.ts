@@ -10,8 +10,7 @@ const USAGE: string = `Usage: l
 
 l address <bytes> - show disassembly listing
   address   the address/symbol to disassemble
-  bytes     the number of instructions to disassemble (default ${DEFAULT_LENGTH})
-`;
+  bytes     the number of instructions to disassemble (default ${DEFAULT_LENGTH})`;
 
 export class AssemblyCmdLet extends CmdLet {
   name = 'l';
@@ -72,6 +71,7 @@ export class AssemblyCmdLet extends CmdLet {
 
         Output.writeln(
           `${Output.bold(idx)}: ${Output.green(Format.toHexString(cursor))}: ${Output.yellow(insn.toString().padEnd(40))} ${Output.blue(bytesStr)}`,
+          true,
         );
 
         cursor = cursor.add(insn.size);
@@ -125,7 +125,7 @@ export class AssemblyCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.write(USAGE);
+    Output.writeln(USAGE);
     return Var.ZERO;
   }
 }

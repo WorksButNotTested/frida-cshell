@@ -9,8 +9,7 @@ const USAGE: string = `Usage: h
 h - show history
 
 h index - rerun history item
-  index   the index of the item to rerun
-`;
+  index   the index of the item to rerun`;
 
 export class HistoryCmdLet extends CmdLet {
   name = 'h';
@@ -29,7 +28,10 @@ export class HistoryCmdLet extends CmdLet {
     if (v0 === null) {
       const history = Array.from(History.all());
       for (const [i, value] of history.entries()) {
-        Output.writeln(`${i.toString().padStart(3, ' ')}: ${value}`);
+        Output.writeln(
+          [`${i.toString().padStart(3, ' ')}:`, value].join(' '),
+          true,
+        );
       }
       return Var.ZERO;
     } else {
@@ -40,7 +42,7 @@ export class HistoryCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.write(USAGE);
+    Output.writeln(USAGE);
     return Var.ZERO;
   }
 }

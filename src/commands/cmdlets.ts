@@ -45,6 +45,8 @@ import { JsCmdLet } from '../cmdlets/js.js';
 import { PrintCmdLet } from '../cmdlets/print.js';
 import { ShCmdLet } from '../cmdlets/sh.js';
 import { SrcCmdLet } from '../cmdlets/src.js';
+import { VerboseCmdLet } from '../cmdlets/verbose.js';
+import { GrepCmdLet } from '../cmdlets/grep.js';
 
 export class CmdLets {
   private static byName: Map<string, CmdLet> = new Map<string, CmdLet>();
@@ -65,6 +67,7 @@ export class CmdLets {
     this.registerCmdletType(EndianCmdLet);
     this.registerCmdletType(ExitCmdLet);
     this.registerCmdletType(FdCmdLet);
+    this.registerCmdletType(GrepCmdLet);
     this.registerCmdletType(FunctionEntryBpCmdLet);
     this.registerCmdletType(FunctionExitBpCmdLet);
     this.registerCmdletType(HelpCmdLet);
@@ -88,6 +91,7 @@ export class CmdLets {
     this.registerCmdletType(ThreadCmdLet);
     this.registerCmdletType(UniqueBlockTraceBpCmdLet);
     this.registerCmdletType(VarCmdLet);
+    this.registerCmdletType(VerboseCmdLet);
     this.registerCmdletType(VmCmdLet);
     this.registerCmdletType(WriteCmdLet);
     this.registerCmdletType(WriteBpCmdLet);

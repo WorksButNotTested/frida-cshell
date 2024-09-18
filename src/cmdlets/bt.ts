@@ -9,8 +9,7 @@ const USAGE: string = `Usage: bt
 bt - show the backtrace for the current thread in a breakpoint
 
 bt name - show backtrace for thread
-  thread   the name of the thread to show backtrace for
-`;
+  thread   the name of the thread to show backtrace for`;
 
 export class BtCmdLet extends CmdLet {
   name = 'bt';
@@ -51,17 +50,20 @@ export class BtCmdLet extends CmdLet {
       .forEach(s => {
         const prefix = s.moduleName === null ? '' : `${s.moduleName}!`;
         const name = `${prefix}${s.name}`;
-        Output.write(
-          `${Output.green(name.padEnd(40, '.'))} ${Output.yellow(Format.toHexString(s.address))}`,
-        );
+        let fileInfo = '';
         if (s.fileName !== null && s.lineNumber !== null) {
           if (s.fileName.length !== 0 && s.lineNumber !== 0) {
-            Output.write(
-              `\t${Output.blue(s.fileName)}:${Output.blue(s.lineNumber.toString())} `,
-            );
+            fileInfo = `\t${Output.blue(s.fileName)}:${Output.blue(s.lineNumber.toString())}`;
           }
         }
-        Output.writeln();
+        Output.writeln(
+          [
+            Output.green(name.padEnd(40, '.')),
+            Output.yellow(Format.toHexString(s.address)),
+            fileInfo,
+          ].join(' '),
+          true,
+        );
       });
   }
 
@@ -100,7 +102,7 @@ export class BtCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.write(USAGE);
+    Output.writeln(USAGE);
     return Var.ZERO;
   }
 }

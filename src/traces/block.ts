@@ -69,11 +69,8 @@ export class BlockTrace implements Trace {
           }
           numOutput += 1;
           const idx = `${numOutput.toString().padStart(4, ' ')}. `;
-          Output.write(Output.bold(idx));
-          if (currentDepth > 0) {
-            Output.write('\t'.repeat(currentDepth));
-          }
-          Output.writeln(name);
+          const depth = currentDepth > 0 ? '\t'.repeat(currentDepth) : '';
+          Output.writeln(`${depth}${Output.bold(idx)}${name}`);
           break;
         }
         case 4: {

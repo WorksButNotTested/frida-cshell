@@ -8,8 +8,7 @@ const USAGE: string = `Usage: ld
 ld - load a module
 
 ld path - load a module
-  path      the absolute path of the module to load (note that paths with spaces must be quoted)
-`;
+  path      the absolute path of the module to load (note that paths with spaces must be quoted)`;
 
 export class LdCmdLet extends CmdLet {
   name = 'ld';
@@ -33,7 +32,7 @@ export class LdCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.write(USAGE);
+    Output.writeln(USAGE);
     return Var.ZERO;
   }
 }

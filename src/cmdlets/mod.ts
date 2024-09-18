@@ -13,8 +13,7 @@ mod address - show module for address
   address   the address/symbol to show module information for
 
 mod name - show named module
-  name      the name of the module to show information for
-`;
+  name      the name of the module to show information for`;
 
 export class ModCmdLet extends CmdLet {
   name = 'mod';
@@ -54,15 +53,17 @@ export class ModCmdLet extends CmdLet {
     return v0;
   }
 
-  private printModule(m: Module) {
+  private printModule(m: Module, filtered: boolean = true) {
     const limit = m.base.add(m.size);
-    Output.write(
-      `${Output.green(Format.toHexString(m.base))}-${Output.green(Format.toHexString(limit))} `,
+    Output.writeln(
+      [
+        `${Output.green(Format.toHexString(m.base))}-${Output.green(Format.toHexString(limit))}`,
+        Output.bold(Format.toSize(m.size)),
+        Output.yellow(m.name.padEnd(30, ' ')),
+        Output.blue(m.path),
+      ].join(' '),
+      filtered,
     );
-    Output.write(`${Output.bold(Format.toSize(m.size))} `);
-    Output.write(`${Output.yellow(m.name.padEnd(30, ' '))} `);
-    Output.write(`${Output.blue(m.path)}`);
-    Output.writeln();
   }
 
   private runShowNamed(tokens: Token[]): Var | null {
@@ -86,7 +87,7 @@ export class ModCmdLet extends CmdLet {
       );
       modules.sort();
       modules.forEach(m => {
-        this.printModule(m);
+        this.printModule(m, true);
       });
       if (modules.length === 1) {
         const module = modules[0] as Module;
@@ -110,7 +111,7 @@ export class ModCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.write(USAGE);
+    Output.writeln(USAGE);
     return Var.ZERO;
   }
 }

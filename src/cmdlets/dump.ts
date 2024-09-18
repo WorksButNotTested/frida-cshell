@@ -5,6 +5,7 @@ import { Token } from '../io/token.js';
 import { Var } from '../vars/var.js';
 import { Mem } from '../memory/mem.js';
 
+const ROW_WIDTH: number = 16;
 const DEFAULT_COUNT: number = 32;
 
 const USAGE: string = `Usage: d
@@ -16,8 +17,7 @@ d address <bytes> - show data
 d address bytes <width> - show data
   adress   the address/symbol to read from
   count    the count of fields to read (default ${DEFAULT_COUNT})
-  width    the width of each field in the output (1, 2, 4 or 8)
-`;
+  width    the width of each field in the output (1, 2, 4 or 8)`;
 
 export class DumpCmdLet extends CmdLet {
   name = 'd';
@@ -45,65 +45,88 @@ export class DumpCmdLet extends CmdLet {
       const length = count * width;
       const bytes = Mem.readBytes(address, length);
 
-      switch (width) {
-        case 1: {
-          const dump = hexdump(bytes.buffer as ArrayBuffer, {
-            length,
-            header: true,
-            ansi: true,
-            address: address,
-          });
-          const prefixed = dump.replace(
-            new RegExp('\\n', 'g'),
-            `\n${Output.green('0x')}`,
-          );
-          Output.writeln(`  ${prefixed}`);
-          break;
-        }
-        default: {
-          const output = Memory.alloc(length);
-          output.writeByteArray(bytes.buffer as ArrayBuffer);
-          Output.write(' '.repeat(2 + Process.pointerSize * 2));
-          for (let i = 0; i < 16; i++) {
-            if (i % width !== 0) continue;
-            const hdr = i.toString(16).toUpperCase();
-            const padLen = width * 2 + 1 - hdr.length;
-            Output.write(` ${hdr.padStart(padLen, ' ')}`);
-          }
-          for (let i = 0; i < count; i++) {
-            const offset = i * width;
-            if (offset % 16 == 0) {
-              Output.writeln();
-              Output.write(
-                `${Output.green(Format.toHexString(address.add(offset)))} `,
-              );
-            }
+      const output = Memory.alloc(length);
+      output.writeByteArray(bytes.buffer as ArrayBuffer);
+      const headerPrefix = ' '.repeat(1 + Process.pointerSize * 2);
+      const headers = [...Array(ROW_WIDTH).keys()]
+        .map(i => {
+          if (i % width !== 0) return '';
+          const hdr = i.toString(16).toUpperCase();
+          const padLen = width * 2 + 1 - hdr.length;
+          return ` ${hdr.padStart(padLen, ' ')}`;
+        })
+        .join('');
+      const byteHeaders = width === 1 ? '0123456789ABCDEF' : '';
+      Output.writeln([headerPrefix, headers, byteHeaders].join(' '), true);
 
-            const cursor = output.add(offset);
+      const startAddress = address.and(~(ROW_WIDTH - 1));
+      const endAddress = address
+        .add(length)
+        .add(ROW_WIDTH - 1)
+        .and(~(ROW_WIDTH - 1));
+      const numChunks = endAddress.sub(startAddress).toUInt32() / ROW_WIDTH;
+
+      const rows = [...Array(numChunks).keys()]
+        .map(i => {
+          return startAddress.add(i * ROW_WIDTH);
+        })
+        .map(rowAddress => {
+          const headerPrefix = `${Output.green(Format.toHexString(rowAddress))}`;
+          const values = [...Array(ROW_WIDTH / width).keys()].map(i => {
+            const offset = i * width;
+            const rowCursor = rowAddress.add(offset);
+            const limit = address.add(length);
+            if (rowCursor < address) return ''.padStart(width * 2, ' ');
+            if (rowCursor >= limit) return ''.padStart(width * 2, ' ');
             switch (width) {
+              case 1: {
+                const val = rowCursor.readU8();
+                const str = val.toString(16).padStart(2, '0');
+                return `${Output.yellow(str)}`;
+              }
               case 2: {
-                const val = cursor.readU16();
+                const val = rowCursor.readU16();
                 const str = val.toString(16).padStart(4, '0');
-                Output.write(`${Output.yellow(str)} `);
-                break;
+                return `${Output.yellow(str)}`;
               }
               case 4: {
-                const val = cursor.readU32();
+                const val = rowCursor.readU32();
                 const str = val.toString(16).padStart(8, '0');
-                Output.write(`${Output.yellow(str)} `);
-                break;
+                return `${Output.yellow(str)}`;
               }
               case 8: {
-                const val = cursor.readU64();
+                const val = rowCursor.readU64();
                 const str = val.toString(16).padStart(16, '0');
-                Output.write(`${Output.yellow(str)} `);
-                break;
+                return `${Output.yellow(str)}`;
+              }
+              default: {
+                throw new Error(`invalid width: ${width}`);
               }
             }
+          });
+          if (width === 1) {
+            const hexDigits = [...Array(ROW_WIDTH).keys()]
+              .map(i => {
+                const rowCursor = rowAddress.add(i);
+                const limit = address.add(length);
+                if (rowCursor < address) return ' ';
+                if (rowCursor >= limit) return ' ';
+                const val = rowCursor.readU8();
+                if (val >= 32 && val <= 126) {
+                  return String.fromCharCode(val);
+                } else {
+                  return '.';
+                }
+              })
+              .join('');
+            return `${headerPrefix} ${values.join(' ')} ${Output.yellow(hexDigits)}`;
+          } else {
+            return `${headerPrefix} ${values.join(' ')}`;
           }
-          Output.writeln();
-        }
-      }
+        });
+      rows.forEach(l => {
+        Output.writeln(l, true);
+      });
     } catch (error) {
       throw new Error(
         `failed to read ${Format.toHexString(count)} bytes from ${Format.toHexString(address)}, ${error}`,
@@ -112,7 +135,7 @@ export class DumpCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.write(USAGE);
+    Output.writeln(USAGE);
     return Var.ZERO;
   }
 }

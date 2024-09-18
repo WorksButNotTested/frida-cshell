@@ -9,8 +9,7 @@ const USAGE: string = `Usage: t
 t - show all threads
 
 t name - show named thread
-  name  the name of the thread to show information for
-`;
+  name  the name of the thread to show information for`;
 
 export class ThreadCmdLet extends CmdLet {
   name = 't';
@@ -49,7 +48,7 @@ export class ThreadCmdLet extends CmdLet {
     }
   }
 
-  private printThread(t: ThreadDetails) {
+  private printThread(t: ThreadDetails, filtered: boolean = true) {
     Output.writeln(
       [
         `${Output.yellow(t.id.toString().padStart(5, ' '))}:`,
@@ -58,6 +57,7 @@ export class ThreadCmdLet extends CmdLet {
         `pc: ${Output.yellow(Format.toHexString(t.context.pc))}`,
         `sp: ${Output.yellow(Format.toHexString(t.context.sp))}`,
       ].join(' '),
+      filtered,
     );
   }
 
@@ -78,7 +78,7 @@ export class ThreadCmdLet extends CmdLet {
       }
       default:
         matches.forEach(t => {
-          this.printThread(t);
+          this.printThread(t, true);
         });
         return Var.ZERO;
     }
@@ -99,14 +99,14 @@ export class ThreadCmdLet extends CmdLet {
       }
       default:
         threads.forEach(t => {
-          this.printThread(t);
+          this.printThread(t, true);
         });
         return Var.ZERO;
     }
   }
 
   public usage(): Var {
-    Output.write(USAGE);
+    Output.writeln(USAGE);
     return Var.ZERO;
   }
 }

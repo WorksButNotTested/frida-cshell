@@ -107,9 +107,8 @@ export class WriteCmdLet extends CmdLet {
 w n address value - write 'n' bytes to memory
     n        the number of bytes to read (1, 2, 4 or 8).
     address  the address/symbol to write to
-    value    the value to write
-        `;
-    Output.write(usage);
+    value    the value to write`;
+    Output.writeln(usage);
     return Var.ZERO;
   }
 }

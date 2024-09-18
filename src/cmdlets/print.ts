@@ -7,8 +7,7 @@ const USAGE: string = `Usage: p
 p - print an expression
 
 p exp - print an expression
-  exp   the expression to print
-`;
+  exp   the expression to print`;
 
 export class PrintCmdLet extends CmdLet {
   name = 'p';
@@ -30,7 +29,7 @@ export class PrintCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.write(USAGE);
+    Output.writeln(USAGE);
     return Var.ZERO;
   }
 }

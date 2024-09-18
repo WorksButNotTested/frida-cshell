@@ -15,8 +15,7 @@ sym name - display address information for a named symbol
   name   the name of the symbol to lookup
 
 sym addr - display symbol information associated with an address
-  addr   the address of the symbol to lookup
-`;
+  addr   the address of the symbol to lookup`;
 
 export class SymCmdLet extends CmdLet {
   name = 'sym';
@@ -148,7 +147,7 @@ export class SymCmdLet extends CmdLet {
           Output.yellow(Format.toHexString(value.address)),
           `[${Output.blue(value.type)}]`,
         ].join(' '),
-      ).forEach(s => Output.writeln(s));
+      ).forEach(s => Output.writeln(s, true));
 
       const values = Array.from(dict.values());
       if (values.length === 1) {
@@ -185,7 +184,7 @@ export class SymCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.write(USAGE);
+    Output.writeln(USAGE);
     return Var.ZERO;
   }
 }

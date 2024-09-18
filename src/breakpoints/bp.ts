@@ -191,13 +191,16 @@ export class Bp {
   private startCoverage(threadId: ThreadId, ctx: CpuContext) {
     Output.clearLine();
     Output.writeln(Output.yellow('-'.repeat(80)));
-    Output.write(`${Output.yellow('|')} Start Trace `);
-    Output.write(`${Output.green(`#${this._idx}`)} `);
-    Output.write(`[${this._type}] `);
-    Output.write(`${Output.yellow(this.literal)} `);
-    Output.write(`@ $pc=${Output.blue(Format.toHexString(ctx.pc))} `);
-    Output.write(`$tid=${threadId}, depth=${this._depth}`);
-    Output.writeln();
+    Output.writeln(
+      [
+        `${Output.yellow('|')} Start Trace`,
+        Output.green(`#${this._idx}`),
+        `[${this._type}]`,
+        Output.yellow(this.literal),
+        `@ $pc=${Output.blue(Format.toHexString(ctx.pc))}`,
+        `$tid=${threadId}, depth=${this._depth}`,
+      ].join(' '),
+    );
     Output.writeln(Output.yellow('-'.repeat(80)));
   }
 
@@ -212,14 +215,16 @@ export class Bp {
       Output.writeln(Output.blue('-'.repeat(80)));
       Output.clearLine();
 
-      Output.writeln(Output.yellow('-'.repeat(80)));
-      Output.write(`${Output.yellow('|')} Stop Trace `);
-      Output.write(`${Output.green(`#${this._idx}`)} `);
-      Output.write(`[${this._type}] `);
-      Output.write(`${Output.yellow(this.literal)} `);
-      Output.write(`@ $pc=${Output.blue(Format.toHexString(ctx.pc))} `);
-      Output.write(`$tid=${threadId}`);
-      Output.writeln();
+      Output.writeln(
+        [
+          `${Output.yellow('|')} Stop Trace`,
+          Output.green(`#${this._idx}`),
+          `[${this._type}]`,
+          Output.yellow(this.literal),
+          `@ $pc=${Output.blue(Format.toHexString(ctx.pc))}`,
+          `$tid=${threadId}, depth=${this._depth}`,
+        ].join(' '),
+      );
       Output.writeln(Output.yellow('-'.repeat(80)));
 
       Traces.delete(threadId);
@@ -239,13 +244,16 @@ export class Bp {
     else if (this._hits > 0) this._hits--;
     Output.clearLine();
     Output.writeln(Output.yellow('-'.repeat(80)));
-    Output.write(`${Output.yellow('|')} Break `);
-    Output.write(`${Output.green(`#${this._idx}`)} `);
-    Output.write(`[${this._type}] `);
-    Output.write(`${Output.yellow(this.literal)} `);
-    Output.write(`@ $pc=${Output.blue(Format.toHexString(ctx.pc))} `);
-    Output.write(`$tid=${threadId}`);
-    Output.writeln();
+    Output.writeln(
+      [
+        `${Output.yellow('|')} Break`,
+        Output.green(`#${this._idx}`),
+        `[${this._type}]`,
+        Output.yellow(this.literal),
+        `@ $pc=${Output.blue(Format.toHexString(ctx.pc))}`,
+        `$tid=${threadId}`,
+      ].join(' '),
+    );
     Output.writeln(Output.yellow('-'.repeat(80)));
     Regs.setThreadId(threadId);
     Regs.setContext(ctx);
@@ -275,7 +283,7 @@ export class Bp {
     } catch (error) {
       if (error instanceof Error) {
         Output.writeln(`ERROR: ${error.message}`);
-        Output.writeln(`${error.stack}`, true);
+        Output.verboseWriteln(`${error.stack}`);
       } else {
         Output.writeln(`ERROR: Unknown error`);
       }
@@ -325,13 +333,16 @@ export class Bp {
 
     Output.clearLine();
     Output.writeln(Output.yellow('-'.repeat(80)));
-    Output.write(`${Output.yellow('|')} Break `);
-    Output.write(`${Output.green(`#${this._idx}`)} `);
-    Output.write(`[${this._type}] `);
-    Output.write(`${Output.yellow(this.literal)} `);
-    Output.write(`@ $pc=${Output.blue(Format.toHexString(details.from))} `);
-    Output.write(`$addr=${Output.blue(Format.toHexString(details.address))}`);
-    Output.writeln();
+    Output.writeln(
+      [
+        `${Output.yellow('|')} Break`,
+        Output.green(`#${this._idx}`),
+        `[${this._type}]`,
+        Output.yellow(this.literal),
+        `@ $pc=${Output.blue(Format.toHexString(details.from))}`,
+        `$addr=${Output.blue(Format.toHexString(details.address))}`,
+      ].join(' '),
+    );
     Output.writeln(Output.yellow('-'.repeat(80)));
     Regs.setAddress(details.address);
     Regs.setPc(details.from);

@@ -10,8 +10,7 @@ import { Vars } from '../vars/vars.js';
 const USAGE: string = `Usage: src
 
 src path - load script
-  path      the absolute path of the script to load (note that paths with spaces must be quoted)
-`;
+  path      the absolute path of the script to load (note that paths with spaces must be quoted)`;
 
 export class SrcCmdLet extends CmdLet {
   name = 'src';
@@ -58,8 +57,7 @@ export class SrcCmdLet extends CmdLet {
         if (line.length === 0) continue;
         if (line.charAt(0) === '#') continue;
 
-        Output.write(Output.bold(Input.PROMPT));
-        Output.writeln(line);
+        Output.writeln(`${Output.bold(Input.PROMPT)}${line}`);
 
         if (line.trim().length === 0) continue;
 
@@ -76,7 +74,7 @@ export class SrcCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.write(USAGE);
+    Output.writeln(USAGE);
     return Var.ZERO;
   }
 }

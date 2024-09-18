@@ -55,12 +55,12 @@ import { ThreadCmdLet } from './thread.js';
 import { VarCmdLet } from './var.js';
 import { VmCmdLet } from './vm.js';
 import { WriteCmdLet } from './write.js';
+import { GrepCmdLet } from './grep.js';
 
 const USAGE: string = `Usage: js
 
 js path - load JS script
-  path      the absolute path of the script to load (note that paths with spaces must be quoted)
-`;
+  path      the absolute path of the script to load (note that paths with spaces must be quoted)`;
 
 export class JsCmdLet extends CmdLet {
   name = 'js';
@@ -97,6 +97,7 @@ export class JsCmdLet extends CmdLet {
       Format: Format,
       FunctionEntryBpCmdLet: FunctionEntryBpCmdLet,
       FunctionExitBpCmdLet: FunctionExitBpCmdLet,
+      GrepCmdLet: GrepCmdLet,
       HelpCmdLet: HelpCmdLet,
       History: History,
       HistoryCmdLet: HistoryCmdLet,
@@ -147,7 +148,7 @@ export class JsCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.write(USAGE);
+    Output.writeln(USAGE);
     return Var.ZERO;
   }
 }

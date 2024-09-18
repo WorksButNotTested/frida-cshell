@@ -25,7 +25,7 @@ rpc.exports = {
   init(stage: string, params: InitParams | null = null) {
     const verbose = params?.verbose ?? false;
     Output.setVerbose(verbose);
-    Output.writeln(`init - stage: ${stage}, verbose: ${verbose}`, true);
+    Output.verboseWriteln(`init - stage: ${stage}, verbose: ${verbose}`);
     Output.banner();
     Process.setExceptionHandler(exceptionHandler);
     SrcCmdLet.loadInitScript(DEFAULT_SRC_PATH);

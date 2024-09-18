@@ -13,8 +13,7 @@ R name - display the value of a named register
 
 R name value - assign a value to a register
   name    the name of the register to assign
-  value   the value to assign
-`;
+  value   the value to assign`;
 
 export class RegCmdLet extends CmdLet {
   name = 'R';
@@ -36,6 +35,7 @@ export class RegCmdLet extends CmdLet {
         for (const [key, value] of Regs.all()) {
           Output.writeln(
             `${Output.bold(key.padEnd(4, ' '))}: ${value.toString()}`,
+            true,
           );
         }
         return Vars.getRet();
@@ -63,7 +63,7 @@ export class RegCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.write(USAGE);
+    Output.writeln(USAGE);
     return Var.ZERO;
   }
 }

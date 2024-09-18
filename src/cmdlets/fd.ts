@@ -19,8 +19,7 @@ const USAGE: string = `Usage: fd
 fd - show all the open file descriptors for the process
 
 fd idx - show the given file descriptor
-  idx    the number of file descriptor to show
-`;
+  idx    the number of file descriptor to show`;
 
 type Fds = {
   [key: number]: string;
@@ -51,7 +50,14 @@ export class FdCmdLet extends CmdLet {
     if (v0 === null) {
       const fds = this.readFds();
       for (const [fd, path] of Object.entries(fds)) {
-        Output.writeln(`Fd: ${fd.toString().padStart(3, ' ')}, Path: ${path}`);
+        Output.writeln(
+          [
+            'Fd: ',
+            `${Output.yellow(fd.toString().padStart(3, ' '))},`,
+            `Path: ${Output.blue(path)}`,
+          ].join(' '),
+          true,
+        );
       }
       return Var.ZERO;
     } else {
@@ -59,7 +65,13 @@ export class FdCmdLet extends CmdLet {
       const path = this.readFds()[fd];
       if (path === undefined) throw new Error(`fd: ${fd} not found`);
 
-      Output.writeln(`Fd: ${fd.toString().padStart(3, ' ')}, Path: ${path}`);
+      Output.writeln(
+        [
+          'Fd: ',
+          `${Output.yellow(fd.toString().padStart(3, ' '))},`,
+          `Path: ${Output.blue(path)}`,
+        ].join(' '),
+      );
 
       return new Var(uint64(fd), `Fd: ${fd}`);
     }
@@ -218,7 +230,7 @@ export class FdCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.write(USAGE);
+    Output.writeln(USAGE);
     return Var.ZERO;
   }
 

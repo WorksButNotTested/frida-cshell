@@ -17,8 +17,7 @@ v name value - assign a value to a variable
   value   the value to assign
 
 v name ${DELETE_CHAR} - delete a variable
-  name    the name of the variable to delete
-`;
+  name    the name of the variable to delete`;
 
 export class VarCmdLet extends CmdLet {
   name = 'v';
@@ -73,6 +72,7 @@ export class VarCmdLet extends CmdLet {
             `${Output.green(key.padEnd(25, ' '))}:`,
             `${Output.yellow(value.toString())}`,
           ].join(' '),
+          true,
         );
       }
       return Vars.getRet();
@@ -94,7 +94,7 @@ export class VarCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.write(USAGE);
+    Output.writeln(USAGE);
     return Var.ZERO;
   }
 }

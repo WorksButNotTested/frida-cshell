@@ -17,8 +17,7 @@ const WNOHANG: number = 1;
 type Pipe = { readFd: number; writeFd: number };
 
 const USAGE: string = `Usage: fd
-sh - run a shell
-`;
+sh - run a shell`;
 
 export class ShCmdLet extends CmdLet {
   name = 'sh';
@@ -88,7 +87,7 @@ export class ShCmdLet extends CmdLet {
       throw new Error(`failed to getenv("SHELL"), errno: ${getenvErrno}`);
 
     const shellPath = shellVar.readUtf8String();
-    Output.writeln(`SHELL: ${shellPath}`, true);
+    Output.verboseWriteln(`SHELL: ${shellPath}`);
 
     if (shellPath === null) throw new Error('failed to read SHELL');
 
@@ -206,7 +205,7 @@ export class ShCmdLet extends CmdLet {
       if (this.fnClose === null || this.fnWaitPid === null)
         throw new Error('failed to find necessary native functions');
 
-      Output.writeln(`child pid: ${childPid}`, true);
+      Output.verboseWriteln(`child pid: ${childPid}`);
       const { value: closeChildRet, errno: closeChildErrno } = this.fnClose(
         toChildReadFd,
       ) as UnixSystemFunctionResult<number>;
@@ -234,7 +233,7 @@ export class ShCmdLet extends CmdLet {
 
       Input.setInterceptRaw(onRaw);
 
-      Output.writeln(`reading pid: ${childPid}`, true);
+      Output.verboseWriteln(`reading pid: ${childPid}`);
 
       for (
         let buf = await input.read(READ_SIZE);
@@ -245,7 +244,7 @@ export class ShCmdLet extends CmdLet {
         Output.write(str);
       }
 
-      Output.writeln(`waiting pid: ${childPid}`, true);
+      Output.verboseWriteln(`waiting pid: ${childPid}`);
 
       const pStatus = Memory.alloc(INT_SIZE);
 
@@ -289,7 +288,7 @@ export class ShCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.write(USAGE);
+    Output.writeln(USAGE);
     return Var.ZERO;
   }
 

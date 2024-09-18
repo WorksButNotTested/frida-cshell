@@ -25,6 +25,7 @@ export class Output {
 
   private static verbose: boolean = false;
   private static indent: boolean = false;
+  private static filter: RegExp | null = null;
 
   public static banner() {
     this.shell
@@ -53,30 +54,50 @@ export class Output {
     this.writeln(`\tName: ${this.green(first.name)}`);
   }
 
-  public static writeln(
-    buffer: string | null = null,
-    verbose: boolean = false,
-  ) {
-    this.write(`${buffer ?? ''}\n`, verbose);
+  public static verboseWriteln(buffer: string | null) {
+    this.dowrite(`${buffer ?? ''}\n`, true, false);
   }
 
-  public static write(buffer: string | null = null, verbose: boolean = false) {
+  public static writeln(buffer: string | null = null, filter: boolean = false) {
+    this.dowrite(`${buffer ?? ''}\n`, false, filter);
+  }
+
+  public static write(buffer: string | null = null, filter: boolean = false) {
+    this.dowrite(buffer, false, filter);
+  }
+
+  private static dowrite(
+    buffer: string | null = null,
+    verbose: boolean,
+    filter: boolean,
+  ) {
     if (verbose && !this.verbose) return;
 
     if (buffer === null) return;
 
+    const filterExpression = (l: string) =>
+      filter === false ||
+      l.length === 0 ||
+      Output.filter === null ||
+      Output.filter.test(l);
+
     if (this.indent) {
-      const trimmed = buffer.endsWith('\n')
-        ? buffer.slice(0, buffer.length - 1)
-        : buffer;
-      const fixed = trimmed.replace(
-        new RegExp('\\n', 'g'),
-        `\r\n${Output.yellow('| ')}`,
-      );
-      const output = buffer.endsWith('\n') ? `${fixed}\r\n` : fixed;
-      send(['frida:stderr', `${Output.yellow('| ')}${output}`]);
+      if (buffer.endsWith('\n')) {
+        const lines = buffer.slice(0, buffer.length - 1).split('\n');
+        const fixed = lines
+          .filter(filterExpression)
+          .join(`\r\n${Output.yellow('| ')}`);
+        send(['frida:stderr', `${Output.yellow('| ')}${fixed}\r\n`]);
+      } else {
+        const lines = buffer.split('\n');
+        const fixed = lines
+          .filter(filterExpression)
+          .join(`\r\n${Output.yellow('| ')}`);
+        send(['frida:stderr', `${Output.yellow('| ')}${fixed}`]);
+      }
     } else {
-      const fixed = buffer.replace(new RegExp('\\n', 'g'), '\r\n');
+      const lines = buffer.split('\n');
+      const fixed = lines.filter(filterExpression).join(`\r\n`);
       send(['frida:stderr', fixed]);
     }
   }
@@ -89,6 +110,10 @@ export class Output {
   public static writeRet() {
     Output.writeln();
     Output.writeln(`ret: ${Output.bold(Vars.getRet().toString())}`);
+  }
+
+  public static getVerbose(): boolean {
+    return this.verbose;
   }
 
   public static setVerbose(verbose: boolean) {
@@ -117,5 +142,17 @@ export class Output {
 
   public static red(input: string): string {
     return `${CharCode.RED}${input}${CharCode.RESET}`;
+  }
+
+  public static setFilter(filter: string) {
+    this.filter = new RegExp(filter);
+  }
+
+  public static clearFilter() {
+    this.filter = null;
+  }
+
+  public static isFiltered() {
+    return this.filter !== null;
   }
 }

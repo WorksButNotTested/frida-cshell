@@ -9,8 +9,7 @@ const MAX_STRING_LENGTH: number = 1024;
 const USAGE: string = `Usage: ds
 
 ds address <bytes> - show string
-  adress   the address/symbol to show
-`;
+  adress   the address/symbol to show`;
 
 export class DumpStringCmdLet extends CmdLet {
   name = 'ds';
@@ -58,22 +57,20 @@ export class DumpStringCmdLet extends CmdLet {
         `No string found at ${Output.green(name)}: ${Output.yellow(Format.toHexString(address))}`,
       );
     } else {
-      Output.write(Output.green(name));
-      Output.write(' = ');
-      Output.write(Output.blue("'"));
-      Output.write(Output.yellow(value));
-      Output.write(Output.blue("'"));
-      Output.write(', length: ');
-      Output.write(Output.blue(value.length.toString()));
-      Output.write(' (');
-      Output.write(Output.blue(`0x${value.length.toString(16)}`));
-      Output.write(')');
-      Output.writeln();
+      Output.writeln(
+        [
+          Output.green(name),
+          '=',
+          `${Output.blue("'")}${Output.yellow(value)}${Output.blue("'")},`,
+          `length: ${Output.blue(value.length.toString())},`,
+          `(${Output.blue(`0x${value.length.toString(16)}`)})`,
+        ].join(' '),
+      );
     }
   }
 
   public usage(): Var {
-    Output.write(USAGE);
+    Output.writeln(USAGE);
     return Var.ZERO;
   }
 }

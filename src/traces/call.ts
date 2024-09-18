@@ -54,9 +54,10 @@ export class CallTrace implements Trace {
         if (toName === null) continue;
 
         if (first) {
+          const idx = `${numOutput.toString().padStart(4, ' ')}. `;
           const fromName = Traces.getAddressString(from as NativePointer);
           if (fromName === null) continue;
-          Output.writeln(fromName);
+          Output.writeln(`${Output.bold(idx)}${fromName}`);
           currentDepth = 1;
           first = false;
         }
@@ -66,11 +67,8 @@ export class CallTrace implements Trace {
         }
         numOutput += 1;
         const idx = `${numOutput.toString().padStart(4, ' ')}. `;
-        Output.write(Output.bold(idx));
-        if (currentDepth > 0) {
-          Output.write('\t'.repeat(currentDepth));
-        }
-        Output.writeln(toName);
+        const depth = currentDepth > 0 ? '\t'.repeat(currentDepth) : '';
+        Output.writeln(`${depth}${Output.bold(idx)}${toName}`);
       } else if (kind === 'ret') {
         if (currentDepth > 0) {
           currentDepth -= 1;

@@ -10,8 +10,7 @@ const USAGE: string = `Usage: cp
 cp dest src bytes - copy data
   dest   the address/symbol to write to
   src    the address/symbol to read from
-  bytes    the numer of bytes to read
-`;
+  bytes    the numer of bytes to read`;
 
 export class CopyCmdLet extends CmdLet {
   name = 'cp';
@@ -43,7 +42,7 @@ export class CopyCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.write(USAGE);
+    Output.writeln(USAGE);
     return Var.ZERO;
   }
 }

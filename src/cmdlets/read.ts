@@ -66,7 +66,7 @@ r n address - read 'n' bytes from memory
   n         the number of bytes to read (1, 2, 4 or 8).
   address   the address/symbol to read from`;
 
-    Output.write(usage);
+    Output.writeln(usage);
     return Var.ZERO;
   }
 }

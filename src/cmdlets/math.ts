@@ -34,9 +34,8 @@ abstract class BinaryOpCmdLet extends CmdLet {
 
 ${this.name} op1 op2 - ${this.OPERATION} two values together
   op1   the first operand on which to perform the operation
-  op2   the second operand on which to perform the operation
-`;
-    Output.write(usage);
+  op2   the second operand on which to perform the operation`;
+    Output.writeln(usage);
     return Var.ZERO;
   }
 
@@ -105,9 +104,8 @@ abstract class UnaryOpCmdLet extends CmdLet {
     const usage: string = `Usage: ${this.name}
 
 ${this.name} op - perform a ${this.OPERATION} operation on an operand
-  op   the operand on which to operate
-`;
-    Output.write(usage);
+  op   the operand on which to operate`;
+    Output.writeln(usage);
     return Var.ZERO;
   }
 
@@ -420,9 +418,8 @@ export class EndianCmdLet extends UnaryOpCmdLet {
 
 ${this.name} width val - ${this.OPERATION} of an operand
   width   the width of the operand (1, 2, 4 or 8)
-  op      the operand on which to perform the operation
-`;
-    Output.write(usage);
+  op      the operand on which to perform the operation`;
+    Output.writeln(usage);
     return Var.ZERO;
   }
 }

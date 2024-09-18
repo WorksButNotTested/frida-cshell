@@ -76,7 +76,7 @@ abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
       );
       Bps.all()
         .filter(bp => bp.type === this.bpType)
-        .forEach(bp => Output.writeln(bp.toString()));
+        .forEach(bp => Output.writeln(bp.toString(), true));
       return Var.ZERO;
     } else {
       const bp = Bps.get(this.bpType, index);
@@ -90,7 +90,7 @@ abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
   public usage(): Var {
     const create = this.usageCreate();
     const modify = this.usageModify();
-    const INSN_BP_USAGE: string = `Usage: ${this.name}
+    const USAGE: string = `Usage: ${this.name}
 ${Output.bold('show:')}
 
 ${this.name} - show all ${this.bpType} breakpoints
@@ -109,9 +109,9 @@ ${Output.bold('delete:')}
 ${this.name} ${NUM_CHAR}n # - delete a ${this.bpType} breakpoint
    ${NUM_CHAR}n      the number of the breakpoint to delete
 
-${Output.bold('NOTE:')} Set hits to '*' for unlimited breakpoint.
-`;
-    Output.write(INSN_BP_USAGE);
+${Output.bold('NOTE:')} Set hits to '*' for unlimited breakpoint.`;
+
+    Output.writeln(USAGE);
     return Var.ZERO;
   }
 

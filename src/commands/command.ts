@@ -57,9 +57,12 @@ export class Command {
     }
 
     args.forEach((param, index) => {
-      Output.writeln(
-        `\t${index}: ${Format.toHexString(param)} ${Format.toDecString(param)}`,
-        true,
+      Output.verboseWriteln(
+        [
+          `\t${index}:`,
+          Format.toHexString(param),
+          Format.toDecString(param),
+        ].join(' '),
       );
     });
 

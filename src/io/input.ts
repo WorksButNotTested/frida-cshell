@@ -15,6 +15,7 @@ const CLEAR_CHAR: string = 'c';
 
 export class Input {
   public static readonly PROMPT: string = '-> ';
+  public static readonly FILTERED_PROMPT: string = '~> ';
   private static readonly EDIT_PROMPT: string = '. ';
 
   private static buffer: string = '';
@@ -108,7 +109,7 @@ export class Input {
     } catch (error) {
       if (error instanceof Error) {
         Output.writeln(`ERROR: ${error.message}`);
-        Output.writeln(`${error.stack}`, true);
+        Output.verboseWriteln(`${error.stack}`);
       } else {
         Output.writeln(`ERROR: Unknown error`);
       }
@@ -120,7 +121,11 @@ export class Input {
   public static prompt() {
     Output.clearLine();
     if (this.interceptLine === null) {
-      Output.write(Output.bold(this.PROMPT));
+      if (Output.isFiltered()) {
+        Output.write(Output.bold(this.FILTERED_PROMPT));
+      } else {
+        Output.write(Output.bold(this.PROMPT));
+      }
     } else {
       Output.write(Output.bold(this.EDIT_PROMPT));
     }

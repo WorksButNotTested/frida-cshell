@@ -26,6 +26,7 @@ export class Output {
   private static verbose: boolean = false;
   private static indent: boolean = false;
   private static filter: RegExp | null = null;
+  private static log: File | null = null;
 
   public static banner() {
     this.shell
@@ -72,34 +73,38 @@ export class Output {
     filter: boolean,
   ) {
     if (verbose && !this.verbose) return;
-
     if (buffer === null) return;
 
     const filterExpression = (l: string) =>
       filter === false ||
-      l.length === 0 ||
+      l.trim().length === 0 ||
       Output.filter === null ||
       Output.filter.test(l);
 
+    let text = '';
     if (this.indent) {
       if (buffer.endsWith('\n')) {
         const lines = buffer.slice(0, buffer.length - 1).split('\n');
         const fixed = lines
           .filter(filterExpression)
           .join(`\r\n${Output.yellow('| ')}`);
-        send(['frida:stderr', `${Output.yellow('| ')}${fixed}\r\n`]);
+        text = `${Output.yellow('| ')}${fixed}\r\n`;
       } else {
         const lines = buffer.split('\n');
         const fixed = lines
           .filter(filterExpression)
           .join(`\r\n${Output.yellow('| ')}`);
-        send(['frida:stderr', `${Output.yellow('| ')}${fixed}`]);
+        text = `${Output.yellow('| ')}${fixed}`;
       }
     } else {
       const lines = buffer.split('\n');
-      const fixed = lines.filter(filterExpression).join(`\r\n`);
-      send(['frida:stderr', fixed]);
+      text = lines.filter(filterExpression).join(`\r\n`);
     }
+
+    if (this.log !== null) {
+      this.log.write(text);
+    }
+    send(['frida:stderr', text]);
   }
 
   public static clearLine() {
@@ -154,5 +159,19 @@ export class Output {
 
   public static isFiltered() {
     return this.filter !== null;
+  }
+
+  public static setLog(log: string) {
+    this.log = new File(log, 'w');
+  }
+
+  public static clearLog() {
+    if (this.log !== null) {
+      const pos = this.log.tell();
+      Output.writeln(`Wrote  ${Output.blue(pos.toString())} bytes to log.`);
+      this.log.flush();
+      this.log.close();
+      this.log = null;
+    }
   }
 }

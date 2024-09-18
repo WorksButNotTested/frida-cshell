@@ -56,6 +56,8 @@ import { VarCmdLet } from './var.js';
 import { VmCmdLet } from './vm.js';
 import { WriteCmdLet } from './write.js';
 import { GrepCmdLet } from './grep.js';
+import { CatCmdLet } from './cat.js';
+import { LogCmdLet } from './log.js';
 
 const USAGE: string = `Usage: js
 
@@ -86,6 +88,7 @@ export class JsCmdLet extends CmdLet {
       Bp: Bp,
       Bps: Bps,
       BtCmdLet: BtCmdLet,
+      CatCmdLet: CatCmdLet,
       CharCode: CharCode,
       CmdLets: CmdLets,
       Command: Command,
@@ -105,6 +108,7 @@ export class JsCmdLet extends CmdLet {
       InsnBpCmdLet: InsnBpCmdLet,
       LdCmdLet: LdCmdLet,
       Line: Line,
+      LogCmdLet: LogCmdLet,
       Mem: Mem,
       MemoryBps: MemoryBps,
       ModCmdLet: ModCmdLet,

@@ -6,5 +6,6 @@
     "editor.defaultFormatter": "ms-vscode.cpptools"
   },
   "cmake.configureOnOpen": false,
-  "makefile.configureOnOpen": false
+  "makefile.configureOnOpen": false,
+  "typescript.tsc.autoDetect": "off",
 }

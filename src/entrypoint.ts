@@ -13,6 +13,7 @@ import { MemoryBps } from './breakpoints/memory.js';
 import { Regs } from './breakpoints/regs.js';
 import { Format } from './misc/format.js';
 import { SrcCmdLet } from './cmdlets/src.js';
+import { BtCmdLet } from './cmdlets/bt.js';
 
 export const DEFAULT_SRC_PATH: string = `${Process.getHomeDir()}/.cshellrc`;
 
@@ -77,6 +78,8 @@ function exceptionHandler(details: ExceptionDetails) {
     Output.writeln(`${Output.bold(key.padEnd(4, ' '))}: ${value.toString()}`);
   }
   Output.writeln();
+
+  BtCmdLet.printBacktrace(details.context);
   Output.writeln(`${Output.bold(Output.red('*****************'))}`);
   Thread.sleep(1);
 }

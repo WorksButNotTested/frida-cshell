@@ -29,7 +29,8 @@ export class SrcCmdLet extends CmdLet {
   public runSync(tokens: Token[]): Var {
     const vars = this.transformOptional(tokens, [], [this.parseLiteral]);
     if (vars === null) return this.usage();
-    let [[], [name]] = vars as [[], [string | null]];
+    // eslint-disable-next-line prefer-const
+    let [_, [name]] = vars as [[], [string | null]];
     if (name === null) {
       if (SrcCmdLet.lastPath === null) throw new Error('path not initialized');
 
@@ -69,7 +70,9 @@ export class SrcCmdLet extends CmdLet {
         Output.writeRet();
         Output.writeln();
       }
-    } catch (_) {}
+    } catch (_) {
+      /* Ignore the error */
+    }
   }
 
   public usage(): Var {

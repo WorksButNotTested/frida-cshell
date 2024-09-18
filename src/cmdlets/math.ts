@@ -411,7 +411,7 @@ export class EndianCmdLet extends UnaryOpCmdLet {
     }
   }
 
-  public override op(op0: UInt64): UInt64 {
+  public override op(_op0: UInt64): UInt64 {
     throw new Error('not implemented');
   }
 

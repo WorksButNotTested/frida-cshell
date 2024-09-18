@@ -63,7 +63,7 @@ export class VarCmdLet extends CmdLet {
   private runShow(tokens: Token[]): Var | null {
     const vars = this.transformOptional(tokens, [], [this.parseLiteral]);
     if (vars === null) return null;
-    const [[], [name]] = vars as [[], [string | null]];
+    const [_, [name]] = vars as [[], [string | null]];
 
     if (name === null) {
       Output.writeln('Vars:');

@@ -24,7 +24,7 @@ export class HistoryCmdLet extends CmdLet {
   public override async run(tokens: Token[]): Promise<Var> {
     const vars = this.transformOptional(tokens, [], [this.parseVar]);
     if (vars === null) return this.usage();
-    const [[], [v0]] = vars as [[], [Var | null]];
+    const [_, [v0]] = vars as [[], [Var | null]];
 
     if (v0 === null) {
       const history = Array.from(History.all());

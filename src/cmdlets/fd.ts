@@ -46,7 +46,7 @@ export class FdCmdLet extends CmdLet {
   public runSync(tokens: Token[]): Var {
     const vars = this.transformOptional(tokens, [], [this.parseVar]);
     if (vars === null) return this.usage();
-    const [[], [v0]] = vars as [[], [Var | null]];
+    const [_, [v0]] = vars as [[], [Var | null]];
 
     if (v0 === null) {
       const fds = this.readFds();

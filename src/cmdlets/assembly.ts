@@ -106,7 +106,7 @@ export class AssemblyCmdLet extends CmdLet {
   }
 
   private readMaxBytes(ptr: NativePointer, length: number): Uint8Array {
-    for (let i = length; i > 0; i++) {
+    for (let i = length; i > 0; i--) {
       try {
         const bytes = Mem.readBytes(ptr, i);
         return bytes;

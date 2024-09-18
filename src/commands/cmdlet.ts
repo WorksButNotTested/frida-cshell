@@ -17,6 +17,7 @@ export abstract class CmdLet {
     return true;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public transform<T extends any[]>(
     tokens: Token[],
     operations: { [K in keyof T]: (token: Token) => T[K] | null },
@@ -32,6 +33,7 @@ export abstract class CmdLet {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public transformOptional<M extends any[], O extends any[]>(
     tokens: Token[],
     madatory: { [K in keyof M]: (token: Token) => M[K] | null },

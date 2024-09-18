@@ -70,13 +70,13 @@ export class Output {
         ? buffer.slice(0, buffer.length - 1)
         : buffer;
       const fixed = trimmed.replace(
-        new RegExp('\n', 'g'),
+        new RegExp('\\n', 'g'),
         `\r\n${Output.yellow('| ')}`,
       );
       const output = buffer.endsWith('\n') ? `${fixed}\r\n` : fixed;
       send(['frida:stderr', `${Output.yellow('| ')}${output}`]);
     } else {
-      const fixed = buffer.replace(new RegExp('\n', 'g'), '\r\n');
+      const fixed = buffer.replace(new RegExp('\\n', 'g'), '\r\n');
       send(['frida:stderr', fixed]);
     }
   }

@@ -95,7 +95,7 @@ export class VmCmdLet extends CmdLet {
   private runShowNamed(tokens: Token[]): Var | null {
     const vars = this.transformOptional(tokens, [], [this.parseLiteral]);
     if (vars === null) return null;
-    const [[], [name]] = vars as [[], [string | null]];
+    const [_, [name]] = vars as [[], [string | null]];
 
     if (name === null) {
       Process.enumerateRanges('---').forEach(r => {

@@ -39,13 +39,13 @@ export class BtCmdLet extends CmdLet {
       return Var.ZERO;
     } else {
       matches.forEach(t => {
-        this.printBacktrace(t.context);
+        BtCmdLet.printBacktrace(t.context);
       });
       return new Var(uint64(id), `Thread: ${id}`);
     }
   }
 
-  private printBacktrace(ctx: CpuContext) {
+  public static printBacktrace(ctx: CpuContext) {
     Thread.backtrace(ctx, Backtracer.ACCURATE)
       .map(DebugSymbol.fromAddress)
       .forEach(s => {
@@ -68,7 +68,7 @@ export class BtCmdLet extends CmdLet {
   private runShowNamed(tokens: Token[]): Var | null {
     const vars = this.transformOptional(tokens, [], [this.parseLiteral]);
     if (vars === null) return null;
-    const [[], [name]] = vars as [[], [string | null]];
+    const [_, [name]] = vars as [[], [string | null]];
 
     if (name === null) {
       const ctx = Regs.getContext();
@@ -77,7 +77,7 @@ export class BtCmdLet extends CmdLet {
           `backtrace requires context, only available in breakpoints`,
         );
 
-      this.printBacktrace(ctx);
+      BtCmdLet.printBacktrace(ctx);
       return Var.ZERO;
     } else {
       const matches = Process.enumerateThreads().filter(t => t.name === name);
@@ -87,12 +87,12 @@ export class BtCmdLet extends CmdLet {
           return Var.ZERO;
         case 1: {
           const t = matches[0] as ThreadDetails;
-          this.printBacktrace(t.context);
+          BtCmdLet.printBacktrace(t.context);
           return new Var(uint64(t.id), `Thread: ${t.id}`);
         }
         default:
           matches.forEach(t => {
-            this.printBacktrace(t.context);
+            BtCmdLet.printBacktrace(t.context);
           });
           return Var.ZERO;
       }

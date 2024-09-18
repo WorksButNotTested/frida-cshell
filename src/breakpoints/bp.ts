@@ -99,6 +99,7 @@ export class Bp {
     if (this._listener !== null) return;
     this._overlay = Overlay.add(this._addr.toPointer(), BP_LENGTH);
     const addr = this._addr;
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const bp = this;
     switch (this._type) {
       case BpType.Instruction:
@@ -358,7 +359,7 @@ export class Bp {
     return this._idx - other._idx;
   }
 
-  public toString(short: boolean = false): string {
+  public toString(): string {
     const idxString = Output.green(`#${this._idx.toString()}.`.padEnd(4, ' '));
     const typeString = `[${this._type.toString()}]`;
     const literalString = Output.yellow(this.literal);

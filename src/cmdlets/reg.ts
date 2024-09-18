@@ -28,7 +28,7 @@ export class RegCmdLet extends CmdLet {
       [this.parseRegister, this.parseVar],
     );
     if (vars === null) return this.usage();
-    const [[], [name, address]] = vars as [[], [string | null, Var | null]];
+    const [_, [name, address]] = vars as [[], [string | null, Var | null]];
 
     if (address === null) {
       if (name === null) {

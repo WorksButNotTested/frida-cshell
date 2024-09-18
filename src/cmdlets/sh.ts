@@ -58,7 +58,7 @@ export class ShCmdLet extends CmdLet {
   // void exit(int status);
   private fnExit: SystemFunction<void, [number]> | null = null;
 
-  public override runSync(tokens: Token[]): Var {
+  public override runSync(_tokens: Token[]): Var {
     throw new Error("can't run in synchronous mode");
   }
 

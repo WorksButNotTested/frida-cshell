@@ -63,7 +63,7 @@ export class Coverage implements CoverageSession {
    * Module filter which selects all modules
    * @param module The module to filter
    */
-  public static allModules(module: Module): boolean {
+  public static allModules(_module: Module): boolean {
     return true;
   }
 
@@ -71,7 +71,7 @@ export class Coverage implements CoverageSession {
    * Thread filter which selects all thread
    * @param threadDetails The thread to filter
    */
-  public static allThreads(threadDetails: ThreadDetails): boolean {
+  public static allThreads(_threadDetails: ThreadDetails): boolean {
     return true;
   }
 

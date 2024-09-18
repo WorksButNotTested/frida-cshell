@@ -68,7 +68,7 @@ abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
   private runShow(tokens: Token[]): Var | null {
     const vars = this.transformOptional(tokens, [], [this.parseIndex]);
     if (vars === null) return null;
-    const [[], [index]] = vars as [[], [number | null]];
+    const [_, [index]] = vars as [[], [number | null]];
 
     if (index === null) {
       Output.writeln(
@@ -76,7 +76,7 @@ abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
       );
       Bps.all()
         .filter(bp => bp.type === this.bpType)
-        .forEach(bp => Output.writeln(bp.toString(true)));
+        .forEach(bp => Output.writeln(bp.toString()));
       return Var.ZERO;
     } else {
       const bp = Bps.get(this.bpType, index);

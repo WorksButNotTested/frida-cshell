@@ -102,7 +102,9 @@ export class Output {
     }
 
     if (this.log !== null) {
-      this.log.write(text);
+      // eslint-disable-next-line no-control-regex
+      const uncoloured = text.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '');
+      this.log.write(uncoloured);
     }
     send(['frida:stderr', text]);
   }

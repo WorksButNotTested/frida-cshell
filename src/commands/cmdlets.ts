@@ -49,6 +49,7 @@ import { DebugCmdLet } from '../cmdlets/development/debug.js';
 import { GrepCmdLet } from '../cmdlets/misc/grep.js';
 import { CatCmdLet } from '../cmdlets/files/cat.js';
 import { LogCmdLet } from '../cmdlets/misc/log.js';
+import { HotCmdLet } from '../cmdlets/thread/hot.js';
 
 export class CmdLets {
   private static byName: Map<string, CmdLet> = new Map<string, CmdLet>();
@@ -75,6 +76,7 @@ export class CmdLets {
     this.registerCmdletType(FunctionExitBpCmdLet);
     this.registerCmdletType(HelpCmdLet);
     this.registerCmdletType(HistoryCmdLet);
+    this.registerCmdletType(HotCmdLet);
     this.registerCmdletType(InsnBpCmdLet);
     this.registerCmdletType(JsCmdLet);
     this.registerCmdletType(LdCmdLet);

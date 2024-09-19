@@ -1,9 +1,12 @@
 #include <fcntl.h>
+#include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#define NUM_THREADS 5
 
 typedef unsigned int uint;
 
@@ -106,13 +109,50 @@ void my_a(uint i)
   }
 }
 
+static void *busy_loop(void *arg)
+{
+  char thread_name[16] = {0};
+  int index = *(int *)arg;
+  printf("Thread %d started\n", index);
+
+  snprintf(thread_name, sizeof(thread_name), "Child-%d", index);
+  pthread_setname_np(pthread_self(), thread_name);
+
+  long limit = (index + 1) * 10000000L;
+
+  while (true)
+  {
+    for (volatile long i = 0; i < limit; i++)
+      ;
+
+    usleep(500000);
+  }
+
+  return 0;
+}
+
 int main(int argc, char **argv, char **envp)
 {
+  pthread_t threads[NUM_THREADS] = {0};
+  int thread_indices[NUM_THREADS] = {0};
+
   int fd = open("/dev/null", O_RDWR);
   dup2(fd, STDIN_FILENO);
   dup2(fd, STDOUT_FILENO);
   dup2(fd, STDERR_FILENO);
   close(fd);
+
+  pthread_setname_np(pthread_self(), "Parent");
+
+  for (int i = 0; i < NUM_THREADS; i++)
+  {
+    thread_indices[i] = i;
+    if (pthread_create(&threads[i], NULL, busy_loop, &thread_indices[i]) != 0)
+    {
+      perror("Failed to create thread");
+      return 1;
+    }
+  }
 
   while (true)
   {
@@ -129,6 +169,15 @@ int main(int argc, char **argv, char **envp)
     puts(buf);
 
     free(buf);
+
+    for (volatile long i = 0; i < 100000000L; i++)
+      ;
+
     usleep(500000);
+  }
+
+  for (int i = 0; i < NUM_THREADS; i++)
+  {
+    pthread_join(threads[i], NULL);
   }
 }

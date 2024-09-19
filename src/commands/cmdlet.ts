@@ -2,6 +2,7 @@ import { Token } from '../io/token.js';
 import { Var } from '../vars/var.js';
 
 const DELETE_CHAR: string = '#';
+const UNLIMITED_CHAR: string = '*';
 
 export abstract class CmdLet {
   public abstract readonly category: string;
@@ -94,5 +95,15 @@ export abstract class CmdLet {
     const literal = token.getLiteral();
     if (literal !== DELETE_CHAR) return null;
     return literal;
+  }
+
+  protected parseNumberOrAll(token: Token): number | null {
+    if (token.getLiteral() === UNLIMITED_CHAR) return -1;
+
+    const v = token.toVar();
+    if (v === null) return null;
+
+    const hits = v.toU64().toNumber();
+    return hits;
   }
 }

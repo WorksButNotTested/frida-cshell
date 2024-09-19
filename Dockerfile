@@ -264,6 +264,8 @@ RUN gcc \
     -Wall \
     -Werror \
     -no-pie \
+    -D_GNU_SOURCE \
+    -lpthread \
     -o target \
     /root/target.c
 RUN mkdir /root/x86
@@ -283,6 +285,8 @@ RUN gcc \
     -Werror \
     -no-pie \
     -m32 \
+    -D_GNU_SOURCE \
+    -lpthread \
     -o target \
     /root/target.c
 RUN mkdir /root/arm
@@ -302,6 +306,8 @@ RUN arm-none-linux-gnueabihf-gcc \
     -Werror \
     -no-pie \
     -marm \
+    -D_GNU_SOURCE \
+    -lpthread \
     -o target \
     /root/target.c
 RUN mkdir /root/arm64
@@ -321,6 +327,8 @@ RUN aarch64-none-linux-gnu-gcc \
     -Werror \
     -no-pie \
     -march=armv8-a \
+    -D_GNU_SOURCE \
+    -lpthread \
     -o target \
     /root/target.c
 

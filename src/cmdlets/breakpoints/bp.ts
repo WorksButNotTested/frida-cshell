@@ -7,7 +7,6 @@ import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 
 const NUM_CHAR: string = '#';
-const UNLIMITED_CHAR: string = '*';
 
 abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
   public abstract readonly bpType: BpType;
@@ -43,16 +42,6 @@ abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
 
     if (isNaN(val)) return null;
     return val;
-  }
-
-  protected parseHits(token: Token): number | null {
-    if (token.getLiteral() === UNLIMITED_CHAR) return -1;
-
-    const v = token.toVar();
-    if (v === null) return null;
-
-    const hits = v.toU64().toNumber();
-    return hits;
   }
 
   private runDelete(tokens: Token[]): Var | null {
@@ -140,7 +129,7 @@ abstract class CodeBpCmdLet
     const vars = this.transformOptional(
       tokens,
       [this.parseVar],
-      [this.parseHits],
+      [this.parseNumberOrAll],
     );
     if (vars === null) return null;
     const [[addr], [hits]] = vars as [[Var], [number | null]];
@@ -164,7 +153,7 @@ abstract class CodeBpCmdLet
     const vars = this.transformOptional(
       tokens,
       [this.parseIndex, this.parseVar],
-      [this.parseHits],
+      [this.parseNumberOrAll],
     );
     if (vars === null) return null;
     const [[index, addr], [hits]] = vars as [[number, Var], [number | null]];
@@ -224,7 +213,7 @@ abstract class MemoryBpCmdLet
     const vars = this.transformOptional(
       tokens,
       [this.parseVar, this.parseVar],
-      [this.parseHits],
+      [this.parseNumberOrAll],
     );
     if (vars === null) return null;
     const [[addr, length], [hits]] = vars as [[Var, Var], [number | null]];
@@ -249,7 +238,7 @@ abstract class MemoryBpCmdLet
     const vars = this.transformOptional(
       tokens,
       [this.parseIndex, this.parseVar, this.parseVar],
-      [this.parseHits],
+      [this.parseNumberOrAll],
     );
     if (vars === null) return null;
     const [[index, addr, length], [hits]] = vars as [
@@ -325,7 +314,7 @@ abstract class TraceBpCmdLet
     const vars = this.transformOptional(
       tokens,
       [this.parseVar, this.parseVar],
-      [this.parseHits],
+      [this.parseNumberOrAll],
     );
     if (vars === null) return null;
     const [[addr, depth], [hits]] = vars as [[Var, Var], [number | null]];
@@ -360,7 +349,7 @@ abstract class TraceBpCmdLet
     const vars = this.transformOptional(
       tokens,
       [this.parseIndex, this.parseVar, this.parseVar],
-      [this.parseHits],
+      [this.parseNumberOrAll],
     );
     if (vars === null) return null;
     const [[index, addr, depth], [hits]] = vars as [

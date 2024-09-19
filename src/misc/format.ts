@@ -24,7 +24,7 @@ export class Format {
     ptr: NativePointer | UInt64 | number | null,
   ): string {
     if (ptr === null) return '[UNDEFINED]';
-    return ptr.toString(10);
+    return ptr.toString(10).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   }
 
   public static toSize(ptr: NativePointer | UInt64 | number | null): string {

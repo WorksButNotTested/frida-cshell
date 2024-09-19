@@ -9,7 +9,7 @@ echo 'EOF'                        >> $TEMPDIR/frida-cshell
 echo ')'                          >> $TEMPDIR/frida-cshell
 
 cat <<EOF                         >> $TEMPDIR/frida-cshell
-verbose=
+debug=
 file=
 name=
 pid=
@@ -25,7 +25,7 @@ show_help () {
     echo "  -f    spawn FILE"
     echo "  -n    attach to NAME"
     echo "  -p    attach to PID"
-    echo "  -V    enable verbose mode"
+    echo "  -d    enable debug mode"
     echo
 }
 
@@ -34,7 +34,7 @@ if [[ "\$1" == "--help" ]]; then
     exit 0
 fi
 
-while getopts ":f:hn:p:V:" opt; do
+while getopts ":f:hn:p:d" opt; do
     case \$opt in
         f)
             file=\$OPTARG
@@ -48,8 +48,8 @@ while getopts ":f:hn:p:V:" opt; do
         p)
             pid=\$OPTARG
             ;;
-        V)
-            verbose=true
+        d)
+            debug=true
             ;;
         :)
             echo "Option - \$OPTARG requires an argument."
@@ -76,8 +76,8 @@ then
     exit 1
 fi
 
-if [ \${verbose} ]; then
-    opt="{\"verbose\":true}"
+if [ \${debug} ]; then
+    opt="{\"debug\":true}"
 else
     opt="{}"
 fi

@@ -18,6 +18,7 @@ export class GrepCmdLet extends CmdLet {
   public runSync(tokens: Token[]): Var {
     const vars = this.transformOptional(tokens, [], [this.parseLiteral]);
     if (vars === null) return this.usage();
+    // eslint-disable-next-line prefer-const
     let [_, [filter]] = vars as [[], [string | null]];
     if (filter === null) {
       Output.clearFilter();

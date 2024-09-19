@@ -58,6 +58,7 @@ import { WriteCmdLet } from '../data/write.js';
 import { GrepCmdLet } from '../misc/grep.js';
 import { CatCmdLet } from '../files/cat.js';
 import { LogCmdLet } from '../misc/log.js';
+import { HotCmdLet } from '../thread/hot.js';
 
 const USAGE: string = `Usage: js
 
@@ -104,6 +105,7 @@ export class JsCmdLet extends CmdLet {
       HelpCmdLet: HelpCmdLet,
       History: History,
       HistoryCmdLet: HistoryCmdLet,
+      HotCmdLet: HotCmdLet,
       Input: Input,
       InsnBpCmdLet: InsnBpCmdLet,
       LdCmdLet: LdCmdLet,

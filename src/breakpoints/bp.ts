@@ -133,7 +133,7 @@ export class Bp {
         this._listener = Interceptor.attach(addr.toPointer(), {
           onEnter() {
             if (bp._hits === 0) return;
-            bp._trace = BlockTrace.create(this.threadId, bp._depth);
+            bp._trace = BlockTrace.create(this.threadId, bp._depth, false);
             bp.startCoverage(this.threadId, this.context);
           },
           onLeave(_retVal) {
@@ -172,7 +172,7 @@ export class Bp {
         this._listener = Interceptor.attach(addr.toPointer(), {
           onEnter() {
             if (bp._hits === 0) return;
-            bp._trace = CoverageTrace.create(this.threadId);
+            bp._trace = CoverageTrace.create(this.threadId, null, null);
             bp.startCoverage(this.threadId, this.context);
           },
           onLeave(_retVal) {
@@ -243,7 +243,9 @@ export class Bp {
     Output.setIndent(true);
     Output.writeln();
     try {
-      trace.display();
+      trace.lines().forEach(l => {
+        Output.writeln(l);
+      });
       Output.writeln();
     } finally {
       Output.setIndent(false);

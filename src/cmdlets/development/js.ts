@@ -59,6 +59,12 @@ import { GrepCmdLet } from '../misc/grep.js';
 import { CatCmdLet } from '../files/cat.js';
 import { LogCmdLet } from '../misc/log.js';
 import { HotCmdLet } from '../thread/hot.js';
+import {
+  TraceCallCmdLet,
+  TraceBlockCmdLet,
+  TraceUniqueBlockCmdLet,
+  TraceCoverageCmdLet,
+} from '../trace/trace.js';
 
 const USAGE: string = `Usage: js
 
@@ -131,6 +137,10 @@ export class JsCmdLet extends CmdLet {
       SubCmdLet: SubCmdLet,
       SymCmdLet: SymCmdLet,
       ThreadCmdLet: ThreadCmdLet,
+      TraceBlockCmdLet: TraceBlockCmdLet,
+      TraceCallCmdLet: TraceCallCmdLet,
+      TraceCoverageCmdLet: TraceCoverageCmdLet,
+      TraceUniqueBlockCmdLet: TraceUniqueBlockCmdLet,
       Token: Token,
       Var: Var,
       VarCmdLet: VarCmdLet,

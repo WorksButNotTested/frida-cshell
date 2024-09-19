@@ -1,57 +1,18 @@
 import { Output } from '../../io/output.js';
-import { Trace, TraceData, Traces } from '../trace.js';
+import { TraceBase, TraceData, Traces } from '../trace.js';
 import { Coverage, CoverageSession } from './coverage.js';
 
-class CoverageTraceData implements TraceData {
-  private filename: string;
+class CoverageTraceData extends TraceData {
   private threadId: ThreadId;
-
-  public constructor(threadId: ThreadId, filename: string) {
-    this.threadId = threadId;
-    this.filename = filename;
-  }
-
-  public display() {
-    Output.writeln(
-      `Wrote coverage for thread: ${Output.yellow(this.threadId.toString())} to: ${Output.green(this.filename)}`,
-    );
-  }
-}
-export class CoverageTrace implements Trace {
+  private filename: string;
   private file: File;
-  private coverage: CoverageSession;
-  private stopped: boolean = false;
-  private trace: CoverageTraceData;
+  private size: number = 0;
 
-  private constructor(threadId: ThreadId) {
-    const filename = CoverageTrace.getRandomFileName();
-    this.trace = new CoverageTraceData(threadId, filename);
-
-    this.file = new File(filename, 'wb+');
-    this.coverage = Coverage.start({
-      moduleFilter: m => Coverage.allModules(m),
-      onCoverage: coverageData => {
-        this.file.write(coverageData);
-      },
-      threadFilter: t => t.id === threadId,
-    });
-  }
-
-  public static create(threadId: ThreadId): CoverageTrace {
-    if (Traces.has(threadId)) {
-      throw new Error(`trace already exists for threadId: ${threadId}`);
-    }
-
-    const trace = new CoverageTrace(threadId);
-    Traces.set(threadId, trace);
-    return trace;
-  }
-
-  public stop() {
-    if (this.stopped) return;
-    this.coverage.stop();
-    this.file.close();
-    this.stopped = true;
+  public constructor(threadId: ThreadId, filename: string | null) {
+    super();
+    this.threadId = threadId;
+    this.filename = filename ?? CoverageTraceData.getRandomFileName();
+    this.file = new File(this.filename, 'wb+');
   }
 
   private static getRandomString(length: number): string {
@@ -66,12 +27,84 @@ export class CoverageTrace implements Trace {
   }
 
   private static getRandomFileName(): string {
-    const rand = CoverageTrace.getRandomString(16);
+    const rand = CoverageTraceData.getRandomString(16);
     const filename = `/tmp/${rand}.cov`;
     return filename;
   }
 
-  public data(): CoverageTraceData {
-    return this.trace;
+  public append(events: ArrayBuffer) {
+    this.file.write(events);
+    this.size += events.byteLength;
+  }
+
+  public stop(): void {
+    this.file.close();
+  }
+
+  public lines(): string[] {
+    return [
+      [
+        'Wrote coverage for thread:',
+        Output.yellow(this.threadId.toString()),
+        'to:',
+        Output.green(this.filename),
+      ].join(' '),
+    ];
+  }
+
+  public details(): string {
+    return ['file:', Output.blue(this.filename)].join(' ');
+  }
+
+  public getFileName(): string {
+    return this.filename;
+  }
+
+  public getSize(): number {
+    return this.size;
+  }
+}
+export class CoverageTrace extends TraceBase<CoverageTraceData> {
+  private coverage: CoverageSession;
+
+  private constructor(
+    threadId: ThreadId,
+    filename: string | null,
+    modulePath: string | null,
+  ) {
+    const trace = new CoverageTraceData(threadId, filename);
+    super(threadId, trace);
+
+    let moduleFilter = Coverage.allModules;
+    if (modulePath !== null) {
+      moduleFilter = m => m.path === modulePath;
+    }
+
+    this.coverage = Coverage.start({
+      moduleFilter: moduleFilter,
+      onCoverage: coverageData => {
+        this.trace.append(coverageData);
+      },
+      threadFilter: t => t.id === threadId,
+    });
+  }
+
+  public static create(
+    threadId: ThreadId,
+    filename: string | null,
+    modulePath: string | null,
+  ): CoverageTrace {
+    if (Traces.has(threadId)) {
+      throw new Error(`trace already exists for threadId: ${threadId}`);
+    }
+
+    const trace = new CoverageTrace(threadId, filename, modulePath);
+    Traces.set(threadId, trace);
+    return trace;
+  }
+
+  protected doStop() {
+    this.coverage.stop();
+    this.trace.stop();
   }
 }

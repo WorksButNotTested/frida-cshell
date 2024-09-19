@@ -50,6 +50,12 @@ import { GrepCmdLet } from '../cmdlets/misc/grep.js';
 import { CatCmdLet } from '../cmdlets/files/cat.js';
 import { LogCmdLet } from '../cmdlets/misc/log.js';
 import { HotCmdLet } from '../cmdlets/thread/hot.js';
+import {
+  TraceCallCmdLet,
+  TraceBlockCmdLet,
+  TraceUniqueBlockCmdLet,
+  TraceCoverageCmdLet,
+} from '../cmdlets/trace/trace.js';
 
 export class CmdLets {
   private static byName: Map<string, CmdLet> = new Map<string, CmdLet>();
@@ -95,6 +101,10 @@ export class CmdLets {
     this.registerCmdletType(SrcCmdLet);
     this.registerCmdletType(SymCmdLet);
     this.registerCmdletType(ThreadCmdLet);
+    this.registerCmdletType(TraceBlockCmdLet);
+    this.registerCmdletType(TraceCallCmdLet);
+    this.registerCmdletType(TraceCoverageCmdLet);
+    this.registerCmdletType(TraceUniqueBlockCmdLet);
     this.registerCmdletType(UniqueBlockTraceBpCmdLet);
     this.registerCmdletType(VarCmdLet);
     this.registerCmdletType(DebugCmdLet);

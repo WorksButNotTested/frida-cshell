@@ -1,12 +1,14 @@
 import { Output } from '../io/output.js';
-import { Trace, TraceData, Traces } from './trace.js';
+import { Format } from '../misc/format.js';
+import { TraceBase, TraceData, TraceElement, Traces } from './trace.js';
 
-class BlockTraceData implements TraceData {
+class BlockTraceData extends TraceData {
   private static readonly MAX_BLOCKS = 1024;
   private trace: ArrayBuffer = new ArrayBuffer(0);
   private depth: number;
 
   public constructor(depth: number) {
+    super();
     this.depth = depth;
   }
 
@@ -17,62 +19,84 @@ class BlockTraceData implements TraceData {
     this.trace = newBuffer.buffer as ArrayBuffer;
   }
 
-  public display() {
+  public lines(): string[] {
     const events = Stalker.parse(this.trace, {
       annotate: true,
       stringify: false,
     }) as StalkerEventFull[];
 
-    let numOutput = 0;
-    let currentDepth = 0;
-    let first = true;
-    for (const e of events) {
-      switch (e.length) {
-        case 3: {
-          const [kind, start, _end] = e;
-          if (!first && currentDepth >= this.depth) break;
-          if (kind !== 'block' && kind !== 'compile') break;
-          const name = Traces.getAddressString(start as NativePointer);
-          if (name === null) break;
-          if (first) {
-            currentDepth = 0;
-            first = false;
-          }
-          if (numOutput >= BlockTraceData.MAX_BLOCKS) {
-            Output.writeln(Output.red(`TRACE TRUNCATED`));
-            return;
-          }
-          numOutput += 1;
-          const idx = `${numOutput.toString().padStart(4, ' ')}. `;
-          const depth = currentDepth > 0 ? '\t'.repeat(currentDepth) : '';
-          Output.writeln(`${depth}${Output.bold(idx)}${name}`);
-          break;
-        }
-        case 4: {
-          const [kind, _from, _to, _depth] = e;
-          if (kind === 'call') {
-            currentDepth += 1;
-          } else if (kind === 'ret') {
-            if (currentDepth > 0) {
-              currentDepth -= 1;
+    const filtered = this.filterEvents(events, (e: StalkerEventFull) => {
+      if (e.length !== 3) return null;
+      const [kind, start, _end] = e;
+      if (kind !== 'block' && kind !== 'compile') return null;
+      return start as NativePointer;
+    });
+
+    /* Assign a depth to each event */
+    const depths: {
+      depth: number;
+      events: TraceElement[];
+    } = filtered.reduce<{
+      depth: number;
+      events: TraceElement[];
+    }>(
+      (acc, event) => {
+        switch (event.length) {
+          case 3: {
+            const [kind, start, _end] = event;
+            const startPtr = start as NativePointer;
+            switch (kind) {
+              case 'block':
+              case 'compile': {
+                acc.events.push({ addr: startPtr, depth: acc.depth });
+                break;
+              }
             }
+            break;
           }
-          break;
+          case 4: {
+            const [kind, _from, _to, _depth] = event;
+            switch (kind) {
+              case 'call': {
+                acc.depth += 1;
+                break;
+              }
+              case 'ret': {
+                acc.depth -= 1;
+                break;
+              }
+            }
+            break;
+          }
         }
-        default:
-          break;
-      }
-    }
+        return acc;
+      },
+      { depth: 0, events: [] },
+    );
+
+    const elements = this.filterElements(depths.events, this.depth);
+    const named = this.nameElements(elements).slice(
+      0,
+      BlockTraceData.MAX_BLOCKS,
+    );
+    const strings = this.elementsToStrings(named);
+    return strings;
+  }
+
+  public details(): string {
+    return [
+      'depth:',
+      Output.blue(this.depth.toString()),
+      'size:',
+      Output.blue(Format.toSize(this.trace.byteLength)),
+    ].join(' ');
   }
 }
 
-export class BlockTrace implements Trace {
-  private threadId: ThreadId;
-  private trace: BlockTraceData;
-
+export class BlockTrace extends TraceBase<BlockTraceData> {
   private constructor(threadId: ThreadId, depth: number, unique: boolean) {
-    this.threadId = threadId;
-    this.trace = new BlockTraceData(depth);
+    const trace = new BlockTraceData(depth);
+    super(threadId, trace);
     Stalker.follow(threadId, {
       events: {
         call: true,
@@ -91,7 +115,7 @@ export class BlockTrace implements Trace {
   public static create(
     threadId: ThreadId,
     depth: number,
-    unique: boolean = false,
+    unique: boolean,
   ): BlockTrace {
     if (Traces.has(threadId)) {
       throw new Error(`trace already exists for threadId: ${threadId}`);
@@ -102,12 +126,8 @@ export class BlockTrace implements Trace {
     return trace;
   }
 
-  public stop() {
+  protected doStop() {
     Stalker.unfollow(this.threadId);
     Stalker.flush();
-  }
-
-  public data(): BlockTraceData {
-    return this.trace;
   }
 }

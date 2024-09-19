@@ -53,4 +53,9 @@ export class Format {
     return new Uint8Array(str.split('').map(c => c.charCodeAt(0)))
       .buffer as ArrayBuffer;
   }
+
+  public static removeColours(input: string): string {
+    // eslint-disable-next-line no-control-regex
+    return input.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '');
+  }
 }

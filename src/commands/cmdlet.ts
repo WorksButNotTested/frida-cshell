@@ -1,10 +1,11 @@
 import { Token } from '../io/token.js';
 import { Var } from '../vars/var.js';
 
-const DELETE_CHAR: string = '#';
 const UNLIMITED_CHAR: string = '*';
 
 export abstract class CmdLet {
+  public static readonly NUM_CHAR: string = '#';
+  public static readonly DELETE_CHAR: string = '#';
   public abstract readonly category: string;
   public abstract readonly name: string;
   public abstract readonly help: string;
@@ -93,7 +94,7 @@ export abstract class CmdLet {
 
   protected parseDelete(token: Token): string | null {
     const literal = token.getLiteral();
-    if (literal !== DELETE_CHAR) return null;
+    if (literal !== CmdLet.DELETE_CHAR) return null;
     return literal;
   }
 
@@ -105,5 +106,16 @@ export abstract class CmdLet {
 
     const hits = v.toU64().toNumber();
     return hits;
+  }
+
+  protected parseIndex(token: Token): number | null {
+    const literal = token.getLiteral();
+    if (!literal.startsWith(CmdLet.NUM_CHAR)) return null;
+
+    const numStr = literal.slice(1);
+    const val = parseInt(numStr);
+
+    if (isNaN(val)) return null;
+    return val;
   }
 }

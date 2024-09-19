@@ -1,12 +1,14 @@
 import { Output } from '../io/output.js';
-import { Trace, TraceData, Traces } from './trace.js';
+import { Format } from '../misc/format.js';
+import { TraceBase, TraceData, TraceElement, Traces } from './trace.js';
 
-class CallTraceData implements TraceData {
+class CallTraceData extends TraceData {
   private static readonly MAX_CALLS = 1024;
   private trace: ArrayBuffer = new ArrayBuffer(0);
   private depth: number;
 
   public constructor(depth: number) {
+    super();
     this.depth = depth;
   }
 
@@ -17,55 +19,74 @@ class CallTraceData implements TraceData {
     this.trace = newBuffer.buffer as ArrayBuffer;
   }
 
-  public display() {
+  public lines(): string[] {
     const events = Stalker.parse(this.trace, {
       annotate: true,
       stringify: false,
     }) as StalkerEventFull[];
 
-    let numOutput = 0;
-    let currentDepth = 0;
-    let first = true;
-    for (const e of events) {
-      const [kind, from, to, _depth] = e;
-      if (kind === 'call') {
-        currentDepth += 1;
-        if (!first && currentDepth >= this.depth) continue;
-        const toName = Traces.getAddressString(to as NativePointer);
-        if (toName === null) continue;
+    /* Filter events for which we have no module information */
+    const filtered = this.filterEvents(events, (e: StalkerEventFull) => {
+      if (e.length !== 4) return null;
+      const [kind, _from, to, _depth] = e;
+      if (kind !== 'call') return null;
+      return to as NativePointer;
+    });
 
-        if (first) {
-          const idx = `${numOutput.toString().padStart(4, ' ')}. `;
-          const fromName = Traces.getAddressString(from as NativePointer);
-          if (fromName === null) continue;
-          Output.writeln(`${Output.bold(idx)}${fromName}`);
-          currentDepth = 1;
-          first = false;
+    /* Assign a depth to each event */
+    const depths: {
+      first: boolean;
+      depth: number;
+      events: TraceElement[];
+    } = filtered.reduce<{
+      first: boolean;
+      depth: number;
+      events: TraceElement[];
+    }>(
+      (acc, event) => {
+        if (event.length !== 4) return acc;
+        const [kind, from, to, _depth] = event;
+        const [fromPtr, toPtr] = [from as NativePointer, to as NativePointer];
+        switch (kind) {
+          case 'call': {
+            if (acc.first) {
+              acc.events.push({ addr: fromPtr, depth: acc.depth });
+              acc.first = false;
+            }
+            acc.depth += 1;
+            acc.events.push({ addr: toPtr, depth: acc.depth });
+            break;
+          }
+          case 'ret': {
+            acc.depth -= 1;
+            break;
+          }
         }
-        if (numOutput >= CallTraceData.MAX_CALLS) {
-          Output.writeln(Output.red(`TRACE TRUNCATED`));
-          return;
-        }
-        numOutput += 1;
-        const idx = `${numOutput.toString().padStart(4, ' ')}. `;
-        const depth = currentDepth > 0 ? '\t'.repeat(currentDepth) : '';
-        Output.writeln(`${depth}${Output.bold(idx)}${toName}`);
-      } else if (kind === 'ret') {
-        if (currentDepth > 0) {
-          currentDepth -= 1;
-        }
-      }
-    }
+        return acc;
+      },
+      { first: true, depth: 0, events: [] },
+    );
+
+    const elements = this.filterElements(depths.events, this.depth);
+    const named = this.nameElements(elements).slice(0, CallTraceData.MAX_CALLS);
+    const strings = this.elementsToStrings(named);
+    return strings;
+  }
+
+  public details(): string {
+    return [
+      'depth:',
+      Output.blue(this.depth.toString()),
+      'size:',
+      Output.blue(Format.toSize(this.trace.byteLength)),
+    ].join(' ');
   }
 }
 
-export class CallTrace implements Trace {
-  private threadId: ThreadId;
-  private trace: CallTraceData;
-
+export class CallTrace extends TraceBase<CallTraceData> {
   private constructor(threadId: ThreadId, depth: number) {
-    this.threadId = threadId;
-    this.trace = new CallTraceData(depth);
+    const trace = new CallTraceData(depth);
+    super(threadId, trace);
     Stalker.follow(threadId, {
       events: {
         call: true,
@@ -89,12 +110,8 @@ export class CallTrace implements Trace {
     return trace;
   }
 
-  public stop() {
+  protected doStop() {
     Stalker.unfollow(this.threadId);
     Stalker.flush();
-  }
-
-  public data(): CallTraceData {
-    return this.trace;
   }
 }

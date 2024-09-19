@@ -4,8 +4,6 @@ import { Vars } from '../../vars/vars.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 
-const DELETE_CHAR: string = '#';
-
 const USAGE: string = `Usage: v
 v - show the values of all variables
 
@@ -16,7 +14,7 @@ v name value - assign a value to a variable
   name    the name of the variable to assign
   value   the value to assign
 
-v name ${DELETE_CHAR} - delete a variable
+v name ${CmdLet.DELETE_CHAR} - delete a variable
   name    the name of the variable to delete`;
 
 export class VarCmdLet extends CmdLet {

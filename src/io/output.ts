@@ -1,6 +1,7 @@
 import { CharCode } from './char.js';
 import { Vars } from '../vars/vars.js';
 import { DEFAULT_SRC_PATH } from '../entrypoint.js';
+import { Format } from '../misc/format.js';
 
 export class Output {
   private static readonly VERSION = '@VER@';
@@ -102,8 +103,7 @@ export class Output {
     }
 
     if (this.log !== null) {
-      // eslint-disable-next-line no-control-regex
-      const uncoloured = text.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '');
+      const uncoloured = Format.removeColours(text);
       this.log.write(uncoloured);
     }
     send(['frida:stderr', text]);

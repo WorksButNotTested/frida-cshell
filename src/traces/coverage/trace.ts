@@ -1,18 +1,33 @@
 import { Output } from '../../io/output.js';
-import { Trace, Traces } from '../trace.js';
+import { Trace, TraceData, Traces } from '../trace.js';
 import { Coverage, CoverageSession } from './coverage.js';
 
-export class CoverageTrace implements Trace {
-  private threadId: ThreadId;
+class CoverageTraceData implements TraceData {
   private filename: string;
+  private threadId: ThreadId;
+
+  public constructor(threadId: ThreadId, filename: string) {
+    this.threadId = threadId;
+    this.filename = filename;
+  }
+
+  public display() {
+    Output.writeln(
+      `Wrote coverage for thread: ${Output.yellow(this.threadId.toString())} to: ${Output.green(this.filename)}`,
+    );
+  }
+}
+export class CoverageTrace implements Trace {
   private file: File;
   private coverage: CoverageSession;
   private stopped: boolean = false;
+  private trace: CoverageTraceData;
 
   private constructor(threadId: ThreadId) {
-    this.threadId = threadId;
-    this.filename = CoverageTrace.getRandomFileName();
-    this.file = new File(this.filename, 'wb+');
+    const filename = CoverageTrace.getRandomFileName();
+    this.trace = new CoverageTraceData(threadId, filename);
+
+    this.file = new File(filename, 'wb+');
     this.coverage = Coverage.start({
       moduleFilter: m => Coverage.allModules(m),
       onCoverage: coverageData => {
@@ -30,12 +45,6 @@ export class CoverageTrace implements Trace {
     const trace = new CoverageTrace(threadId);
     Traces.set(threadId, trace);
     return trace;
-  }
-
-  public display() {
-    Output.writeln(
-      `Wrote coverage for thread: ${Output.yellow(this.threadId.toString())} to: ${Output.green(this.filename)}`,
-    );
   }
 
   public stop() {
@@ -60,5 +69,9 @@ export class CoverageTrace implements Trace {
     const rand = CoverageTrace.getRandomString(16);
     const filename = `/tmp/${rand}.cov`;
     return filename;
+  }
+
+  public data(): CoverageTraceData {
+    return this.trace;
   }
 }

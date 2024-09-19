@@ -1,39 +1,20 @@
 import { Output } from '../io/output.js';
-import { Trace, Traces } from './trace.js';
+import { Trace, TraceData, Traces } from './trace.js';
 
-export class CallTrace implements Trace {
+class CallTraceData implements TraceData {
   private static readonly MAX_CALLS = 1024;
-  private threadId: ThreadId;
   private trace: ArrayBuffer = new ArrayBuffer(0);
   private depth: number;
 
-  private constructor(threadId: ThreadId, depth: number) {
-    this.threadId = threadId;
+  public constructor(depth: number) {
     this.depth = depth;
-    Stalker.follow(threadId, {
-      events: {
-        call: true,
-        ret: true,
-      },
-      onReceive: (events: ArrayBuffer) => {
-        const newBuffer = new Uint8Array(
-          this.trace.byteLength + events.byteLength,
-        );
-        newBuffer.set(new Uint8Array(this.trace), 0);
-        newBuffer.set(new Uint8Array(events), this.trace.byteLength);
-        this.trace = newBuffer.buffer as ArrayBuffer;
-      },
-    });
   }
 
-  public static create(threadId: ThreadId, depth: number): CallTrace {
-    if (Traces.has(threadId)) {
-      throw new Error(`trace already exists for threadId: ${threadId}`);
-    }
-
-    const trace = new CallTrace(threadId, depth);
-    Traces.set(threadId, trace);
-    return trace;
+  public append(events: ArrayBuffer) {
+    const newBuffer = new Uint8Array(this.trace.byteLength + events.byteLength);
+    newBuffer.set(new Uint8Array(this.trace), 0);
+    newBuffer.set(new Uint8Array(events), this.trace.byteLength);
+    this.trace = newBuffer.buffer as ArrayBuffer;
   }
 
   public display() {
@@ -49,7 +30,7 @@ export class CallTrace implements Trace {
       const [kind, from, to, _depth] = e;
       if (kind === 'call') {
         currentDepth += 1;
-        if (currentDepth >= this.depth) continue;
+        if (!first && currentDepth >= this.depth) continue;
         const toName = Traces.getAddressString(to as NativePointer);
         if (toName === null) continue;
 
@@ -61,7 +42,7 @@ export class CallTrace implements Trace {
           currentDepth = 1;
           first = false;
         }
-        if (numOutput >= CallTrace.MAX_CALLS) {
+        if (numOutput >= CallTraceData.MAX_CALLS) {
           Output.writeln(Output.red(`TRACE TRUNCATED`));
           return;
         }
@@ -76,9 +57,44 @@ export class CallTrace implements Trace {
       }
     }
   }
+}
+
+export class CallTrace implements Trace {
+  private threadId: ThreadId;
+  private trace: CallTraceData;
+
+  private constructor(threadId: ThreadId, depth: number) {
+    this.threadId = threadId;
+    this.trace = new CallTraceData(depth);
+    Stalker.follow(threadId, {
+      events: {
+        call: true,
+        ret: true,
+      },
+      onReceive: (events: ArrayBuffer) => {
+        if (this.trace !== null) {
+          this.trace.append(events);
+        }
+      },
+    });
+  }
+
+  public static create(threadId: ThreadId, depth: number): CallTrace {
+    if (Traces.has(threadId)) {
+      throw new Error(`trace already exists for threadId: ${threadId}`);
+    }
+
+    const trace = new CallTrace(threadId, depth);
+    Traces.set(threadId, trace);
+    return trace;
+  }
 
   public stop() {
     Stalker.unfollow(this.threadId);
     Stalker.flush();
+  }
+
+  public data(): CallTraceData {
+    return this.trace;
   }
 }

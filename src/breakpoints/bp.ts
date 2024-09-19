@@ -7,7 +7,7 @@ import { Parser } from '../io/parser.js';
 import { Regs } from './regs.js';
 import { Format } from '../misc/format.js';
 import { BlockTrace } from '../traces/block.js';
-import { Trace, Traces } from '../traces/trace.js';
+import { Trace, TraceData, Traces } from '../traces/trace.js';
 import { Var } from '../vars/var.js';
 import { Vars } from '../vars/vars.js';
 import { CallTrace } from '../traces/call.js';
@@ -210,11 +210,8 @@ export class Bp {
       if (this._trace === null) return;
       this._trace.stop();
 
-      Output.writeln(Output.blue('-'.repeat(80)));
-      this._trace.display();
-      Output.writeln(Output.blue('-'.repeat(80)));
       Output.clearLine();
-
+      Output.writeln(Output.blue('-'.repeat(80)));
       Output.writeln(
         [
           `${Output.yellow('|')} Stop Trace`,
@@ -227,10 +224,32 @@ export class Bp {
       );
       Output.writeln(Output.yellow('-'.repeat(80)));
 
+      const data = this._trace.data();
+      setTimeout(() => this.displayTraceData(data));
+
       Traces.delete(threadId);
     } finally {
       Input.prompt();
       Regs.clear();
+    }
+  }
+
+  private displayTraceData(trace: TraceData) {
+    Output.clearLine();
+    Output.writeln(Output.yellow('-'.repeat(80)));
+    Output.writeln(`${Output.yellow('|')} Displaying trace:`);
+    Output.writeln(Output.yellow('-'.repeat(80)));
+    Input.suppressIntercept(true);
+    Output.setIndent(true);
+    Output.writeln();
+    try {
+      trace.display();
+      Output.writeln();
+    } finally {
+      Output.setIndent(false);
+      Input.suppressIntercept(false);
+      Output.writeln(Output.yellow('-'.repeat(80)));
+      Input.prompt();
     }
   }
 

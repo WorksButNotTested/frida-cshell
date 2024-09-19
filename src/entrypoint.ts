@@ -12,20 +12,20 @@ import { Output } from './io/output.js';
 import { MemoryBps } from './breakpoints/memory.js';
 import { Regs } from './breakpoints/regs.js';
 import { Format } from './misc/format.js';
-import { SrcCmdLet } from './cmdlets/src.js';
-import { BtCmdLet } from './cmdlets/bt.js';
+import { SrcCmdLet } from './cmdlets/files/src.js';
+import { BtCmdLet } from './cmdlets/thread/bt.js';
 
 export const DEFAULT_SRC_PATH: string = `${Process.getHomeDir()}/.cshellrc`;
 
 type InitParams = {
-  verbose: boolean;
+  debug: boolean;
 };
 
 rpc.exports = {
   init(stage: string, params: InitParams | null = null) {
-    const verbose = params?.verbose ?? false;
-    Output.setVerbose(verbose);
-    Output.verboseWriteln(`init - stage: ${stage}, verbose: ${verbose}`);
+    const debug = params?.debug ?? false;
+    Output.setDebugging(debug);
+    Output.debug(`init - stage: ${stage}, debug: ${debug}`);
     Output.banner();
     Process.setExceptionHandler(exceptionHandler);
     SrcCmdLet.loadInitScript(DEFAULT_SRC_PATH);

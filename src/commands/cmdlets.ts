@@ -1,16 +1,16 @@
 import { CmdLet } from './cmdlet.js';
-import { DumpCmdLet } from '../cmdlets/dump.js';
-import { DumpStringCmdLet } from '../cmdlets/string.js';
-import { ExitCmdLet } from '../cmdlets/exit.js';
-import { SymCmdLet } from '../cmdlets/sym.js';
-import { ReadCmdLet } from '../cmdlets/read.js';
-import { WriteCmdLet } from '../cmdlets/write.js';
-import { AssemblyCmdLet } from '../cmdlets/assembly.js';
-import { VarCmdLet } from '../cmdlets/var.js';
-import { VmCmdLet } from '../cmdlets/vm.js';
-import { ModCmdLet } from '../cmdlets/mod.js';
-import { ThreadCmdLet } from '../cmdlets/thread.js';
-import { BtCmdLet } from '../cmdlets/bt.js';
+import { DumpCmdLet } from '../cmdlets/data/dump.js';
+import { DumpStringCmdLet } from '../cmdlets/data/string.js';
+import { ExitCmdLet } from '../cmdlets/misc/exit.js';
+import { SymCmdLet } from '../cmdlets/memory/sym.js';
+import { ReadCmdLet } from '../cmdlets/data/read.js';
+import { WriteCmdLet } from '../cmdlets/data/write.js';
+import { AssemblyCmdLet } from '../cmdlets/data/assembly.js';
+import { VarCmdLet } from '../cmdlets/misc/var.js';
+import { VmCmdLet } from '../cmdlets/memory/vm.js';
+import { ModCmdLet } from '../cmdlets/modules/mod.js';
+import { ThreadCmdLet } from '../cmdlets/thread/thread.js';
+import { BtCmdLet } from '../cmdlets/thread/bt.js';
 import {
   AddCmdLet,
   SubCmdLet,
@@ -23,10 +23,10 @@ import {
   ShrCmdLet,
   NotCmdLet,
   EndianCmdLet,
-} from '../cmdlets/math.js';
-import { HistoryCmdLet } from '../cmdlets/history.js';
-import { HelpCmdLet } from '../cmdlets/help.js';
-import { CopyCmdLet } from '../cmdlets/copy.js';
+} from '../cmdlets/math/math.js';
+import { HistoryCmdLet } from '../cmdlets/misc/history.js';
+import { HelpCmdLet } from '../cmdlets/misc/help.js';
+import { CopyCmdLet } from '../cmdlets/data/copy.js';
 import {
   FunctionEntryBpCmdLet,
   FunctionExitBpCmdLet,
@@ -37,18 +37,18 @@ import {
   InsnBpCmdLet,
   ReadBpCmdLet,
   WriteBpCmdLet,
-} from '../cmdlets/bp.js';
-import { RegCmdLet } from '../cmdlets/reg.js';
-import { LdCmdLet } from '../cmdlets/ld.js';
-import { FdCmdLet } from '../cmdlets/fd.js';
-import { JsCmdLet } from '../cmdlets/js.js';
-import { PrintCmdLet } from '../cmdlets/print.js';
-import { ShCmdLet } from '../cmdlets/sh.js';
-import { SrcCmdLet } from '../cmdlets/src.js';
-import { VerboseCmdLet } from '../cmdlets/verbose.js';
-import { GrepCmdLet } from '../cmdlets/grep.js';
-import { CatCmdLet } from '../cmdlets/cat.js';
-import { LogCmdLet } from '../cmdlets/log.js';
+} from '../cmdlets/breakpoints/bp.js';
+import { RegCmdLet } from '../cmdlets/breakpoints/reg.js';
+import { LdCmdLet } from '../cmdlets/modules/ld.js';
+import { FdCmdLet } from '../cmdlets/files/fd.js';
+import { JsCmdLet } from '../cmdlets/development/js.js';
+import { PrintCmdLet } from '../cmdlets/misc/print.js';
+import { ShCmdLet } from '../cmdlets/misc/sh.js';
+import { SrcCmdLet } from '../cmdlets/files/src.js';
+import { DebugCmdLet } from '../cmdlets/development/debug.js';
+import { GrepCmdLet } from '../cmdlets/misc/grep.js';
+import { CatCmdLet } from '../cmdlets/files/cat.js';
+import { LogCmdLet } from '../cmdlets/misc/log.js';
 
 export class CmdLets {
   private static byName: Map<string, CmdLet> = new Map<string, CmdLet>();
@@ -95,7 +95,7 @@ export class CmdLets {
     this.registerCmdletType(ThreadCmdLet);
     this.registerCmdletType(UniqueBlockTraceBpCmdLet);
     this.registerCmdletType(VarCmdLet);
-    this.registerCmdletType(VerboseCmdLet);
+    this.registerCmdletType(DebugCmdLet);
     this.registerCmdletType(VmCmdLet);
     this.registerCmdletType(WriteCmdLet);
     this.registerCmdletType(WriteBpCmdLet);

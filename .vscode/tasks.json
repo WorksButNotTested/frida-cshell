@@ -131,7 +131,7 @@
 		},
 		{
 			"type": "shell",
-			"command": "frida-inject-32 -s frida-cshell.js -P '{\"verbose\": true}' --interactive -f /usr/bin/target32",
+			"command": "frida-inject-32 -s frida-cshell.js -P '{\"debug\": true}' --interactive -f /usr/bin/target32",
 			"problemMatcher": [],
 			"label": "Debug32",
 			"group": {
@@ -153,7 +153,7 @@
 		}
 		{
 			"type": "shell",
-			"command": "frida-inject-64 -s frida-cshell.js -P '{\"verbose\": true}' --interactive -f /usr/bin/target64",
+			"command": "frida-inject-64 -s frida-cshell.js -P '{\"debug\": true}' --interactive -f /usr/bin/target64",
 			"problemMatcher": [],
 			"label": "Debug64",
 			"group": {

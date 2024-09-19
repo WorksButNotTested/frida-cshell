@@ -109,7 +109,7 @@ export class Input {
     } catch (error) {
       if (error instanceof Error) {
         Output.writeln(`ERROR: ${error.message}`);
-        Output.verboseWriteln(`${error.stack}`);
+        Output.debug(`${error.stack}`);
       } else {
         Output.writeln(`ERROR: Unknown error`);
       }

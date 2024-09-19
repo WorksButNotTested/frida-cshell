@@ -57,7 +57,7 @@ export class Command {
     }
 
     args.forEach((param, index) => {
-      Output.verboseWriteln(
+      Output.debug(
         [
           `\t${index}:`,
           Format.toHexString(param),

@@ -23,7 +23,7 @@ export class Output {
     '\\____|___/_| |_|\\___|_|_| ',
   ];
 
-  private static verbose: boolean = false;
+  private static debugging: boolean = false;
   private static indent: boolean = false;
   private static filter: RegExp | null = null;
   private static log: File | null = null;
@@ -55,7 +55,7 @@ export class Output {
     this.writeln(`\tName: ${this.green(first.name)}`);
   }
 
-  public static verboseWriteln(buffer: string | null) {
+  public static debug(buffer: string | null) {
     this.dowrite(`${buffer ?? ''}\n`, true, false);
   }
 
@@ -72,7 +72,7 @@ export class Output {
     verbose: boolean,
     filter: boolean,
   ) {
-    if (verbose && !this.verbose) return;
+    if (verbose && !this.debugging) return;
     if (buffer === null) return;
 
     const filterExpression = (l: string) =>
@@ -117,12 +117,12 @@ export class Output {
     Output.writeln(`ret: ${Output.bold(Vars.getRet().toString())}`);
   }
 
-  public static getVerbose(): boolean {
-    return this.verbose;
+  public static getDebugging(): boolean {
+    return this.debugging;
   }
 
-  public static setVerbose(verbose: boolean) {
-    this.verbose = verbose;
+  public static setDebugging(debugging: boolean) {
+    this.debugging = debugging;
   }
 
   public static setIndent(indent: boolean) {

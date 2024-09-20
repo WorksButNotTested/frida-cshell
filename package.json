@@ -1,6 +1,6 @@
 {
   "name": "frida-cshell",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Frida's CShell",
   "scripts": {
     "prepare": "npm run build && npm run version && npm run package && npm run copy",

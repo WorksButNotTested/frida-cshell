@@ -5,7 +5,12 @@ import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 import { Regex } from '../../misc/regex.js';
 
-const USAGE: string = `Usage: mod
+export class ModCmdLet extends CmdLet {
+  name = 'mod';
+  category = 'modules';
+  help = 'display module information';
+
+  private static readonly USAGE: string = `Usage: mod
 
 mod - show all modules
 
@@ -14,11 +19,6 @@ mod address - show module for address
 
 mod name - show named module
   name      the name of the module to show information for`;
-
-export class ModCmdLet extends CmdLet {
-  name = 'mod';
-  category = 'modules';
-  help = 'display module information';
 
   public runSync(tokens: Token[]): Var {
     const retWithAddress = this.runShowAddress(tokens);
@@ -111,7 +111,7 @@ export class ModCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.writeln(USAGE);
+    Output.writeln(ModCmdLet.USAGE);
     return Var.ZERO;
   }
 }

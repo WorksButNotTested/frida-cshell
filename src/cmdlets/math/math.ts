@@ -4,11 +4,11 @@ import { Format } from '../../misc/format.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 
-const HEX_LABEL: string = 'HEXADECIMAL';
-const DEC_LABEL: string = 'DECIMAL';
-
 abstract class BinaryOpCmdLet extends CmdLet {
   category = 'math';
+
+  private static readonly HEX_LABEL: string = 'HEXADECIMAL';
+  private static readonly DEC_LABEL: string = 'DECIMAL';
 
   protected abstract OPERATION: string;
   protected abstract op(op0: UInt64, op1: UInt64): UInt64;
@@ -43,14 +43,26 @@ ${this.name} op1 op2 - ${this.OPERATION} two values together
     const h0 = Format.toHexString(op0);
     const h1 = Format.toHexString(op1);
     const hv = Format.toHexString(val);
-    const hMax = [HEX_LABEL, DEC_LABEL, h0, h1, hv]
+    const hMax = [
+      BinaryOpCmdLet.HEX_LABEL,
+      BinaryOpCmdLet.DEC_LABEL,
+      h0,
+      h1,
+      hv,
+    ]
       .map(x => x.length)
       .reduce((max, curr) => Math.max(max, curr));
 
     const d0 = Format.toDecString(op0);
     const d1 = Format.toDecString(op1);
     const dv = Format.toDecString(val);
-    const dMax = [HEX_LABEL, DEC_LABEL, d0, d1, dv]
+    const dMax = [
+      BinaryOpCmdLet.HEX_LABEL,
+      BinaryOpCmdLet.DEC_LABEL,
+      d0,
+      d1,
+      dv,
+    ]
       .map(x => x.length)
       .reduce((max, curr) => Math.max(max, curr));
 
@@ -61,7 +73,7 @@ ${this.name} op1 op2 - ${this.OPERATION} two values together
 
     Output.writeln();
     Output.writeln(
-      `${pad} ${HEX_LABEL.padStart(hMax, ' ')}${gap}${pad} ${DEC_LABEL.padStart(dMax, ' ')}`,
+      `${pad} ${BinaryOpCmdLet.HEX_LABEL.padStart(hMax, ' ')}${gap}${pad} ${BinaryOpCmdLet.DEC_LABEL.padStart(dMax, ' ')}`,
     );
     Output.writeln(
       `${pad} ${Output.blue(h0.padStart(hMax, ' '))}${gap}${pad} ${Output.blue(d0.padStart(dMax, ' '))}`,
@@ -80,6 +92,9 @@ ${this.name} op1 op2 - ${this.OPERATION} two values together
 
 abstract class UnaryOpCmdLet extends CmdLet {
   category = 'math';
+
+  private static readonly HEX_LABEL: string = 'HEXADECIMAL';
+  private static readonly DEC_LABEL: string = 'DECIMAL';
 
   protected abstract OPERATION: string;
   protected abstract op(op0: UInt64): UInt64;
@@ -112,13 +127,13 @@ ${this.name} op - perform a ${this.OPERATION} operation on an operand
   protected output(op0: UInt64, val: UInt64) {
     const h0 = Format.toHexString(op0);
     const hv = Format.toHexString(val);
-    const hMax = [HEX_LABEL, DEC_LABEL, h0, hv]
+    const hMax = [UnaryOpCmdLet.HEX_LABEL, UnaryOpCmdLet.DEC_LABEL, h0, hv]
       .map(x => x.length)
       .reduce((max, curr) => Math.max(max, curr));
 
     const d0 = Format.toDecString(op0);
     const dv = Format.toDecString(val);
-    const dMax = [HEX_LABEL, DEC_LABEL, d0, dv]
+    const dMax = [UnaryOpCmdLet.HEX_LABEL, UnaryOpCmdLet.DEC_LABEL, d0, dv]
       .map(x => x.length)
       .reduce((max, curr) => Math.max(max, curr));
 
@@ -129,7 +144,7 @@ ${this.name} op - perform a ${this.OPERATION} operation on an operand
 
     Output.writeln();
     Output.writeln(
-      `${pad} ${HEX_LABEL.padStart(hMax, ' ')}${gap}${pad} ${DEC_LABEL.padStart(dMax, ' ')}`,
+      `${pad} ${UnaryOpCmdLet.HEX_LABEL.padStart(hMax, ' ')}${gap}${pad} ${UnaryOpCmdLet.DEC_LABEL.padStart(dMax, ' ')}`,
     );
     Output.writeln(
       `${pad} ${Output.blue(h0.padStart(hMax, ' '))}${gap}${pad} ${Output.blue(d0.padStart(dMax, ' '))}`,

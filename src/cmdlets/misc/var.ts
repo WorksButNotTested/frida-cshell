@@ -4,7 +4,12 @@ import { Vars } from '../../vars/vars.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 
-const USAGE: string = `Usage: v
+export class VarCmdLet extends CmdLet {
+  name = 'v';
+  category = 'misc';
+  help = 'variable management';
+
+  private static readonly USAGE: string = `Usage: v
 v - show the values of all variables
 
 v name - display the value of a named variable
@@ -16,11 +21,6 @@ v name value - assign a value to a variable
 
 v name ${CmdLet.DELETE_CHAR} - delete a variable
   name    the name of the variable to delete`;
-
-export class VarCmdLet extends CmdLet {
-  name = 'v';
-  category = 'misc';
-  help = 'variable management';
 
   public runSync(tokens: Token[]): Var {
     const retWithNameAndHash = this.runDelete(tokens);
@@ -92,7 +92,7 @@ export class VarCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.writeln(USAGE);
+    Output.writeln(VarCmdLet.USAGE);
     return Var.ZERO;
   }
 }

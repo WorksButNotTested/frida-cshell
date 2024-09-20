@@ -4,17 +4,17 @@ import { History } from '../../terminal/history.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 
-const USAGE: string = `Usage: h
+export class HistoryCmdLet extends CmdLet {
+  name = 'h';
+  category = 'misc';
+  help = 'command history';
+
+  private static readonly USAGE: string = `Usage: h
 
 h - show history
 
 h index - rerun history item
   index   the index of the item to rerun`;
-
-export class HistoryCmdLet extends CmdLet {
-  name = 'h';
-  category = 'misc';
-  help = 'command history';
 
   public runSync(_tokens: Token[]): Var {
     throw new Error('not supported');
@@ -42,7 +42,7 @@ export class HistoryCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.writeln(USAGE);
+    Output.writeln(HistoryCmdLet.USAGE);
     return Var.ZERO;
   }
 }

@@ -5,6 +5,7 @@ export type TraceElement = { addr: NativePointer; depth: number };
 export type NamedElement = { name: string; depth: number };
 
 export abstract class TraceData {
+  public static readonly MAX_LINES: number = 1024;
   private static readonly MAX_OFFSET: number = 1024;
 
   public abstract append(events: ArrayBuffer): void;

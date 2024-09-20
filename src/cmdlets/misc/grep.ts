@@ -3,17 +3,17 @@ import { Output } from '../../io/output.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 
-const USAGE: string = `Usage: grep
+export class GrepCmdLet extends CmdLet {
+  name = 'grep';
+  category = 'misc';
+  help = 'filter output';
+
+  private static readonly USAGE: string = `Usage: grep
 
 grep - clear output filter
 
 grep regex - filter output
   regex      the regex to use to filter the output`;
-
-export class GrepCmdLet extends CmdLet {
-  name = 'grep';
-  category = 'misc';
-  help = 'filter output';
 
   public runSync(tokens: Token[]): Var {
     const vars = this.transformOptional(tokens, [], [this.parseLiteral]);
@@ -49,7 +49,7 @@ export class GrepCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.writeln(USAGE);
+    Output.writeln(GrepCmdLet.USAGE);
     return Var.ZERO;
   }
 }

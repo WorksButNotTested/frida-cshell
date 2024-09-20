@@ -3,15 +3,15 @@ import { Output } from '../../io/output.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 
-const USAGE: string = `Usage: cat
-
-cat file - dump file
-  file      the file to dump`;
-
 export class CatCmdLet extends CmdLet {
   name = 'cat';
   category = 'files';
   help = 'dump a file';
+
+  private static readonly USAGE: string = `Usage: cat
+
+cat file - dump file
+  file      the file to dump`;
 
   public runSync(tokens: Token[]): Var {
     const vars = this.transform(tokens, [this.parseLiteral]);
@@ -32,7 +32,7 @@ export class CatCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.writeln(USAGE);
+    Output.writeln(CatCmdLet.USAGE);
     return Var.ZERO;
   }
 }

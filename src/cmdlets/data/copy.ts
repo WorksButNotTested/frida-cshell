@@ -5,17 +5,17 @@ import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 import { Mem } from '../../memory/mem.js';
 
-const USAGE: string = `Usage: cp
+export class CopyCmdLet extends CmdLet {
+  name = 'cp';
+  category = 'data';
+  help = 'copy data in memory';
+
+  private static readonly USAGE: string = `Usage: cp
 
 cp dest src bytes - copy data
   dest   the address/symbol to write to
   src    the address/symbol to read from
   bytes    the numer of bytes to read`;
-
-export class CopyCmdLet extends CmdLet {
-  name = 'cp';
-  category = 'data';
-  help = 'copy data in memory';
 
   public runSync(tokens: Token[]): Var {
     const vars = this.transform(tokens, [
@@ -42,7 +42,7 @@ export class CopyCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.writeln(USAGE);
+    Output.writeln(CopyCmdLet.USAGE);
     return Var.ZERO;
   }
 }

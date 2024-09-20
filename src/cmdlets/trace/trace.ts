@@ -5,7 +5,7 @@ import { Format } from '../../misc/format.js';
 import { BlockTrace } from '../../traces/block.js';
 import { CallTrace } from '../../traces/call.js';
 import { CoverageTrace } from '../../traces/coverage/trace.js';
-import { Trace, Traces } from '../../traces/trace.js';
+import { Trace, TraceData, Traces } from '../../traces/trace.js';
 import { Var } from '../../vars/var.js';
 
 abstract class TraceBaseCmdLet<T extends Trace, M> extends CmdLet {
@@ -235,6 +235,7 @@ abstract class TraceCmdLet<T extends Trace> extends TraceBaseCmdLet<
       trace
         .data()
         .lines()
+        .slice(0, TraceData.MAX_LINES)
         .forEach(l => {
           Output.writeln(l);
         });
@@ -245,14 +246,28 @@ abstract class TraceCmdLet<T extends Trace> extends TraceBaseCmdLet<
 
   protected override onStop(trace: Trace, meta: TraceCmdLetMeta): void {
     if (meta.file === null) return;
-
+    Output.writeln(Output.yellow('processing...'));
     const lines = trace.data().lines();
-    for (const line of lines) {
+    let last = 0;
+    Output.write(
+      `${Output.yellow('progress')} ${Output.blue(last.toString())}${Output.blue('%')}`,
+    );
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i] as string;
+      const current = Math.floor((i * 100) / lines.length);
+      if (current > last) {
+        Output.clearLine();
+        Output.write(
+          `${Output.yellow('progress')} ${Output.blue(current.toString())}${Output.blue('%')}`,
+        );
+        last = current;
+      }
       meta.file.write(`${Format.removeColours(line)}\n`);
     }
     meta.file.flush();
     const size = meta.file.tell();
     meta.file.close();
+    Output.writeln();
     Output.writeln(
       `\tWriting trace to: ${meta.fileName}, ${Format.toSize(size)} bytes`,
     );

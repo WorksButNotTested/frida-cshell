@@ -5,7 +5,12 @@ import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 import { Regs } from '../../breakpoints/regs.js';
 
-const USAGE: string = `Usage: R
+export class RegCmdLet extends CmdLet {
+  name = 'R';
+  category = 'breakpoints';
+  help = 'register management';
+
+  private static readonly USAGE: string = `Usage: R
 R - show the values of all registers
 
 R name - display the value of a named register
@@ -14,11 +19,6 @@ R name - display the value of a named register
 R name value - assign a value to a register
   name    the name of the register to assign
   value   the value to assign`;
-
-export class RegCmdLet extends CmdLet {
-  name = 'R';
-  category = 'breakpoints';
-  help = 'register management';
 
   public runSync(tokens: Token[]): Var {
     const vars = this.transformOptional(
@@ -63,7 +63,7 @@ export class RegCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.writeln(USAGE);
+    Output.writeln(RegCmdLet.USAGE);
     return Var.ZERO;
   }
 }

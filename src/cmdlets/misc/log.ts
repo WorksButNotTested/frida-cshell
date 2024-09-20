@@ -3,17 +3,17 @@ import { Output } from '../../io/output.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 
-const USAGE: string = `Usage: log
+export class LogCmdLet extends CmdLet {
+  name = 'log';
+  category = 'misc';
+  help = 'set log file';
+
+  private static readonly USAGE: string = `Usage: log
 
 log - clear log file
 
 log file - set log file
   file      the file to log to`;
-
-export class LogCmdLet extends CmdLet {
-  name = 'log';
-  category = 'misc';
-  help = 'set log file';
 
   public runSync(tokens: Token[]): Var {
     const vars = this.transformOptional(tokens, [], [this.parseLiteral]);
@@ -41,7 +41,7 @@ export class LogCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.writeln(USAGE);
+    Output.writeln(LogCmdLet.USAGE);
     return Var.ZERO;
   }
 }

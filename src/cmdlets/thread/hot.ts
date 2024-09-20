@@ -6,87 +6,87 @@ import { Var } from '../../vars/var.js';
 import { Format } from '../../misc/format.js';
 import { Input } from '../../io/input.js';
 
-const MAX_DURATION: number = 10;
-const USAGE: string = `Usage: t
+export class HotCmdLet extends CmdLet {
+  name = 'hot';
+  category = 'thread';
+  help = 'display thread execution time information';
+
+  private static readonly MAX_DURATION: number = 10;
+  private static readonly USAGE: string = `Usage: t
 
 hot * - show execution time for all threads
 
 hot * duration - show execution time for all threads during a given time period
-  duration   the duration in seconds (maximum of ${MAX_DURATION}) over which to time the threads
+  duration   the duration in seconds (maximum of ${HotCmdLet.MAX_DURATION}) over which to time the threads
 
 hot id - show execution time for given thread
   id    the id of the thread to show information for
 
 hot id duration - show execution time for given thread during a given time period
   id         the id of the thread to show information for
-  duration   the duration in seconds (maximum of ${MAX_DURATION}) over which to time the thread
+  duration   the duration in seconds (maximum of ${HotCmdLet.MAX_DURATION}) over which to time the thread
 
 hot name - show execution time for given thread
   name  the name of the thread to show information for
 
 hot name duration - show execution time for given thread during a given time period
   name       the name of the thread to show information for
-  duration   the duration in seconds (maximum of ${MAX_DURATION}) over which to time the thread`;
+  duration   the duration in seconds (maximum of ${HotCmdLet.MAX_DURATION}) over which to time the thread`;
 
-const FIELD_NAMES = [
-  'pid',
-  'comm',
-  'state',
-  'ppid',
-  'pgrp',
-  'session',
-  'tty_nr',
-  'tpgid',
-  'flags',
-  'minflt',
-  'cminflt',
-  'majflt',
-  'cmajflt',
-  'utime',
-  'stime',
-  'cutime',
-  'cstime',
-  'priority',
-  'nice',
-  'num_threads',
-  'itrealvalue',
-  'starttime',
-  'vsize',
-  'rss',
-  'rsslim',
-  'startcode',
-  'endcode',
-  'startstack',
-  'kstkesp',
-  'kstkeip',
-  'signal',
-  'blocked',
-  'sigignore',
-  'sigcatch',
-  'wchan',
-  'nswap',
-  'cnswap',
-  'exit_signal',
-  'processor',
-  'rt_priority',
-  'policy',
-  'delayacct_blkio_ticks',
-  'guest_time',
-  'cguest_time',
-  'start_data',
-  'end_data',
-  'start_brk',
-  'arg_start',
-  'arg_end',
-  'env_start',
-  'env_end',
-  'exit_code',
-];
-
-export class HotCmdLet extends CmdLet {
-  name = 'hot';
-  category = 'thread';
-  help = 'display thread execution time information';
+  private static readonly FIELD_NAMES = [
+    'pid',
+    'comm',
+    'state',
+    'ppid',
+    'pgrp',
+    'session',
+    'tty_nr',
+    'tpgid',
+    'flags',
+    'minflt',
+    'cminflt',
+    'majflt',
+    'cmajflt',
+    'utime',
+    'stime',
+    'cutime',
+    'cstime',
+    'priority',
+    'nice',
+    'num_threads',
+    'itrealvalue',
+    'starttime',
+    'vsize',
+    'rss',
+    'rsslim',
+    'startcode',
+    'endcode',
+    'startstack',
+    'kstkesp',
+    'kstkeip',
+    'signal',
+    'blocked',
+    'sigignore',
+    'sigcatch',
+    'wchan',
+    'nswap',
+    'cnswap',
+    'exit_signal',
+    'processor',
+    'rt_priority',
+    'policy',
+    'delayacct_blkio_ticks',
+    'guest_time',
+    'cguest_time',
+    'start_data',
+    'end_data',
+    'start_brk',
+    'arg_start',
+    'arg_end',
+    'env_start',
+    'env_end',
+    'exit_code',
+  ];
 
   private static readonly _SC_CLK_TCK: number = 2;
   private pSysConf: NativePointer | null = null;
@@ -154,7 +154,7 @@ export class HotCmdLet extends CmdLet {
     const v = token.toVar();
     if (v === null) return null;
     const num = v.toU64().toNumber();
-    if (num > MAX_DURATION) return null;
+    if (num > HotCmdLet.MAX_DURATION) return null;
     return num;
   }
 
@@ -229,12 +229,14 @@ export class HotCmdLet extends CmdLet {
           const data = File.readAllText(path);
           Output.debug(`data: ${data}`);
           const fields = data.split(' ');
-          const stats: Record<string, string | undefined> = FIELD_NAMES.reduce<
-            Record<string, string | undefined>
-          >((acc, key, index) => {
-            acc[key] = fields[index];
-            return acc;
-          }, {});
+          const stats: Record<string, string | undefined> =
+            HotCmdLet.FIELD_NAMES.reduce<Record<string, string | undefined>>(
+              (acc, key, index) => {
+                acc[key] = fields[index];
+                return acc;
+              },
+              {},
+            );
 
           Object.keys(stats).forEach((key, index) => {
             const val = stats[key];
@@ -324,7 +326,7 @@ export class HotCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.writeln(USAGE);
+    Output.writeln(HotCmdLet.USAGE);
     return Var.ZERO;
   }
 

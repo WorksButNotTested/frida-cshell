@@ -3,16 +3,16 @@ import { Output } from '../../io/output.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 
-const USAGE: string = `Usage: p
-p - print an expression
-
-p exp - print an expression
-  exp   the expression to print`;
-
 export class PrintCmdLet extends CmdLet {
   name = 'p';
   category = 'misc';
   help = 'print an expression';
+
+  private static readonly USAGE: string = `Usage: p
+p - print an expression
+
+p exp - print an expression
+  exp   the expression to print`;
 
   public runSync(tokens: Token[]): Var {
     if (tokens.length !== 1) return this.usage();
@@ -29,7 +29,7 @@ export class PrintCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.writeln(USAGE);
+    Output.writeln(PrintCmdLet.USAGE);
     return Var.ZERO;
   }
 }

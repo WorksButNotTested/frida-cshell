@@ -5,17 +5,17 @@ import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 import { Mem } from '../../memory/mem.js';
 
-const DEFAULT_LENGTH: number = 10;
-const USAGE: string = `Usage: l
-
-l address <bytes> - show disassembly listing
-  address   the address/symbol to disassemble
-  bytes     the number of instructions to disassemble (default ${DEFAULT_LENGTH})`;
-
 export class AssemblyCmdLet extends CmdLet {
   name = 'l';
   category = 'data';
   help = 'disassembly listing';
+
+  private static readonly DEFAULT_LENGTH: number = 10;
+  private static readonly USAGE: string = `Usage: l
+
+l address <bytes> - show disassembly listing
+  address   the address/symbol to disassemble
+  bytes     the number of instructions to disassemble (default ${AssemblyCmdLet.DEFAULT_LENGTH})`;
 
   public runSync(tokens: Token[]): Var {
     const vars = this.transformOptional(
@@ -27,7 +27,8 @@ export class AssemblyCmdLet extends CmdLet {
     const [[v0], [v1]] = vars as [[Var], [Var | null]];
 
     const address = v0.toPointer();
-    const length = v1 === null ? DEFAULT_LENGTH : v1.toU64().toNumber();
+    const length =
+      v1 === null ? AssemblyCmdLet.DEFAULT_LENGTH : v1.toU64().toNumber();
 
     if (length > 100) throw new Error(`too many instructions: ${length}`);
 
@@ -125,7 +126,7 @@ export class AssemblyCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.writeln(USAGE);
+    Output.writeln(AssemblyCmdLet.USAGE);
     return Var.ZERO;
   }
 }

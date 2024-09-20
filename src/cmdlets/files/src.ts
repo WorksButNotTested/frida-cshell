@@ -7,15 +7,15 @@ import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 import { Vars } from '../../vars/vars.js';
 
-const USAGE: string = `Usage: src
-
-src path - run commands from file
-  path      the absolute path of the file to load (note that paths with spaces must be quoted)`;
-
 export class SrcCmdLet extends CmdLet {
   name = 'src';
   category = 'files';
   help = 'run commands from file';
+
+  private static readonly USAGE: string = `Usage: src
+
+src path - run commands from file
+  path      the absolute path of the file to load (note that paths with spaces must be quoted)`;
 
   private static lastPath: string | null = null;
 
@@ -74,7 +74,7 @@ export class SrcCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.writeln(USAGE);
+    Output.writeln(SrcCmdLet.USAGE);
     return Var.ZERO;
   }
 }

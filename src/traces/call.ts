@@ -3,7 +3,6 @@ import { Format } from '../misc/format.js';
 import { TraceBase, TraceData, TraceElement, Traces } from './trace.js';
 
 class CallTraceData extends TraceData {
-  private static readonly MAX_CALLS = 1024;
   private trace: ArrayBuffer = new ArrayBuffer(0);
   private depth: number;
 
@@ -20,11 +19,13 @@ class CallTraceData extends TraceData {
   }
 
   public lines(): string[] {
+    Output.debug(Output.yellow('parsing...'));
     const events = Stalker.parse(this.trace, {
       annotate: true,
       stringify: false,
     }) as StalkerEventFull[];
 
+    Output.debug(Output.yellow('filtering events...'));
     /* Filter events for which we have no module information */
     const filtered = this.filterEvents(events, (e: StalkerEventFull) => {
       if (e.length !== 4) return null;
@@ -33,6 +34,7 @@ class CallTraceData extends TraceData {
       return to as NativePointer;
     });
 
+    Output.debug(Output.yellow('calculating depths...'));
     /* Assign a depth to each event */
     const depths: {
       first: boolean;
@@ -67,8 +69,11 @@ class CallTraceData extends TraceData {
       { first: true, depth: 0, events: [] },
     );
 
+    Output.debug(Output.yellow('filtering depths...'));
     const elements = this.filterElements(depths.events, this.depth);
-    const named = this.nameElements(elements).slice(0, CallTraceData.MAX_CALLS);
+    Output.debug(Output.yellow('finding symbols...'));
+    const named = this.nameElements(elements);
+    Output.debug(Output.yellow('formatting...'));
     const strings = this.elementsToStrings(named);
     return strings;
   }

@@ -4,17 +4,17 @@ import { Token } from '../../io/token.js';
 import { Format } from '../../misc/format.js';
 import { Var } from '../../vars/var.js';
 
-const USAGE: string = `Usage: t
+export class ThreadCmdLet extends CmdLet {
+  name = 't';
+  category = 'thread';
+  help = 'display thread information';
+
+  private static readonly USAGE: string = `Usage: t
 
 t - show all threads
 
 t name - show named thread
   name  the name of the thread to show information for`;
-
-export class ThreadCmdLet extends CmdLet {
-  name = 't';
-  category = 'thread';
-  help = 'display thread information';
 
   public runSync(tokens: Token[]): Var {
     const retWithId = this.runShowId(tokens);
@@ -106,7 +106,7 @@ export class ThreadCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.writeln(USAGE);
+    Output.writeln(ThreadCmdLet.USAGE);
     return Var.ZERO;
   }
 }

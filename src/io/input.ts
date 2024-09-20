@@ -9,14 +9,14 @@ enum InputState {
   Csi,
 }
 
-const QUIT_CHAR: string = 'q';
-const ABORT_CHAR: string = 'x';
-const CLEAR_CHAR: string = 'c';
-
 export class Input {
   public static readonly PROMPT: string = '-> ';
   public static readonly FILTERED_PROMPT: string = '~> ';
   private static readonly EDIT_PROMPT: string = '. ';
+
+  private static readonly QUIT_CHAR: string = 'q';
+  private static readonly ABORT_CHAR: string = 'x';
+  private static readonly CLEAR_CHAR: string = 'c';
 
   private static buffer: string = '';
   private static state: InputState = InputState.Default;
@@ -160,7 +160,7 @@ export class Input {
     Output.clearLine();
     Output.writeln(`- ${line}`);
 
-    if (line === QUIT_CHAR) {
+    if (line === Input.QUIT_CHAR) {
       /* Notify the commandlet we are done and exit edit mode */
       try {
         edit.done();
@@ -168,7 +168,7 @@ export class Input {
         this.interceptLine = null;
       }
       Output.writeRet();
-    } else if (line === CLEAR_CHAR) {
+    } else if (line === Input.CLEAR_CHAR) {
       /* Notify the commandlet we cleared and exit edit mode */
       try {
         edit.clear();
@@ -176,7 +176,7 @@ export class Input {
         this.interceptLine = null;
       }
       Output.writeRet();
-    } else if (line === ABORT_CHAR) {
+    } else if (line === Input.ABORT_CHAR) {
       /* Notify the commandlet we aborted and exit edit mode */
       try {
         edit.abort();
@@ -264,7 +264,7 @@ export class Input {
         this.interceptRaw = null;
       }
       Output.writeln(
-        `Type '${QUIT_CHAR}' to finish, '${CLEAR_CHAR}' to clear, or '${ABORT_CHAR}' to abort`,
+        `Type '${Input.QUIT_CHAR}' to finish, '${Input.CLEAR_CHAR}' to clear, or '${Input.ABORT_CHAR}' to abort`,
       );
       this.interceptLine = interceptLine;
     }

@@ -3,17 +3,17 @@ import { Output } from '../../io/output.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 
-const USAGE: string = `Usage: ld
+export class LdCmdLet extends CmdLet {
+  name = 'ld';
+  category = 'modules';
+  help = 'load modules';
+
+  private static readonly USAGE: string = `Usage: ld
 
 ld - load a module
 
 ld path - load a module
   path      the absolute path of the module to load (note that paths with spaces must be quoted)`;
-
-export class LdCmdLet extends CmdLet {
-  name = 'ld';
-  category = 'modules';
-  help = 'load modules';
 
   public runSync(tokens: Token[]): Var {
     const vars = this.transform(tokens, [this.parseLiteral]);
@@ -32,7 +32,7 @@ export class LdCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.writeln(USAGE);
+    Output.writeln(LdCmdLet.USAGE);
     return Var.ZERO;
   }
 }

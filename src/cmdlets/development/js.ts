@@ -66,15 +66,15 @@ import {
   TraceCoverageCmdLet,
 } from '../trace/trace.js';
 
-const USAGE: string = `Usage: js
-
-js path - load commandlet JS script
-  path      the absolute path of the commandlet script to load (note that paths with spaces must be quoted)`;
-
 export class JsCmdLet extends CmdLet {
   name = 'js';
   category = 'development';
   help = 'load script';
+
+  private static readonly USAGE: string = `Usage: js
+
+js path - load commandlet JS script
+  path      the absolute path of the commandlet script to load (note that paths with spaces must be quoted)`;
 
   public runSync(tokens: Token[]): Var {
     const vars = this.transform(tokens, [this.parseLiteral]);
@@ -164,7 +164,7 @@ export class JsCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.writeln(USAGE);
+    Output.writeln(JsCmdLet.USAGE);
     return Var.ZERO;
   }
 }

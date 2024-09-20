@@ -5,16 +5,16 @@ import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 import { Mem } from '../../memory/mem.js';
 
-const MAX_STRING_LENGTH: number = 1024;
-const USAGE: string = `Usage: ds
-
-ds address <bytes> - show string
-  adress   the address/symbol to show`;
-
 export class DumpStringCmdLet extends CmdLet {
   name = 'ds';
   category = 'data';
   help = 'dump string';
+
+  private static readonly MAX_STRING_LENGTH: number = 1024;
+  private static readonly USAGE: string = `Usage: ds
+
+ds address <bytes> - show string
+  adress   the address/symbol to show`;
 
   public runSync(tokens: Token[]): Var {
     const vars = this.transform(tokens, [this.parseVar]);
@@ -27,7 +27,7 @@ export class DumpStringCmdLet extends CmdLet {
   private dump(arg: Var) {
     const name = arg.getLiteral();
     const address = arg.toPointer();
-    const length = MAX_STRING_LENGTH;
+    const length = DumpStringCmdLet.MAX_STRING_LENGTH;
     let bytes: Uint8Array = new Uint8Array(0);
     let lastError: Error | null = null;
     while (length > 0) {
@@ -70,7 +70,7 @@ export class DumpStringCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.writeln(USAGE);
+    Output.writeln(DumpStringCmdLet.USAGE);
     return Var.ZERO;
   }
 }

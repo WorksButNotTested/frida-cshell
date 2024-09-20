@@ -5,16 +5,16 @@ import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 import { Format } from '../../misc/format.js';
 
-const USAGE: string = `Usage: bt
-bt - show the backtrace for the current thread in a breakpoint
-
-bt name - show backtrace for thread
-  thread   the name of the thread to show backtrace for`;
-
 export class BtCmdLet extends CmdLet {
   name = 'bt';
   category = 'thread';
   help = 'display backtrace information';
+
+  private static readonly USAGE: string = `Usage: bt
+bt - show the backtrace for the current thread in a breakpoint
+
+bt name - show backtrace for thread
+  thread   the name of the thread to show backtrace for`;
 
   public runSync(tokens: Token[]): Var {
     const retWithId = this.runShowId(tokens);
@@ -102,7 +102,7 @@ export class BtCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.writeln(USAGE);
+    Output.writeln(BtCmdLet.USAGE);
     return Var.ZERO;
   }
 }

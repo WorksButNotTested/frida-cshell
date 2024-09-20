@@ -15,12 +15,6 @@ enum DtType {
   DT_WHT = 14 /* The file is a BSD whiteout. */,
 }
 
-const USAGE: string = `Usage: fd
-fd - show all the open file descriptors for the process
-
-fd idx - show the given file descriptor
-  idx    the number of file descriptor to show`;
-
 type Fds = {
   [key: number]: string;
 };
@@ -29,6 +23,12 @@ export class FdCmdLet extends CmdLet {
   name = 'fd';
   category = 'files';
   help = 'display file descriptors';
+
+  private static readonly USAGE: string = `Usage: fd
+fd - show all the open file descriptors for the process
+
+fd idx - show the given file descriptor
+  idx    the number of file descriptor to show`;
 
   private static readonly PATH_MAX: number = 4096;
   private static readonly F_GETFD: number = 1;
@@ -230,7 +230,7 @@ export class FdCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.writeln(USAGE);
+    Output.writeln(FdCmdLet.USAGE);
     return Var.ZERO;
   }
 

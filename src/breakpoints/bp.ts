@@ -13,8 +13,6 @@ import { Vars } from '../vars/vars.js';
 import { CallTrace } from '../traces/call.js';
 import { CoverageTrace } from '../traces/coverage/trace.js';
 
-export const BP_LENGTH: number = 16;
-
 export enum BpKind {
   Code = 'code',
   Memory = 'memory',
@@ -33,6 +31,7 @@ export enum BpType {
 }
 
 export class Bp {
+  public static readonly BP_LENGTH: number = 16;
   private readonly _type: BpType;
   private readonly _idx: number;
 
@@ -97,7 +96,7 @@ export class Bp {
   private enableCode() {
     if (this._addr === null) return;
     if (this._listener !== null) return;
-    this._overlay = Overlay.add(this._addr.toPointer(), BP_LENGTH);
+    this._overlay = Overlay.add(this._addr.toPointer(), Bp.BP_LENGTH);
     const addr = this._addr;
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const bp = this;
@@ -243,9 +242,12 @@ export class Bp {
     Output.setIndent(true);
     Output.writeln();
     try {
-      trace.lines().forEach(l => {
-        Output.writeln(l);
-      });
+      trace
+        .lines()
+        .slice(0, TraceData.MAX_LINES)
+        .forEach(l => {
+          Output.writeln(l);
+        });
       Output.writeln();
     } finally {
       Output.setIndent(false);

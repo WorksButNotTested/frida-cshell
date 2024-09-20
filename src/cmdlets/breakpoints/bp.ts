@@ -1,4 +1,4 @@
-import { BP_LENGTH, BpType } from '../../breakpoints/bp.js';
+import { Bp, BpType } from '../../breakpoints/bp.js';
 import { Bps } from '../../breakpoints/bps.js';
 import { CmdLet } from '../../commands/cmdlet.js';
 import { Input, InputInterceptLine } from '../../io/input.js';
@@ -66,7 +66,7 @@ abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
   public usage(): Var {
     const create = this.usageCreate();
     const modify = this.usageModify();
-    const USAGE: string = `Usage: ${this.name}
+    const usage: string = `Usage: ${this.name}
 ${Output.bold('show:')}
 
 ${this.name} - show all ${this.bpType} breakpoints
@@ -87,7 +87,7 @@ ${this.name} ${CmdLet.NUM_CHAR}n # - delete a ${this.bpType} breakpoint
 
 ${Output.bold('NOTE:')} Set hits to '*' for unlimited breakpoint.`;
 
-    Output.writeln(USAGE);
+    Output.writeln(usage);
     return Var.ZERO;
   }
 
@@ -125,10 +125,10 @@ abstract class CodeBpCmdLet
       const bp = Bps.create(this.bpType, 0, null, 0);
       Output.writeln(`Created ${bp.toString()}`);
     } else if (hits === null) {
-      const bp = Bps.create(this.bpType, -1, addr, BP_LENGTH);
+      const bp = Bps.create(this.bpType, -1, addr, Bp.BP_LENGTH);
       Output.writeln(`Created ${bp.toString()}`);
     } else {
-      const bp = Bps.create(this.bpType, hits, addr, BP_LENGTH);
+      const bp = Bps.create(this.bpType, hits, addr, Bp.BP_LENGTH);
       Output.writeln(`Created ${bp.toString()}`);
     }
 
@@ -149,10 +149,10 @@ abstract class CodeBpCmdLet
       const bp = Bps.modify(this.bpType, index, 0, null, 0);
       Output.writeln(`Modified ${bp.toString()}`);
     } else if (hits === null) {
-      const bp = Bps.modify(this.bpType, index, -1, addr, BP_LENGTH);
+      const bp = Bps.modify(this.bpType, index, -1, addr, Bp.BP_LENGTH);
       Output.writeln(`Modified ${bp.toString()}`);
     } else {
-      const bp = Bps.modify(this.bpType, index, hits, addr, BP_LENGTH);
+      const bp = Bps.modify(this.bpType, index, hits, addr, Bp.BP_LENGTH);
       Output.writeln(`Modified ${bp.toString()}`);
     }
 
@@ -165,7 +165,7 @@ abstract class CodeBpCmdLet
   }
 
   protected override usageCreate(): string {
-    const USAGE: string = `
+    const usage: string = `
 ${this.name} 0 - create ${this.bpType} breakpoint without assigning an address
 
 ${this.name} addr - create ${this.bpType} breakpoint without a hit limit
@@ -175,11 +175,11 @@ ${this.name} addr hits - create ${this.bpType} breakpoint
    addr    the address to create the breakpoint
    hits    the number of times the breakpoint should fire`;
 
-    return USAGE;
+    return usage;
   }
 
   protected override usageModify(): string {
-    const USAGE: string = `
+    const usage: string = `
 ${this.name} ${CmdLet.NUM_CHAR}n addr - modify a ${this.bpType} breakpoint without a hit limit
    ${CmdLet.NUM_CHAR}n      the number of the breakpoint to modify
    addr    the address to move the breakpoint
@@ -188,7 +188,7 @@ ${this.name} ${CmdLet.NUM_CHAR}n addr hits - modify a ${this.bpType} breakpoint
    ${CmdLet.NUM_CHAR}n      the number of the breakpoint to modify
    addr    the address to move the breakpoint
    hits    the number of times the breakpoint should fire`;
-    return USAGE;
+    return usage;
   }
 }
 
@@ -263,7 +263,7 @@ abstract class MemoryBpCmdLet
   }
 
   protected override usageCreate(): string {
-    const USAGE: string = `
+    const usage: string = `
 ${this.name} 0 0 - create ${this.bpType} breakpoint without assigning an address
 
 ${this.name} addr len - create ${this.bpType} breakpoint without a hit limit
@@ -274,11 +274,11 @@ ${this.name} addr len hits - create ${this.bpType} breakpoint without a hit limi
    addr    the address to create the breakpoint
    len     the length of the memory region to watch
    hits    the number of times the breakpoint should fire`;
-    return USAGE;
+    return usage;
   }
 
   protected override usageModify(): string {
-    const USAGE: string = `
+    const usage: string = `
 ${this.name} ${CmdLet.NUM_CHAR}n addr len - modify a ${this.bpType} breakpoint without a hit limit
    ${CmdLet.NUM_CHAR}n      the number of the breakpoint to modify
    addr    the address to move the breakpoint
@@ -289,7 +289,7 @@ ${this.name} ${CmdLet.NUM_CHAR}n addr len hits - modify a ${this.bpType} breakpo
    addr    the address to move the breakpoint
    len     the length of the memory region to watch
    hits    the number of times the breakpoint should fire`;
-    return USAGE;
+    return usage;
   }
 }
 
@@ -313,7 +313,7 @@ abstract class TraceBpCmdLet
         this.bpType,
         -1,
         addr,
-        BP_LENGTH,
+        Bp.BP_LENGTH,
         depth.toU64().toNumber(),
       );
       Output.writeln(`Created ${bp.toString()}`);
@@ -322,7 +322,7 @@ abstract class TraceBpCmdLet
         this.bpType,
         hits,
         addr,
-        BP_LENGTH,
+        Bp.BP_LENGTH,
         depth.toU64().toNumber(),
       );
       Output.writeln(`Created ${bp.toString()}`);
@@ -352,7 +352,7 @@ abstract class TraceBpCmdLet
         index,
         -1,
         addr,
-        BP_LENGTH,
+        Bp.BP_LENGTH,
         depth.toU64().toNumber(),
       );
 
@@ -363,7 +363,7 @@ abstract class TraceBpCmdLet
         index,
         hits,
         addr,
-        BP_LENGTH,
+        Bp.BP_LENGTH,
         depth.toU64().toNumber(),
       );
 
@@ -375,7 +375,7 @@ abstract class TraceBpCmdLet
   }
 
   protected override usageCreate(): string {
-    const USAGE: string = `
+    const usage: string = `
 ${this.name} addr depth - create ${this.bpType} breakpoint without a hit limit
    addr    the address to create the breakpoint
    depth   the maximum depth of callstack to follow
@@ -384,11 +384,11 @@ ${this.name} addr depth hits - create ${this.bpType} breakpoint
    hits    the number of times the breakpoint should fire
    addr    the address to create the breakpoint
    depth   the maximum depth of callstack to follow`;
-    return USAGE;
+    return usage;
   }
 
   protected override usageModify(): string {
-    const USAGE: string = `
+    const usage: string = `
 ${this.name} ${CmdLet.NUM_CHAR}n addr depth - modify a ${this.bpType} breakpoint without a hit limit
    ${CmdLet.NUM_CHAR}n      the number of the breakpoint to modify
    addr    the address to move the breakpoint
@@ -399,7 +399,7 @@ ${this.name} ${CmdLet.NUM_CHAR}n addr depth hits - modify a ${this.bpType} break
    addr    the address to move the breakpoint
    depth   the maximum depth of callstack to follow
    hits    the number of times the breakpoint should fire`;
-    return USAGE;
+    return usage;
   }
 }
 

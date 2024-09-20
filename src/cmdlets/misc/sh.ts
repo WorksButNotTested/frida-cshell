@@ -5,24 +5,24 @@ import { Token } from '../../io/token.js';
 import { Format } from '../../misc/format.js';
 import { Var } from '../../vars/var.js';
 
-const INT_SIZE: number = 4;
-const PIPE_READ_OFFSET: number = 0;
-const PIPE_WRITE_OFFSET: number = 4;
-const STDIN_FILENO: number = 0;
-const STDOUT_FILENO: number = 1;
-const STDERR_FILENO: number = 2;
-const READ_SIZE: number = 4096;
-const WNOHANG: number = 1;
-
 type Pipe = { readFd: number; writeFd: number };
-
-const USAGE: string = `Usage: fd
-sh - run a shell`;
 
 export class ShCmdLet extends CmdLet {
   name = 'sh';
   category = 'misc';
   help = 'run a shell';
+
+  private static readonly USAGE: string = `Usage: fd
+sh - run a shell`;
+
+  private static readonly INT_SIZE: number = 4;
+  private static readonly PIPE_READ_OFFSET: number = 0;
+  private static readonly PIPE_WRITE_OFFSET: number = 4;
+  private static readonly STDIN_FILENO: number = 0;
+  private static readonly STDOUT_FILENO: number = 1;
+  private static readonly STDERR_FILENO: number = 2;
+  private static readonly READ_SIZE: number = 4096;
+  private static readonly WNOHANG: number = 1;
 
   private pGetEnv: NativePointer | null = null;
   private pPipe: NativePointer | null = null;
@@ -114,13 +114,13 @@ export class ShCmdLet extends CmdLet {
   private createPipe(): Pipe {
     if (this.fnPipe === null)
       throw new Error('failed to find necessary native functions');
-    const pipes = Memory.alloc(INT_SIZE * 2);
+    const pipes = Memory.alloc(ShCmdLet.INT_SIZE * 2);
     const { value: pipeRet, errno: pipeErrno } = this.fnPipe(
       pipes,
     ) as UnixSystemFunctionResult<number>;
     if (pipeRet !== 0) throw new Error(`failed to pipe, errno: ${pipeErrno}`);
-    const readFd = pipes.add(PIPE_READ_OFFSET).readInt();
-    const writeFd = pipes.add(PIPE_WRITE_OFFSET).readInt();
+    const readFd = pipes.add(ShCmdLet.PIPE_READ_OFFSET).readInt();
+    const writeFd = pipes.add(ShCmdLet.PIPE_WRITE_OFFSET).readInt();
     return { readFd, writeFd };
   }
 
@@ -151,23 +151,23 @@ export class ShCmdLet extends CmdLet {
 
       const { value: dup2InRet, errno: dup2InErrno } = this.fnDup2(
         toChildReadFd,
-        STDIN_FILENO,
+        ShCmdLet.STDIN_FILENO,
       ) as UnixSystemFunctionResult<number>;
-      if (dup2InRet !== STDIN_FILENO)
+      if (dup2InRet !== ShCmdLet.STDIN_FILENO)
         throw new Error(`failed to dup2(stdin), errno: ${dup2InErrno}`);
 
       const { value: dup2OutRet, errno: dup2OutErrno } = this.fnDup2(
         toParentWriteFd,
-        STDOUT_FILENO,
+        ShCmdLet.STDOUT_FILENO,
       ) as UnixSystemFunctionResult<number>;
-      if (dup2OutRet !== STDOUT_FILENO)
+      if (dup2OutRet !== ShCmdLet.STDOUT_FILENO)
         throw new Error(`failed to dup2(stdout), errno: ${dup2OutErrno}`);
 
       const { value: dup2ErrRet, errno: dup2ErrErrno } = this.fnDup2(
         toParentWriteFd,
-        STDERR_FILENO,
+        ShCmdLet.STDERR_FILENO,
       ) as UnixSystemFunctionResult<number>;
-      if (dup2ErrRet !== STDERR_FILENO)
+      if (dup2ErrRet !== ShCmdLet.STDERR_FILENO)
         throw new Error(`failed to dup2(stderr), errno: ${dup2ErrErrno}`);
 
       if (command.length === 0) throw new Error('empty command');
@@ -236,9 +236,9 @@ export class ShCmdLet extends CmdLet {
       Output.debug(`reading pid: ${childPid}`);
 
       for (
-        let buf = await input.read(READ_SIZE);
+        let buf = await input.read(ShCmdLet.READ_SIZE);
         buf.byteLength !== 0;
-        buf = await input.read(READ_SIZE)
+        buf = await input.read(ShCmdLet.READ_SIZE)
       ) {
         const str: string = Format.toTextString(buf);
         Output.write(str);
@@ -246,12 +246,12 @@ export class ShCmdLet extends CmdLet {
 
       Output.debug(`waiting pid: ${childPid}`);
 
-      const pStatus = Memory.alloc(INT_SIZE);
+      const pStatus = Memory.alloc(ShCmdLet.INT_SIZE);
 
       const { value: waitRet, errno: waitErrno } = this.fnWaitPid(
         childPid,
         pStatus,
-        WNOHANG,
+        ShCmdLet.WNOHANG,
       ) as UnixSystemFunctionResult<number>;
       if (waitRet < 0)
         throw new Error(`failed to waitpid ${waitRet}, errno: ${waitErrno}`);
@@ -288,7 +288,7 @@ export class ShCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.writeln(USAGE);
+    Output.writeln(ShCmdLet.USAGE);
     return Var.ZERO;
   }
 

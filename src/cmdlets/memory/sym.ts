@@ -5,7 +5,12 @@ import { Format } from '../../misc/format.js';
 import { Var } from '../../vars/var.js';
 import { Regex } from '../../misc/regex.js';
 
-const USAGE: string = `Usage: sym
+export class SymCmdLet extends CmdLet {
+  name = 'sym';
+  category = 'memory';
+  help = 'look up a symbol information';
+
+  private static readonly USAGE: string = `Usage: sym
 
 sym [mod!]name - looks up a symbol based upon a glob
   mod   a glob for the module name
@@ -16,11 +21,6 @@ sym name - display address information for a named symbol
 
 sym addr - display symbol information associated with an address
   addr   the address of the symbol to lookup`;
-
-export class SymCmdLet extends CmdLet {
-  name = 'sym';
-  category = 'memory';
-  help = 'look up a symbol information';
 
   public runSync(tokens: Token[]): Var {
     const retWithAddress = this.runShowAddress(tokens);
@@ -184,7 +184,7 @@ export class SymCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.writeln(USAGE);
+    Output.writeln(SymCmdLet.USAGE);
     return Var.ZERO;
   }
 }

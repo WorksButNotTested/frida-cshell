@@ -5,7 +5,12 @@ import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 import { Regex } from '../../misc/regex.js';
 
-const USAGE: string = `Usage: vm
+export class VmCmdLet extends CmdLet {
+  name = 'vm';
+  category = 'memory';
+  help = 'display virtual memory ranges';
+
+  private static readonly USAGE: string = `Usage: vm
 
 vm - show all mappings
 
@@ -14,11 +19,6 @@ vm address - show mapping for address
 
 vm module - show mappings for a module
   module    the name of the module to show mapping information for`;
-
-export class VmCmdLet extends CmdLet {
-  name = 'vm';
-  category = 'memory';
-  help = 'display virtual memory ranges';
 
   public runSync(tokens: Token[]): Var {
     const retWithAddress = this.runShowAddress(tokens);
@@ -142,7 +142,7 @@ export class VmCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.writeln(USAGE);
+    Output.writeln(VmCmdLet.USAGE);
     return Var.ZERO;
   }
 }

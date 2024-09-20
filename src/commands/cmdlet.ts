@@ -1,9 +1,8 @@
 import { Token } from '../io/token.js';
 import { Var } from '../vars/var.js';
 
-const UNLIMITED_CHAR: string = '*';
-
 export abstract class CmdLet {
+  private static readonly UNLIMITED_CHAR: string = '*';
   public static readonly NUM_CHAR: string = '#';
   public static readonly DELETE_CHAR: string = '#';
   public abstract readonly category: string;
@@ -99,7 +98,7 @@ export abstract class CmdLet {
   }
 
   protected parseNumberOrAll(token: Token): number | null {
-    if (token.getLiteral() === UNLIMITED_CHAR) return -1;
+    if (token.getLiteral() === CmdLet.UNLIMITED_CHAR) return -1;
 
     const v = token.toVar();
     if (v === null) return null;

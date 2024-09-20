@@ -3,13 +3,13 @@ import { Output } from '../../io/output.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 
-const USAGE: string = `Usage: debug
-debug - toggle debug mode`;
-
 export class DebugCmdLet extends CmdLet {
   name = 'debug';
   category = 'development';
   help = 'toggle debug mode';
+
+  private static readonly USAGE: string = `Usage: debug
+debug - toggle debug mode`;
 
   public runSync(_tokens: Token[]): Var {
     const debug = !Output.getDebugging();
@@ -24,7 +24,7 @@ export class DebugCmdLet extends CmdLet {
   }
 
   public usage(): Var {
-    Output.writeln(USAGE);
+    Output.writeln(DebugCmdLet.USAGE);
     return Var.ZERO;
   }
 }

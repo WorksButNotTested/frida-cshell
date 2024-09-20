@@ -1,12 +1,12 @@
 import { Var } from '../vars/var.js';
 
-const THREAD_ID_NAME: string = 'tid';
-const RETURN_ADDRESS_NAME: string = 'ra';
-const ADDR_NAME: string = 'addr';
-const PC_NAME: string = 'pc';
-const RETVAL_NAME: string = 'ret';
-
 export class Regs {
+  private static readonly THREAD_ID_NAME: string = 'tid';
+  private static readonly RETURN_ADDRESS_NAME: string = 'ra';
+  private static readonly ADDR_NAME: string = 'addr';
+  private static readonly PC_NAME: string = 'pc';
+  private static readonly RETVAL_NAME: string = 'ret';
+
   private static threadId: ThreadId | null = null;
   private static ctx: CpuContext | null = null;
   private static returnAddress: NativePointer | null = null;
@@ -17,33 +17,33 @@ export class Regs {
   private constructor() {}
 
   public static get(name: string): Var {
-    if (name === THREAD_ID_NAME) {
+    if (name === Regs.THREAD_ID_NAME) {
       if (this.threadId === null)
         throw new Error('thread ID not available outside of a breakpoint');
-      return new Var(uint64(this.threadId), THREAD_ID_NAME);
-    } else if (name === RETURN_ADDRESS_NAME) {
+      return new Var(uint64(this.threadId), Regs.THREAD_ID_NAME);
+    } else if (name === Regs.RETURN_ADDRESS_NAME) {
       if (this.returnAddress === null)
         throw new Error('return address not available outside of a breakpoint');
       return new Var(
         uint64(this.returnAddress.toString()),
-        RETURN_ADDRESS_NAME,
+        Regs.RETURN_ADDRESS_NAME,
       );
-    } else if (name === ADDR_NAME) {
+    } else if (name === Regs.ADDR_NAME) {
       if (this.addr === null)
         throw new Error('addr not available outside of a breakpoint');
-      return new Var(uint64(this.addr.toString()), ADDR_NAME);
-    } else if (name === RETVAL_NAME) {
+      return new Var(uint64(this.addr.toString()), Regs.ADDR_NAME);
+    } else if (name === Regs.RETVAL_NAME) {
       if (this.retVal === null)
         throw new Error(
           'return Value not available outside of a function exit breakpoint',
         );
-      return new Var(uint64(this.retVal.toString()), RETVAL_NAME);
+      return new Var(uint64(this.retVal.toString()), Regs.RETVAL_NAME);
     } else if (this.ctx === null) {
-      if (name === PC_NAME) {
+      if (name === Regs.PC_NAME) {
         if (this.pc === null) {
           throw new Error('pc not available outside of a breakpoint');
         }
-        return new Var(uint64(this.pc.toString()), PC_NAME);
+        return new Var(uint64(this.pc.toString()), Regs.PC_NAME);
       } else {
         throw new Error('registers not available outside of a breakpoint');
       }
@@ -163,13 +163,13 @@ export class Regs {
   }
 
   public static set(name: string, value: Var) {
-    if (name === THREAD_ID_NAME) {
+    if (name === Regs.THREAD_ID_NAME) {
       throw new Error('thread ID cannot be set');
-    } else if (name === RETURN_ADDRESS_NAME) {
+    } else if (name === Regs.RETURN_ADDRESS_NAME) {
       throw new Error('return address cannot be set');
-    } else if (name === ADDR_NAME) {
+    } else if (name === Regs.ADDR_NAME) {
       throw new Error('addr cannot be set');
-    } else if (name === RETVAL_NAME) {
+    } else if (name === Regs.RETVAL_NAME) {
       if (this.retVal === null)
         throw new Error(
           'return Value not available outside of a function exit breakpoint',
@@ -177,7 +177,7 @@ export class Regs {
       const ptr = value.toPointer();
       this.retVal.replace(ptr);
     } else if (this.ctx === null) {
-      if (name === PC_NAME) {
+      if (name === Regs.PC_NAME) {
         throw new Error('pc cannot be set');
       } else {
         throw new Error('registers not available outside of a breakpoint');
@@ -300,7 +300,10 @@ export class Regs {
 
     if (this.ctx === null) {
       if (this.pc !== null) {
-        result.push([PC_NAME, new Var(uint64(this.pc.toString()), PC_NAME)]);
+        result.push([
+          Regs.PC_NAME,
+          new Var(uint64(this.pc.toString()), Regs.PC_NAME),
+        ]);
       }
     } else {
       const regs = Array.from(this.getRegs(this.ctx).entries());
@@ -309,29 +312,32 @@ export class Regs {
 
     if (this.threadId !== null) {
       result.push([
-        THREAD_ID_NAME,
-        new Var(uint64(this.threadId), THREAD_ID_NAME),
+        Regs.THREAD_ID_NAME,
+        new Var(uint64(this.threadId), Regs.THREAD_ID_NAME),
       ]);
     }
 
     if (this.returnAddress !== null) {
       result.push([
-        RETURN_ADDRESS_NAME,
-        new Var(uint64(this.returnAddress.toString()), RETURN_ADDRESS_NAME),
+        Regs.RETURN_ADDRESS_NAME,
+        new Var(
+          uint64(this.returnAddress.toString()),
+          Regs.RETURN_ADDRESS_NAME,
+        ),
       ]);
     }
 
     if (this.addr !== null) {
       result.push([
-        ADDR_NAME,
-        new Var(uint64(this.addr.toString()), ADDR_NAME),
+        Regs.ADDR_NAME,
+        new Var(uint64(this.addr.toString()), Regs.ADDR_NAME),
       ]);
     }
 
     if (this.retVal !== null) {
       result.push([
-        RETVAL_NAME,
-        new Var(uint64(this.retVal.toString()), RETVAL_NAME),
+        Regs.RETVAL_NAME,
+        new Var(uint64(this.retVal.toString()), Regs.RETVAL_NAME),
       ]);
     }
 

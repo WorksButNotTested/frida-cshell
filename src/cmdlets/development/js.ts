@@ -65,6 +65,7 @@ import {
   TraceUniqueBlockCmdLet,
   TraceCoverageCmdLet,
 } from '../trace/trace.js';
+import { MacroCmdLet } from '../misc/macro.js';
 
 export class JsCmdLet extends CmdLet {
   name = 'js';
@@ -117,6 +118,7 @@ js path - load commandlet JS script
       LdCmdLet: LdCmdLet,
       Line: Line,
       LogCmdLet: LogCmdLet,
+      MacroCmdLet: MacroCmdLet,
       Mem: Mem,
       MemoryBps: MemoryBps,
       ModCmdLet: ModCmdLet,

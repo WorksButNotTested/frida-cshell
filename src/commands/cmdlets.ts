@@ -56,6 +56,7 @@ import {
   TraceUniqueBlockCmdLet,
   TraceCoverageCmdLet,
 } from '../cmdlets/trace/trace.js';
+import { MacroCmdLet } from '../cmdlets/misc/macro.js';
 
 export class CmdLets {
   private static byName: Map<string, CmdLet> = new Map<string, CmdLet>();
@@ -89,6 +90,7 @@ export class CmdLets {
     this.registerCmdletType(LogCmdLet);
     this.registerCmdletType(OrCmdLet);
     this.registerCmdletType(ReadCmdLet);
+    this.registerCmdletType(MacroCmdLet);
     this.registerCmdletType(ModCmdLet);
     this.registerCmdletType(MulCmdLet);
     this.registerCmdletType(NotCmdLet);

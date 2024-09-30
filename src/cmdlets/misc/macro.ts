@@ -106,7 +106,7 @@ m name ${CmdLet.DELETE_CHAR} - delete a macro
     return Var.ZERO;
   }
 
-  public static run(macro: Macro): Var {
+  public static runSync(macro: Macro): Var {
     let ret = Var.ZERO;
     for (const command of macro.commands) {
       if (command.length === 0) continue;

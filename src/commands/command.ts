@@ -17,7 +17,7 @@ export class Command {
 
     const macro = this.getMacro(tokens);
     if (macro !== null) {
-      return MacroCmdLet.run(macro);
+      return MacroCmdLet.runSync(macro);
     }
 
     return this.runFunction(tokens);
@@ -25,11 +25,16 @@ export class Command {
 
   public static runSync(tokens: Token[]): Var {
     const cmdlet = this.getCmdlet(tokens);
-    if (cmdlet === null) {
-      return this.runFunction(tokens);
-    } else {
+    if (cmdlet !== null) {
       return cmdlet.runSync(tokens.slice(1));
     }
+
+    const macro = this.getMacro(tokens);
+    if (macro !== null) {
+      return MacroCmdLet.runSync(macro);
+    }
+
+    return this.runFunction(tokens);
   }
 
   private static getCmdlet(tokens: Token[]): CmdLet | null {
@@ -45,7 +50,8 @@ export class Command {
     if (!name.startsWith(Command.MACRO_PREFIX)) return null;
     if (name.length === 1) throw new Error('macro name not supplied');
     const macro = Macros.get(name.slice(1));
-    if (macro === null) throw new Error(`failed to recognozie macro ${Output.green(name)}`);
+    if (macro === null)
+      throw new Error(`failed to recognozie macro ${Output.green(name)}`);
     return macro;
   }
 

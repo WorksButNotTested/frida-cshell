@@ -228,7 +228,7 @@ sh - run a shell`;
         addRaw(raw: string) {
           output.write(Format.toByteArray(raw));
         },
-        abort() {},
+        abortRaw() {},
       };
 
       Input.setInterceptRaw(onRaw);

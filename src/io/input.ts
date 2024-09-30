@@ -15,7 +15,7 @@ export class Input {
   private static readonly EDIT_PROMPT: string = '. ';
 
   private static readonly QUIT_CHAR: string = 'q';
-  private static readonly ABORT_CHAR: string = 'x';
+  private static readonly KEEP_CHAR: string = 'k';
   private static readonly CLEAR_CHAR: string = 'c';
 
   private static buffer: string = '';
@@ -162,28 +162,16 @@ export class Input {
 
     if (line === Input.QUIT_CHAR) {
       /* Notify the commandlet we are done and exit edit mode */
-      try {
-        edit.done();
-      } finally {
-        this.interceptLine = null;
-      }
-      Output.writeRet();
+      this.interceptLine = null;
+      edit.saveLines();
     } else if (line === Input.CLEAR_CHAR) {
       /* Notify the commandlet we cleared and exit edit mode */
-      try {
-        edit.clear();
-      } finally {
-        this.interceptLine = null;
-      }
-      Output.writeRet();
-    } else if (line === Input.ABORT_CHAR) {
+      this.interceptLine = null;
+      edit.clearLines();
+    } else if (line === Input.KEEP_CHAR) {
       /* Notify the commandlet we aborted and exit edit mode */
-      try {
-        edit.abort();
-      } finally {
-        this.interceptLine = null;
-      }
-      Output.writeRet();
+      this.interceptLine = null;
+      edit.cancelLines();
     } else {
       /* Notify the commandlet of the line */
       edit.addLine(line);
@@ -257,16 +245,17 @@ export class Input {
 
   public static setInterceptLine(interceptLine: InputInterceptLine) {
     if (this.interceptSuppressed) {
-      interceptLine.abort();
+      interceptLine.cancelLines();
     } else {
       if (this.interceptRaw !== null) {
-        this.interceptRaw.abort();
+        this.interceptRaw.abortRaw();
         this.interceptRaw = null;
       }
       Output.writeln(
-        `Type '${Input.QUIT_CHAR}' to finish, '${Input.CLEAR_CHAR}' to clear, or '${Input.ABORT_CHAR}' to abort`,
+        `Type '${Input.QUIT_CHAR}' to finish, '${Input.CLEAR_CHAR}' to clear, or '${Input.KEEP_CHAR}' to keep`,
       );
       this.interceptLine = interceptLine;
+      interceptLine.startLines();
     }
   }
 
@@ -276,10 +265,10 @@ export class Input {
       return;
     }
     if (this.interceptSuppressed) {
-      interceptRaw.abort();
+      interceptRaw.abortRaw();
     } else {
       if (this.interceptLine !== null) {
-        this.interceptLine.abort();
+        this.interceptLine.cancelLines();
         this.interceptLine = null;
       }
       this.interceptRaw = interceptRaw;
@@ -288,13 +277,14 @@ export class Input {
 }
 
 export interface InputInterceptLine {
+  startLines(): void;
   addLine(line: string): void;
-  clear(): void;
-  done(): void;
-  abort(): void;
+  clearLines(): void;
+  saveLines(): void;
+  cancelLines(): void;
 }
 
 export interface InputInterceptRaw {
   addRaw(c: string): void;
-  abort(): void;
+  abortRaw(): void;
 }

@@ -23,6 +23,10 @@ import {
   ShrCmdLet,
   NotCmdLet,
   EndianCmdLet,
+  EqCmdLet,
+  NeCmdLet,
+  FalseCmdLet,
+  TrueCmdLet,
 } from '../cmdlets/math/math.js';
 import { HistoryCmdLet } from '../cmdlets/misc/history.js';
 import { HelpCmdLet } from '../cmdlets/misc/help.js';
@@ -76,7 +80,9 @@ export class CmdLets {
     this.registerCmdletType(DumpCmdLet);
     this.registerCmdletType(DumpStringCmdLet);
     this.registerCmdletType(EndianCmdLet);
+    this.registerCmdletType(EqCmdLet);
     this.registerCmdletType(ExitCmdLet);
+    this.registerCmdletType(FalseCmdLet);
     this.registerCmdletType(FdCmdLet);
     this.registerCmdletType(GrepCmdLet);
     this.registerCmdletType(FunctionEntryBpCmdLet);
@@ -93,6 +99,7 @@ export class CmdLets {
     this.registerCmdletType(MacroCmdLet);
     this.registerCmdletType(ModCmdLet);
     this.registerCmdletType(MulCmdLet);
+    this.registerCmdletType(NeCmdLet);
     this.registerCmdletType(NotCmdLet);
     this.registerCmdletType(PrintCmdLet);
     this.registerCmdletType(ReadBpCmdLet);
@@ -107,6 +114,7 @@ export class CmdLets {
     this.registerCmdletType(TraceCallCmdLet);
     this.registerCmdletType(TraceCoverageCmdLet);
     this.registerCmdletType(TraceUniqueBlockCmdLet);
+    this.registerCmdletType(TrueCmdLet);
     this.registerCmdletType(UniqueBlockTraceBpCmdLet);
     this.registerCmdletType(VarCmdLet);
     this.registerCmdletType(DebugCmdLet);

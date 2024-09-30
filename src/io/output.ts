@@ -28,6 +28,7 @@ export class Output {
   private static indent: boolean = false;
   private static filter: RegExp | null = null;
   private static log: File | null = null;
+  private static suppressed: boolean = false;
 
   public static banner() {
     this.shell
@@ -70,10 +71,11 @@ export class Output {
 
   private static dowrite(
     buffer: string | null = null,
-    verbose: boolean,
+    debug: boolean,
     filter: boolean,
   ) {
-    if (verbose && !this.debugging) return;
+    if (debug && !this.debugging) return;
+    if (this.suppressed) return;
     if (buffer === null) return;
 
     const filterExpression = (l: string) =>
@@ -175,5 +177,9 @@ export class Output {
       this.log.close();
       this.log = null;
     }
+  }
+
+  public static suppress(suppressed: boolean) {
+    this.suppressed = suppressed;
   }
 }

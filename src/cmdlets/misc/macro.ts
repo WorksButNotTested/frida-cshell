@@ -68,25 +68,29 @@ m name ${CmdLet.DELETE_CHAR} - delete a macro
     return Var.ZERO;
   }
 
+  startLines(): void {
+    this.commands = [];
+  }
+
   addLine(line: string): void {
     this.commands.push(line);
   }
 
-  clear(): void {
+  clearLines(): void {
     if (this.current != null) {
       const macro = new Macro(this.current, []);
       Macros.set(macro);
     }
   }
 
-  done(): void {
+  saveLines(): void {
     if (this.current != null) {
       const macro = new Macro(this.current, this.commands);
       Macros.set(macro);
     }
   }
 
-  abort(): void {}
+  cancelLines(): void {}
 
   private runShow(tokens: Token[]): Var | null {
     if (tokens.length !== 0) return null;

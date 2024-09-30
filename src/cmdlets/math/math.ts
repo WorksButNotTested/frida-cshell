@@ -290,6 +290,32 @@ export class ShlCmdLet extends BinaryOpCmdLet {
   }
 }
 
+export class EqCmdLet extends BinaryOpCmdLet {
+  name = '==';
+  help = 'test equality of op1 and op2';
+
+  protected OPERATION: string = 'eq';
+
+  protected op(op0: UInt64, op1: UInt64): UInt64 {
+    const val = uint64(op0.equals(op1) ? 1 : 0);
+    this.output(op0, op1, val);
+    return val;
+  }
+}
+
+export class NeCmdLet extends BinaryOpCmdLet {
+  name = '!=';
+  help = 'test inequality of op1 and op2';
+
+  protected OPERATION: string = 'nu';
+
+  protected op(op0: UInt64, op1: UInt64): UInt64 {
+    const val = uint64(op0.equals(op1) ? 0 : 1);
+    this.output(op0, op1, val);
+    return val;
+  }
+}
+
 export class NotCmdLet extends UnaryOpCmdLet {
   name = '~';
   help = 'bitwise not an operand';
@@ -436,5 +462,31 @@ ${this.name} width val - ${this.OPERATION} of an operand
   op      the operand on which to perform the operation`;
     Output.writeln(usage);
     return Var.ZERO;
+  }
+}
+
+export class TrueCmdLet extends UnaryOpCmdLet {
+  name = 'true';
+  help = 'test operand for non-zero';
+
+  protected OPERATION: string = 'test for non-zero';
+
+  protected op(op: UInt64): UInt64 {
+    const val = uint64(op.equals(uint64('0')) ? 0 : 1);
+    this.output(op, val);
+    return val;
+  }
+}
+
+export class FalseCmdLet extends UnaryOpCmdLet {
+  name = 'false';
+  help = 'test operand for zero';
+
+  protected OPERATION: string = 'test for zero';
+
+  protected op(op: UInt64): UInt64 {
+    const val = uint64(op.equals(uint64('0')) ? 1 : 0);
+    this.output(op, val);
+    return val;
   }
 }

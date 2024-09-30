@@ -39,8 +39,10 @@ export class Bp {
   private _addr: Var | null;
   private _length: number;
   private _depth: number;
+  private _conditional: boolean;
 
-  private _lines: string[] = [];
+  private _commands: string[] = [];
+  private _conditions: string[] = [];
   private _listener: InvocationListener | null;
   private _overlay: string | null = null;
   private _trace: Trace | null = null;
@@ -52,6 +54,7 @@ export class Bp {
     addr: Var | null,
     length: number = 0,
     depth: number = 0,
+    conditional: boolean = false,
   ) {
     this._type = type;
     this._idx = idx;
@@ -59,6 +62,7 @@ export class Bp {
     this._addr = addr;
     this._length = length;
     this._depth = depth;
+    this._conditional = conditional;
     this._listener = null;
   }
 
@@ -264,27 +268,69 @@ export class Bp {
     retVal: InvocationReturnValue | null = null,
   ) {
     if (this._hits === 0) return;
-    else if (this._hits > 0) this._hits--;
-    Output.clearLine();
-    Output.writeln(Output.yellow('-'.repeat(80)));
-    Output.writeln(
-      [
-        `${Output.yellow('|')} Break`,
-        Output.green(`#${this._idx}`),
-        `[${this._type}]`,
-        Output.yellow(this.literal),
-        `@ $pc=${Output.blue(Format.toHexString(ctx.pc))}`,
-        `$tid=${threadId}`,
-      ].join(' '),
-    );
-    Output.writeln(Output.yellow('-'.repeat(80)));
+
     Regs.setThreadId(threadId);
     Regs.setContext(ctx);
     Regs.setReturnAddress(returnAddress);
-
     if (retVal !== null) Regs.setRetVal(retVal);
 
-    this.runCommands();
+    try {
+      if (this.runConditions()) {
+        if (this._hits > 0) this._hits--;
+        Output.clearLine();
+        Output.writeln(Output.yellow('-'.repeat(80)));
+        Output.writeln(
+          [
+            `${Output.yellow('|')} Break`,
+            Output.green(`#${this._idx}`),
+            `[${this._type}]`,
+            Output.yellow(this.literal),
+            `@ $pc=${Output.blue(Format.toHexString(ctx.pc))}`,
+            `$tid=${threadId}`,
+          ].join(' '),
+        );
+        Output.writeln(Output.yellow('-'.repeat(80)));
+        this.runCommands();
+      }
+    } finally {
+      Regs.clear();
+    }
+  }
+
+  private runConditions(): boolean {
+    if (!this._conditional) return true;
+    if (this._conditions.length === 0) return true;
+
+    if (!Output.getDebugging()) {
+      Output.suppress(true);
+    }
+    Input.suppressIntercept(true);
+    Output.setIndent(true);
+    Output.writeln();
+    try {
+      for (const condition of this._conditions) {
+        if (condition.length === 0) continue;
+        if (condition.charAt(0) === '#') continue;
+        Output.writeln(`${Output.bold(Input.PROMPT)}${condition}`);
+        const parser = new Parser(condition.toString());
+        const tokens = parser.tokenize();
+        const ret = Command.runSync(tokens);
+        Vars.setRet(ret);
+        Output.writeRet();
+        Output.writeln();
+      }
+    } finally {
+      Output.setIndent(false);
+      Input.suppressIntercept(false);
+      Input.prompt();
+      Output.suppress(false);
+    }
+
+    if (Vars.getRet().compare(Var.ZERO) === 0) {
+      return false;
+    } else {
+      return true;
+    }
   }
 
   private runCommands() {
@@ -292,11 +338,11 @@ export class Bp {
     Output.setIndent(true);
     Output.writeln();
     try {
-      for (const line of this._lines) {
-        if (line.length === 0) continue;
-        if (line.charAt(0) === '#') continue;
-        Output.writeln(`${Output.bold(Input.PROMPT)}${line}`);
-        const parser = new Parser(line.toString());
+      for (const command of this._commands) {
+        if (command.length === 0) continue;
+        if (command.charAt(0) === '#') continue;
+        Output.writeln(`${Output.bold(Input.PROMPT)}${command}`);
+        const parser = new Parser(command.toString());
         const tokens = parser.tokenize();
         const ret = Command.runSync(tokens);
         Vars.setRet(ret);
@@ -315,7 +361,6 @@ export class Bp {
       Input.suppressIntercept(false);
       Output.writeln(Output.yellow('-'.repeat(80)));
       Input.prompt();
-      Regs.clear();
     }
   }
 
@@ -352,25 +397,33 @@ export class Bp {
     }
 
     if (this._hits === 0) return;
-    else if (this._hits > 0) this._hits--;
 
-    Output.clearLine();
-    Output.writeln(Output.yellow('-'.repeat(80)));
-    Output.writeln(
-      [
-        `${Output.yellow('|')} Break`,
-        Output.green(`#${this._idx}`),
-        `[${this._type}]`,
-        Output.yellow(this.literal),
-        `@ $pc=${Output.blue(Format.toHexString(details.from))}`,
-        `$addr=${Output.blue(Format.toHexString(details.address))}`,
-      ].join(' '),
-    );
-    Output.writeln(Output.yellow('-'.repeat(80)));
     Regs.setAddress(details.address);
     Regs.setPc(details.from);
 
-    this.runCommands();
+    try {
+      if (this.runConditions()) {
+        if (this._hits > 0) this._hits--;
+
+        Output.clearLine();
+        Output.writeln(Output.yellow('-'.repeat(80)));
+        Output.writeln(
+          [
+            `${Output.yellow('|')} Break`,
+            Output.green(`#${this._idx}`),
+            `[${this._type}]`,
+            Output.yellow(this.literal),
+            `@ $pc=${Output.blue(Format.toHexString(details.from))}`,
+            `$addr=${Output.blue(Format.toHexString(details.address))}`,
+          ].join(' '),
+        );
+        Output.writeln(Output.yellow('-'.repeat(80)));
+
+        this.runCommands();
+      }
+    } finally {
+      Regs.clear();
+    }
   }
 
   public overlaps(
@@ -400,6 +453,9 @@ export class Bp {
     const addString = `@ $pc=${Output.blue(this.addrString)}`;
     const hitsString = `[hits:${this.hitsString}]`;
     const lengthString = this.lengthString;
+    const conditionalString = Output.blue(
+      this._conditional ? 'conditional' : 'unconditional',
+    );
     const header = [
       idxString,
       typeString,
@@ -407,10 +463,25 @@ export class Bp {
       addString,
       hitsString,
       lengthString,
+      conditionalString,
     ].join(' ');
 
-    const lines = this._lines.map(l => `  - ${Output.yellow(l)}`);
-    lines.unshift(header);
+    const lines = [header];
+
+    if (this._conditional && this._conditions.length !== 0) {
+      lines.push(Output.green('Conditions:'));
+      this._conditions.forEach(c => {
+        lines.push(`  - ${Output.yellow(c)}`);
+      });
+    }
+
+    if (this._commands.length !== 0) {
+      lines.push(Output.green('Commands:'));
+      this._commands.forEach(c => {
+        lines.push(`  - ${Output.yellow(c)}`);
+      });
+    }
+
     return `${lines.join('\n')}\n`;
   }
 
@@ -464,6 +535,18 @@ export class Bp {
     return this._hits;
   }
 
+  public get conditional(): boolean {
+    return this._conditional;
+  }
+
+  public get conditions(): string[] {
+    return this._conditions;
+  }
+
+  public get commands(): string[] {
+    return this._commands;
+  }
+
   public set address(addr: Var | null) {
     if (addr === null) return;
     this._addr = addr;
@@ -479,11 +562,20 @@ export class Bp {
     this._depth = depth;
   }
 
+  public set conditional(conditional: boolean | null) {
+    if (conditional === null) return;
+    this._conditional = conditional;
+  }
+
   public set hits(hits: number) {
     this._hits = hits;
   }
 
-  public set lines(lines: string[]) {
-    this._lines = lines;
+  public set commands(commands: string[]) {
+    this._commands = commands;
+  }
+
+  public set conditions(conditions: string[]) {
+    this._conditions = conditions;
   }
 }

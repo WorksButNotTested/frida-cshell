@@ -3,8 +3,6 @@ import { Var } from '../vars/var.js';
 
 export class Bps {
   private static byIndex: Map<string, Bp> = new Map<string, Bp>();
-  private static last: Bp | null = null;
-  private static lines: string[] = [];
 
   private constructor() {}
 
@@ -14,6 +12,7 @@ export class Bps {
     addr: Var | null = null,
     length: number = 0,
     depth: number = 0,
+    conditional: boolean = false,
   ): Bp {
     const idx = this.getNextFreeIndex(type);
     const key = this.buildKey(type, idx);
@@ -22,10 +21,8 @@ export class Bps {
       this.checkOverlaps(type, addr.toPointer(), length);
     }
 
-    const bp = new Bp(type, idx, hits, addr, length, depth);
+    const bp = new Bp(type, idx, hits, addr, length, depth, conditional);
     this.byIndex.set(key, bp);
-    this.last = bp;
-    this.lines = [];
     return bp;
   }
 
@@ -71,6 +68,7 @@ export class Bps {
     addr: Var | null = null,
     length: number = 0,
     depth: number = 0,
+    conditional: boolean = false,
   ): Bp {
     const key = this.buildKey(type, idx);
 
@@ -88,8 +86,7 @@ export class Bps {
     bp.address = addr;
     bp.length = length;
     bp.depth = depth;
-    this.last = bp;
-    this.lines = [];
+    bp.conditional = conditional;
     return bp;
   }
 
@@ -108,34 +105,6 @@ export class Bps {
     this.byIndex.delete(key);
     bp.disable();
     return bp;
-  }
-
-  public static addCommandLine(line: string) {
-    this.lines.push(line);
-  }
-
-  private static exitEdit(callback: (bp: Bp) => void) {
-    if (this.last === null) throw new Error('no breakpoint to modify');
-    callback(this.last);
-    this.last.enable();
-    this.last = null;
-    this.lines = [];
-  }
-
-  public static done() {
-    this.exitEdit(bp => {
-      bp.lines = this.lines;
-    });
-  }
-
-  public static clear() {
-    this.exitEdit(bp => {
-      bp.lines = [];
-    });
-  }
-
-  public static abort() {
-    this.exitEdit(_bp => {});
   }
 
   public static all(): Bp[] {

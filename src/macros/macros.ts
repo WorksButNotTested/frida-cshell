@@ -45,6 +45,6 @@ export class Macros {
   public static all(): Macro[] {
     return Array.from(this.map.entries())
       .sort(([k1, _v1], [k2, _v2]) => k1.localeCompare(k2))
-      .map(([k, v]) => v);
+      .map(([_k, v]) => v);
   }
 }

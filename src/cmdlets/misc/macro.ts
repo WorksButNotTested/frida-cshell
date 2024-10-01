@@ -9,6 +9,7 @@ import { Var } from '../../vars/var.js';
 import { Vars } from '../../vars/vars.js';
 
 export class MacroCmdLet extends CmdLet implements InputInterceptLine {
+  private static readonly PARAM_PREFIX: string = '$';
   name = 'm';
   category = 'misc';
   help = 'manage macros';
@@ -110,7 +111,7 @@ m name ${CmdLet.DELETE_CHAR} - delete a macro
     return Var.ZERO;
   }
 
-  public static runSync(macro: Macro): Var {
+  public static runSync(macro: Macro, tokens: Token[]): Var {
     let ret = Var.ZERO;
     for (const [idx, command] of macro.commands.entries()) {
       if (command.length === 0) continue;
@@ -121,8 +122,9 @@ m name ${CmdLet.DELETE_CHAR} - delete a macro
       if (command.trim().length === 0) continue;
 
       const parser = new Parser(command.toString());
-      const tokens = parser.tokenize();
-      ret = Command.runSync(tokens);
+      const commandTokens = parser.tokenize();
+      const substituted = MacroCmdLet.substituteTokens(commandTokens, tokens);
+      ret = Command.runSync(substituted);
       Vars.setRet(ret);
 
       /*
@@ -135,5 +137,38 @@ m name ${CmdLet.DELETE_CHAR} - delete a macro
       }
     }
     return ret;
+  }
+
+  private static substituteTokens(
+    input: Token[],
+    substitutes: Token[],
+  ): Token[] {
+    const tokens: Token[] = [];
+    for (const token of input) {
+      const literal = token.getLiteral();
+
+      /* If it's not a parameter, don't substitute it */
+      if (!literal.startsWith(MacroCmdLet.PARAM_PREFIX)) {
+        tokens.push(token);
+        continue;
+      }
+
+      const indexString = literal.slice(1);
+      const index = parseInt(indexString);
+      /* Our token may be a register (which also starts with a '$' */
+      if (isNaN(index)) {
+        tokens.push(token);
+        continue;
+      }
+
+      if (index >= substitutes.length) {
+        throw new Error(
+          `macro parameter index ${index} out of range (max ${substitutes.length - 1})`,
+        );
+      }
+
+      tokens.push(substitutes[index] as Token);
+    }
+    return tokens;
   }
 }

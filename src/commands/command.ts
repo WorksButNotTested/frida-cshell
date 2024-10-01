@@ -17,7 +17,7 @@ export class Command {
 
     const macro = this.getMacro(tokens);
     if (macro !== null) {
-      return MacroCmdLet.runSync(macro);
+      return MacroCmdLet.runSync(macro, tokens.slice(1));
     }
 
     return this.runFunction(tokens);
@@ -31,7 +31,7 @@ export class Command {
 
     const macro = this.getMacro(tokens);
     if (macro !== null) {
-      return MacroCmdLet.runSync(macro);
+      return MacroCmdLet.runSync(macro, tokens.slice(1));
     }
 
     return this.runFunction(tokens);

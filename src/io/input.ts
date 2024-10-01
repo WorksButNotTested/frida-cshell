@@ -160,15 +160,17 @@ export class Input {
     Output.clearLine();
     Output.writeln(`- ${line}`);
 
-    if (line === Input.QUIT_CHAR) {
+    const trimmed = line.trim();
+
+    if (trimmed === Input.QUIT_CHAR) {
       /* Notify the commandlet we are done and exit edit mode */
       this.interceptLine = null;
       edit.saveLines();
-    } else if (line === Input.CLEAR_CHAR) {
+    } else if (trimmed === Input.CLEAR_CHAR) {
       /* Notify the commandlet we cleared and exit edit mode */
       this.interceptLine = null;
       edit.clearLines();
-    } else if (line === Input.KEEP_CHAR) {
+    } else if (trimmed === Input.KEEP_CHAR) {
       /* Notify the commandlet we aborted and exit edit mode */
       this.interceptLine = null;
       edit.cancelLines();

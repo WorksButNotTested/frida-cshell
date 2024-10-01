@@ -22,13 +22,13 @@ type InitParams = {
 };
 
 rpc.exports = {
-  init(stage: string, params: InitParams | null = null) {
+  async init(stage: string, params: InitParams | null = null) {
     const debug = params?.debug ?? false;
     Output.setDebugging(debug);
     Output.debug(`init - stage: ${stage}, debug: ${debug}`);
     Output.banner();
     Process.setExceptionHandler(exceptionHandler);
-    SrcCmdLet.loadInitScript(DEFAULT_SRC_PATH);
+    await SrcCmdLet.loadInitScript(DEFAULT_SRC_PATH);
     Input.prompt();
   },
   /**

@@ -60,8 +60,9 @@ export class Command {
     const t0 = tokens[0] as Token;
     const v0 = t0.toVar();
     if (v0 === null) {
+      const command = tokens.map(t => t.getLiteral()).join(' ');
       throw new Error(
-        'request was not understood as an internal command or a detected symbol',
+        `request was not understood as an internal command or a detected symbol: '${command}'`,
       );
     }
     const addr = v0.toPointer();

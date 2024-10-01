@@ -10,3 +10,15 @@ test malloc
 # show the first instruction of exit
 l exit 1
 
+# set up a macro
+m test2
+  l main
+  q
+
+# set up a breakpoint
+@f malloc 1 ?
+  != $eip 0
+  q
+  bt
+  @f #1 #
+  q

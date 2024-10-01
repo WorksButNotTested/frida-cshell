@@ -112,7 +112,7 @@ m name ${CmdLet.DELETE_CHAR} - delete a macro
 
   public static runSync(macro: Macro): Var {
     let ret = Var.ZERO;
-    for (const command of macro.commands) {
+    for (const [idx, command] of macro.commands.entries()) {
       if (command.length === 0) continue;
       if (command.charAt(0) === '#') continue;
 
@@ -124,8 +124,15 @@ m name ${CmdLet.DELETE_CHAR} - delete a macro
       const tokens = parser.tokenize();
       ret = Command.runSync(tokens);
       Vars.setRet(ret);
-      Output.writeRet();
-      Output.writeln();
+
+      /*
+       * Don't print the return as the last command as we will print it as the
+       * result of the macro command itself
+       */
+      if (idx !== macro.commands.length - 1) {
+        Output.writeRet();
+        Output.writeln();
+      }
     }
     return ret;
   }

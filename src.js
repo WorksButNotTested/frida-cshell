@@ -4,8 +4,12 @@ return {
   help: "test command",
 
   usage: function() {
-    Output.writeln("USAGE");
+    Output.writeln("test command usage");
     return Var.ZERO;
+  },
+
+  run: function(tokens) {
+    return this.runSync(tokens);
   },
 
   runSync: function(tokens) {

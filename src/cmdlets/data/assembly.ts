@@ -4,6 +4,7 @@ import { Format } from '../../misc/format.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 import { Mem } from '../../memory/mem.js';
+import { Overlay } from '../../memory/overlay.js';
 
 export class AssemblyCmdLet extends CmdLet {
   name = 'l';
@@ -47,6 +48,7 @@ l address <bytes> - show disassembly listing
     try {
       const minLength = this.maxInstructionLen();
       const copy = Memory.alloc(Process.pageSize);
+      let hasOverlaps = false;
 
       for (let i = 1; i <= length; i++) {
         if (buffer.byteLength < minLength) {
@@ -58,7 +60,15 @@ l address <bytes> - show disassembly listing
         }
 
         Mem.writeBytes(copy, buffer);
-        const insn = Instruction.parse(copy.add(isThumb ? 1 : 0));
+
+        let insn = Instruction.parse(cursor.add(isThumb ? 1 : 0));
+        const overlaps = Overlay.overlaps(cursor, insn.size);
+
+        if (overlaps) {
+          hasOverlaps = true;
+          insn = Instruction.parse(copy.add(isThumb ? 1 : 0));
+        }
+
         if (insn.size > buffer.length)
           throw new Error(
             `failed to parse instruction at ${cursor}, not enough bytes: ${buffer.length}`,
@@ -71,12 +81,24 @@ l address <bytes> - show disassembly listing
           .join(' ');
 
         Output.writeln(
-          `${Output.bold(idx)}: ${Output.green(Format.toHexString(cursor))}: ${Output.yellow(insn.toString().padEnd(40))} ${Output.blue(bytesStr)}`,
+          [
+            `${Output.bold(idx)}:`,
+            `${Output.green(Format.toHexString(cursor))}:`,
+            `${Output.yellow(insn.toString().padEnd(40))}`,
+            `${Output.blue(bytesStr)}`,
+            overlaps ? `${Output.red('*')}` : '',
+          ].join(' '),
           true,
         );
 
         cursor = cursor.add(insn.size);
         buffer = buffer.slice(insn.size);
+      }
+
+      if (hasOverlaps) {
+        Output.writeln(
+          `${Output.red('*')} offset in RIP relative instruction may be incorrect due to conflicting breakpoint`,
+        );
       }
 
       return new Var(uint64(cursor.toString()));

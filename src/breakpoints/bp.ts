@@ -32,20 +32,21 @@ export enum BpType {
 
 export class Bp {
   public static readonly BP_LENGTH: number = 16;
-  private readonly _type: BpType;
-  private readonly _idx: number;
 
-  private _hits: number;
-  private _addr: Var | null;
-  private _length: number;
-  private _depth: number;
-  private _conditional: boolean;
+  public readonly type: BpType;
+  public readonly index: number;
 
-  private _commands: string[] = [];
-  private _conditions: string[] = [];
-  private _listener: InvocationListener | null;
-  private _overlay: string | null = null;
-  private _trace: Trace | null = null;
+  public hits: number;
+  public address: Var | null;
+  public length: number;
+  public depth: number;
+  public conditional: boolean;
+  public conditions: string[] = [];
+  public commands: string[] = [];
+
+  private listener: InvocationListener | null;
+  private overlay: string | null = null;
+  private trace: Trace | null = null;
 
   public constructor(
     type: BpType,
@@ -56,14 +57,14 @@ export class Bp {
     depth: number = 0,
     conditional: boolean = false,
   ) {
-    this._type = type;
-    this._idx = idx;
-    this._hits = hits;
-    this._addr = addr;
-    this._length = length;
-    this._depth = depth;
-    this._conditional = conditional;
-    this._listener = null;
+    this.type = type;
+    this.index = idx;
+    this.hits = hits;
+    this.address = addr;
+    this.length = length;
+    this.depth = depth;
+    this.conditional = conditional;
+    this.listener = null;
   }
 
   public enable() {
@@ -78,7 +79,7 @@ export class Bp {
   }
 
   private get kind(): BpKind {
-    return Bp.getBpKind(this._type);
+    return Bp.getBpKind(this.type);
   }
 
   public static getBpKind(type: BpType): BpKind {
@@ -98,15 +99,15 @@ export class Bp {
   }
 
   private enableCode() {
-    if (this._addr === null) return;
-    if (this._listener !== null) return;
-    this._overlay = Overlay.add(this._addr.toPointer(), Bp.BP_LENGTH);
-    const addr = this._addr;
+    if (this.address === null) return;
+    if (this.listener !== null) return;
+    this.overlay = Overlay.add(this.address.toPointer(), Bp.BP_LENGTH);
+    const addr = this.address;
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const bp = this;
-    switch (this._type) {
+    switch (this.type) {
       case BpType.Instruction:
-        this._listener = Interceptor.attach(
+        this.listener = Interceptor.attach(
           addr.toPointer(),
           function (this: InvocationContext, _args: InvocationArguments) {
             bp.breakCode(this.threadId, this.context, this.returnAddress);
@@ -114,14 +115,14 @@ export class Bp {
         );
         break;
       case BpType.FunctionEntry:
-        this._listener = Interceptor.attach(addr.toPointer(), {
+        this.listener = Interceptor.attach(addr.toPointer(), {
           onEnter() {
             bp.breakCode(this.threadId, this.context, this.returnAddress);
           },
         });
         break;
       case BpType.FunctionExit:
-        this._listener = Interceptor.attach(addr.toPointer(), {
+        this.listener = Interceptor.attach(addr.toPointer(), {
           onLeave(retVal) {
             bp.breakCode(
               this.threadId,
@@ -133,59 +134,59 @@ export class Bp {
         });
         break;
       case BpType.BlockTrace:
-        this._listener = Interceptor.attach(addr.toPointer(), {
+        this.listener = Interceptor.attach(addr.toPointer(), {
           onEnter() {
-            if (bp._hits === 0) return;
-            bp._trace = BlockTrace.create(this.threadId, bp._depth, false);
+            if (bp.hits === 0) return;
+            bp.trace = BlockTrace.create(this.threadId, bp.depth, false);
             bp.startCoverage(this.threadId, this.context);
           },
           onLeave(_retVal) {
-            if (bp._hits === 0) return;
+            if (bp.hits === 0) return;
             bp.stopCoverage(this.threadId, this.context);
           },
         });
         break;
       case BpType.CallTrace:
-        this._listener = Interceptor.attach(addr.toPointer(), {
+        this.listener = Interceptor.attach(addr.toPointer(), {
           onEnter() {
-            if (bp._hits === 0) return;
-            bp._trace = CallTrace.create(this.threadId, bp._depth);
+            if (bp.hits === 0) return;
+            bp.trace = CallTrace.create(this.threadId, bp.depth);
             bp.startCoverage(this.threadId, this.context);
           },
           onLeave(_retVal) {
-            if (bp._hits === 0) return;
+            if (bp.hits === 0) return;
             bp.stopCoverage(this.threadId, this.context);
           },
         });
         break;
       case BpType.UniqueBlockTrace:
-        this._listener = Interceptor.attach(addr.toPointer(), {
+        this.listener = Interceptor.attach(addr.toPointer(), {
           onEnter() {
-            if (bp._hits === 0) return;
-            bp._trace = BlockTrace.create(this.threadId, bp._depth, true);
+            if (bp.hits === 0) return;
+            bp.trace = BlockTrace.create(this.threadId, bp.depth, true);
             bp.startCoverage(this.threadId, this.context);
           },
           onLeave(_retVal) {
-            if (bp._hits === 0) return;
+            if (bp.hits === 0) return;
             bp.stopCoverage(this.threadId, this.context);
           },
         });
         break;
       case BpType.Coverage:
-        this._listener = Interceptor.attach(addr.toPointer(), {
+        this.listener = Interceptor.attach(addr.toPointer(), {
           onEnter() {
-            if (bp._hits === 0) return;
-            bp._trace = CoverageTrace.create(this.threadId, null, null);
+            if (bp.hits === 0) return;
+            bp.trace = CoverageTrace.create(this.threadId, null, null);
             bp.startCoverage(this.threadId, this.context);
           },
           onLeave(_retVal) {
-            if (bp._hits === 0) return;
+            if (bp.hits === 0) return;
             bp.stopCoverage(this.threadId, this.context);
           },
         });
         break;
       default:
-        throw new Error(`unknown code breakpoint type: ${this._type}`);
+        throw new Error(`unknown code breakpoint type: ${this.type}`);
     }
 
     Interceptor.flush();
@@ -197,37 +198,37 @@ export class Bp {
     Output.writeln(
       [
         `${Output.yellow('|')} Start Trace`,
-        Output.green(`#${this._idx}`),
-        `[${this._type}]`,
+        Output.green(`#${this.index}`),
+        `[${this.type}]`,
         Output.yellow(this.literal),
         `@ $pc=${Output.blue(Format.toHexString(ctx.pc))}`,
-        `$tid=${threadId}, depth=${this._depth}`,
+        `$tid=${threadId}, depth=${this.depth}`,
       ].join(' '),
     );
     Output.writeln(Output.yellow('-'.repeat(80)));
   }
 
   private stopCoverage(threadId: ThreadId, ctx: CpuContext) {
-    this._hits--;
+    this.hits--;
     try {
-      if (this._trace === null) return;
-      this._trace.stop();
+      if (this.trace === null) return;
+      this.trace.stop();
 
       Output.clearLine();
       Output.writeln(Output.blue('-'.repeat(80)));
       Output.writeln(
         [
           `${Output.yellow('|')} Stop Trace`,
-          Output.green(`#${this._idx}`),
-          `[${this._type}]`,
+          Output.green(`#${this.index}`),
+          `[${this.type}]`,
           Output.yellow(this.literal),
           `@ $pc=${Output.blue(Format.toHexString(ctx.pc))}`,
-          `$tid=${threadId}, depth=${this._depth}`,
+          `$tid=${threadId}, depth=${this.depth}`,
         ].join(' '),
       );
       Output.writeln(Output.yellow('-'.repeat(80)));
 
-      const data = this._trace.data();
+      const data = this.trace.data();
       setTimeout(() => this.displayTraceData(data));
 
       Traces.delete(threadId);
@@ -267,7 +268,7 @@ export class Bp {
     returnAddress: NativePointer,
     retVal: InvocationReturnValue | null = null,
   ) {
-    if (this._hits === 0) return;
+    if (this.hits === 0) return;
 
     Regs.setThreadId(threadId);
     Regs.setContext(ctx);
@@ -276,14 +277,14 @@ export class Bp {
 
     try {
       if (this.runConditions()) {
-        if (this._hits > 0) this._hits--;
+        if (this.hits > 0) this.hits--;
         Output.clearLine();
         Output.writeln(Output.yellow('-'.repeat(80)));
         Output.writeln(
           [
             `${Output.yellow('|')} Break`,
-            Output.green(`#${this._idx}`),
-            `[${this._type}]`,
+            Output.green(`#${this.index}`),
+            `[${this.type}]`,
             Output.yellow(this.literal),
             `@ $pc=${Output.blue(Format.toHexString(ctx.pc))}`,
             `$tid=${threadId}`,
@@ -298,8 +299,8 @@ export class Bp {
   }
 
   private runConditions(): boolean {
-    if (!this._conditional) return true;
-    if (this._conditions.length === 0) return true;
+    if (!this.conditional) return true;
+    if (this.conditions.length === 0) return true;
 
     if (!Output.getDebugging()) {
       Output.suppress(true);
@@ -308,7 +309,7 @@ export class Bp {
     Output.setIndent(true);
     Output.writeln();
     try {
-      for (const condition of this._conditions) {
+      for (const condition of this.conditions) {
         if (condition.length === 0) continue;
         if (condition.charAt(0) === '#') continue;
         Output.writeln(`${Output.bold(Input.PROMPT)}${condition}`);
@@ -338,7 +339,7 @@ export class Bp {
     Output.setIndent(true);
     Output.writeln();
     try {
-      for (const command of this._commands) {
+      for (const command of this.commands) {
         if (command.length === 0) continue;
         if (command.charAt(0) === '#') continue;
         Output.writeln(`${Output.bold(Input.PROMPT)}${command}`);
@@ -376,42 +377,42 @@ export class Bp {
   }
 
   public disableCode() {
-    if (this._listener === null) return;
-    this._listener.detach();
-    this._listener = null;
+    if (this.listener === null) return;
+    this.listener.detach();
+    this.listener = null;
     Interceptor.flush();
-    if (this._overlay === null) return;
-    Overlay.remove(this._overlay);
+    if (this.overlay === null) return;
+    Overlay.remove(this.overlay);
   }
 
   public breakMemory(details: MemoryAccessDetails) {
     switch (details.operation) {
       case 'read':
-        if (this._type !== BpType.MemoryRead) return;
+        if (this.type !== BpType.MemoryRead) return;
         break;
       case 'write':
-        if (this._type !== BpType.MemoryWrite) return;
+        if (this.type !== BpType.MemoryWrite) return;
         break;
       case 'execute':
         return;
     }
 
-    if (this._hits === 0) return;
+    if (this.hits === 0) return;
 
     Regs.setAddress(details.address);
     Regs.setPc(details.from);
 
     try {
       if (this.runConditions()) {
-        if (this._hits > 0) this._hits--;
+        if (this.hits > 0) this.hits--;
 
         Output.clearLine();
         Output.writeln(Output.yellow('-'.repeat(80)));
         Output.writeln(
           [
             `${Output.yellow('|')} Break`,
-            Output.green(`#${this._idx}`),
-            `[${this._type}]`,
+            Output.green(`#${this.index}`),
+            `[${this.type}]`,
             Output.yellow(this.literal),
             `@ $pc=${Output.blue(Format.toHexString(details.from))}`,
             `$addr=${Output.blue(Format.toHexString(details.address))}`,
@@ -432,29 +433,29 @@ export class Bp {
   ): boolean {
     if (address === null) return false;
     if (length === null) return false;
-    if (this._addr === null) return false;
-    if (this._length === 0) return false;
+    if (this.address === null) return false;
+    if (this.length === 0) return false;
 
-    const start = this._addr.toPointer();
+    const start = this.address.toPointer();
 
-    if (start.add(this._length).compare(address) <= 0) return false;
+    if (start.add(this.length).compare(address) <= 0) return false;
     if (start.compare(address.add(length)) >= 0) return false;
     return true;
   }
 
   public compare(other: Bp): number {
-    return this._idx - other._idx;
+    return this.index - other.index;
   }
 
   public toString(): string {
-    const idxString = Output.green(`#${this._idx.toString()}.`.padEnd(4, ' '));
-    const typeString = `[${this._type.toString()}]`;
+    const idxString = Output.green(`#${this.index.toString()}.`.padEnd(4, ' '));
+    const typeString = `[${this.type.toString()}]`;
     const literalString = Output.yellow(this.literal);
     const addString = `@ $pc=${Output.blue(this.addrString)}`;
     const hitsString = `[hits:${this.hitsString}]`;
     const lengthString = this.lengthString;
     const conditionalString = Output.blue(
-      this._conditional ? 'conditional' : 'unconditional',
+      this.conditional ? 'conditional' : 'unconditional',
     );
     const header = [
       idxString,
@@ -468,16 +469,16 @@ export class Bp {
 
     const lines = [header];
 
-    if (this._conditional && this._conditions.length !== 0) {
+    if (this.conditional && this.conditions.length !== 0) {
       lines.push(Output.green('Conditions:'));
-      this._conditions.forEach(c => {
+      this.conditions.forEach(c => {
         lines.push(`  - ${Output.yellow(c)}`);
       });
     }
 
-    if (this._commands.length !== 0) {
+    if (this.commands.length !== 0) {
       lines.push(Output.green('Commands:'));
-      this._commands.forEach(c => {
+      this.commands.forEach(c => {
         lines.push(`  - ${Output.yellow(c)}`);
       });
     }
@@ -486,96 +487,28 @@ export class Bp {
   }
 
   private get addrString(): string {
-    if (this._addr === null) return 'unassigned';
+    if (this.address === null) return 'unassigned';
 
-    const p = this._addr.toPointer();
+    const p = this.address.toPointer();
     return Format.toHexString(p);
   }
 
   private get hitsString(): string {
-    if (this._hits < 0) {
+    if (this.hits < 0) {
       return 'unlimited';
-    } else if (this._hits === 0) {
+    } else if (this.hits === 0) {
       return 'disabled';
     } else {
-      return this._hits.toString();
+      return this.hits.toString();
     }
   }
 
   private get lengthString(): string {
     if (this.kind === BpKind.Code) return '';
-    else return `[length:${this._length}]`;
+    else return `[length:${this.length}]`;
   }
 
-  public get type(): BpType {
-    return this._type;
-  }
-
-  public get index(): number {
-    return this._idx;
-  }
-
-  public get address(): Var | null {
-    return this._addr;
-  }
-
-  public get literal(): string {
-    return this._addr?.getLiteral() ?? '';
-  }
-
-  public get length(): number | null {
-    return this._length;
-  }
-
-  public get depth(): number | null {
-    return this._depth;
-  }
-
-  public get hits(): number {
-    return this._hits;
-  }
-
-  public get conditional(): boolean {
-    return this._conditional;
-  }
-
-  public get conditions(): string[] {
-    return this._conditions;
-  }
-
-  public get commands(): string[] {
-    return this._commands;
-  }
-
-  public set address(addr: Var | null) {
-    if (addr === null) return;
-    this._addr = addr;
-  }
-
-  public set length(length: number | null) {
-    if (length === null) return;
-    this._length = length;
-  }
-
-  public set depth(depth: number | null) {
-    if (depth === null) return;
-    this._depth = depth;
-  }
-
-  public set conditional(conditional: boolean | null) {
-    if (conditional === null) return;
-    this._conditional = conditional;
-  }
-
-  public set hits(hits: number) {
-    this._hits = hits;
-  }
-
-  public set commands(commands: string[]) {
-    this._commands = commands;
-  }
-
-  public set conditions(conditions: string[]) {
-    this._conditions = conditions;
+  private get literal(): string {
+    return this.address?.getLiteral() ?? '';
   }
 }

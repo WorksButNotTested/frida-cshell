@@ -50,6 +50,10 @@ import {
   XorCmdLet,
   TrueCmdLet,
   FalseCmdLet,
+  GreaterThanCmdLet,
+  GreaterThanEqualsCmdLet,
+  LessThanCmdLet,
+  LessThanEqualsCmdLet,
 } from '../math/math.js';
 import { ModCmdLet } from '../modules/mod.js';
 import { ReadCmdLet } from '../data/read.js';
@@ -114,6 +118,8 @@ js path - load commandlet JS script
       Format: Format,
       FunctionEntryBpCmdLet: FunctionEntryBpCmdLet,
       FunctionExitBpCmdLet: FunctionExitBpCmdLet,
+      GreaterThanCmdLet: GreaterThanCmdLet,
+      GreaterThanEqualsCmdLet: GreaterThanEqualsCmdLet,
       GrepCmdLet: GrepCmdLet,
       HelpCmdLet: HelpCmdLet,
       History: History,
@@ -122,6 +128,8 @@ js path - load commandlet JS script
       Input: Input,
       InsnBpCmdLet: InsnBpCmdLet,
       LdCmdLet: LdCmdLet,
+      LessThanCmdLet: LessThanCmdLet,
+      LessThanEqualsCmdLet: LessThanEqualsCmdLet,
       Line: Line,
       LogCmdLet: LogCmdLet,
       MacroCmdLet: MacroCmdLet,

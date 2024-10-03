@@ -294,7 +294,7 @@ export class EqCmdLet extends BinaryOpCmdLet {
   name = '==';
   help = 'test equality of op1 and op2';
 
-  protected OPERATION: string = 'eq';
+  protected OPERATION: string = 'equals';
 
   protected op(op0: UInt64, op1: UInt64): UInt64 {
     const val = uint64(op0.equals(op1) ? 1 : 0);
@@ -307,10 +307,62 @@ export class NeCmdLet extends BinaryOpCmdLet {
   name = '!=';
   help = 'test inequality of op1 and op2';
 
-  protected OPERATION: string = 'nu';
+  protected OPERATION: string = 'not equals';
 
   protected op(op0: UInt64, op1: UInt64): UInt64 {
     const val = uint64(op0.equals(op1) ? 0 : 1);
+    this.output(op0, op1, val);
+    return val;
+  }
+}
+
+export class GreaterThanCmdLet extends BinaryOpCmdLet {
+  name = '>';
+  help = 'test if op1 greater than op2';
+
+  protected OPERATION: string = 'greater than';
+
+  protected op(op0: UInt64, op1: UInt64): UInt64 {
+    const val = uint64(op0.compare(op1) > 0 ? 1 : 0);
+    this.output(op0, op1, val);
+    return val;
+  }
+}
+
+export class GreaterThanEqualsCmdLet extends BinaryOpCmdLet {
+  name = '>=';
+  help = 'test if op1 greater or equal to op2';
+
+  protected OPERATION: string = 'greater than or equal to';
+
+  protected op(op0: UInt64, op1: UInt64): UInt64 {
+    const val = uint64(op0.compare(op1) >= 0 ? 1 : 0);
+    this.output(op0, op1, val);
+    return val;
+  }
+}
+
+export class LessThanCmdLet extends BinaryOpCmdLet {
+  name = '<';
+  help = 'test if op1 less than op2';
+
+  protected OPERATION: string = 'less than';
+
+  protected op(op0: UInt64, op1: UInt64): UInt64 {
+    const val = uint64(op0.compare(op1) < 0 ? 1 : 0);
+    this.output(op0, op1, val);
+    return val;
+  }
+}
+
+export class LessThanEqualsCmdLet extends BinaryOpCmdLet {
+  name = '<=';
+  help = 'test if op1 less than or equal to op2';
+
+  protected OPERATION: string = 'less than or equal to';
+
+  protected op(op0: UInt64, op1: UInt64): UInt64 {
+    const val = uint64(op0.compare(op1) <= 0 ? 1 : 0);
     this.output(op0, op1, val);
     return val;
   }

@@ -27,6 +27,10 @@ import {
   NeCmdLet,
   FalseCmdLet,
   TrueCmdLet,
+  GreaterThanCmdLet,
+  GreaterThanEqualsCmdLet,
+  LessThanCmdLet,
+  LessThanEqualsCmdLet,
 } from '../cmdlets/math/math.js';
 import { HistoryCmdLet } from '../cmdlets/misc/history.js';
 import { HelpCmdLet } from '../cmdlets/misc/help.js';
@@ -84,6 +88,8 @@ export class CmdLets {
     this.registerCmdletType(ExitCmdLet);
     this.registerCmdletType(FalseCmdLet);
     this.registerCmdletType(FdCmdLet);
+    this.registerCmdletType(GreaterThanCmdLet);
+    this.registerCmdletType(GreaterThanEqualsCmdLet);
     this.registerCmdletType(GrepCmdLet);
     this.registerCmdletType(FunctionEntryBpCmdLet);
     this.registerCmdletType(FunctionExitBpCmdLet);
@@ -93,6 +99,8 @@ export class CmdLets {
     this.registerCmdletType(InsnBpCmdLet);
     this.registerCmdletType(JsCmdLet);
     this.registerCmdletType(LdCmdLet);
+    this.registerCmdletType(LessThanCmdLet);
+    this.registerCmdletType(LessThanEqualsCmdLet);
     this.registerCmdletType(LogCmdLet);
     this.registerCmdletType(OrCmdLet);
     this.registerCmdletType(ReadCmdLet);

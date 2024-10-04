@@ -2,7 +2,7 @@ import { Bp } from '../../breakpoints/bp.js';
 import { Bps } from '../../breakpoints/bps.js';
 import { MemoryBps } from '../../breakpoints/memory.js';
 import { Regs } from '../../breakpoints/regs.js';
-import { CmdLet } from '../../commands/cmdlet.js';
+import { CmdLetBase, CmdLet } from '../../commands/cmdlet.js';
 import { CmdLets } from '../../commands/cmdlets.js';
 import { Command } from '../../commands/command.js';
 import { CharCode, Vt } from '../../io/char.js';
@@ -75,7 +75,7 @@ import {
 } from '../trace/trace.js';
 import { MacroCmdLet } from '../misc/macro.js';
 
-export class JsCmdLet extends CmdLet {
+export class JsCmdLet extends CmdLetBase {
   name = 'js';
   category = 'development';
   help = 'load script';
@@ -172,13 +172,71 @@ js path - load commandlet JS script
 
     const script = File.readAllText(name);
     const func = new Function('gThis', `with (gThis) { ${script} }`);
-    const cmdlet = func(gThis);
-    if (cmdlet !== undefined) {
+    const cmdlets = func(gThis) as CmdLet[];
+    if (cmdlets === undefined) {
+      Output.writeln('No cmdlets found.');
+      return Var.ZERO;
+    }
+
+    for (const [idx, cmdlet] of cmdlets.entries()) {
+      try {
+        this.checkMandatoryMembers(cmdlet);
+      } catch (e) {
+        Output.writeln(`error '${e}' in cmdlet ${idx}`);
+        return Var.ZERO;
+      }
+    }
+
+    for (const cmdlet of cmdlets) {
       Output.writeln(`Found cmdlet: ${cmdlet.name}`);
+      this.addMissingMembers(cmdlet);
       CmdLets.registerCmdlet(cmdlet);
     }
 
     return Var.ZERO;
+  }
+
+  private checkMandatoryMembers(cmdlet: CmdLet) {
+    if (cmdlet.name === undefined) {
+      throw new Error('name not specified');
+    }
+
+    if (cmdlet.runSync === undefined) {
+      throw new Error('runSync not specified');
+    }
+  }
+
+  private addMissingMembers(cmdlet: CmdLet) {
+    if (cmdlet.usage === undefined) {
+      cmdlet.usage = function () {
+        Output.writeln('no usage information available for this command');
+        return Var.ZERO;
+      };
+    }
+
+    if (cmdlet.isSupported === undefined) {
+      cmdlet.isSupported = function () {
+        return true;
+      };
+    }
+
+    if (cmdlet.run === undefined) {
+      cmdlet.run = async function (tokens: Token[]): Promise<Var> {
+        return cmdlet.runSync(tokens);
+      };
+    }
+
+    if (cmdlet.category === undefined) {
+      cmdlet.category = 'uncategorised';
+    }
+
+    if (cmdlet.visible === undefined) {
+      cmdlet.visible = true;
+    }
+
+    if (cmdlet.help === undefined) {
+      cmdlet.help = `${cmdlet.name} command`;
+    }
   }
 
   public usage(): Var {

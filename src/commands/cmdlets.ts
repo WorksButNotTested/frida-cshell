@@ -1,4 +1,4 @@
-import { CmdLet } from './cmdlet.js';
+import { CmdLetBase, CmdLet } from './cmdlet.js';
 import { DumpCmdLet } from '../cmdlets/data/dump.js';
 import { DumpStringCmdLet } from '../cmdlets/data/string.js';
 import { ExitCmdLet } from '../cmdlets/misc/exit.js';
@@ -132,7 +132,7 @@ export class CmdLets {
     this.registerCmdletType(XorCmdLet);
   }
 
-  private static registerCmdletType<T extends CmdLet>(
+  private static registerCmdletType<T extends CmdLetBase>(
     cmdletClass: new () => T,
   ) {
     const cmdlet = new cmdletClass();

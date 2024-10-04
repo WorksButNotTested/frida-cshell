@@ -1,11 +1,11 @@
-import { CmdLet } from '../../commands/cmdlet.js';
+import { CmdLetBase } from '../../commands/cmdlet.js';
 import { Output } from '../../io/output.js';
 import { Format } from '../../misc/format.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 import { Regex } from '../../misc/regex.js';
 
-export class ModCmdLet extends CmdLet {
+export class ModCmdLet extends CmdLetBase {
   name = 'mod';
   category = 'modules';
   help = 'display module information';

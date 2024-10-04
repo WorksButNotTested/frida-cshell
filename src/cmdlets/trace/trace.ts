@@ -1,4 +1,4 @@
-import { CmdLet } from '../../commands/cmdlet.js';
+import { CmdLetBase } from '../../commands/cmdlet.js';
 import { Output } from '../../io/output.js';
 import { Token } from '../../io/token.js';
 import { Format } from '../../misc/format.js';
@@ -8,7 +8,7 @@ import { CoverageTrace } from '../../traces/coverage/trace.js';
 import { Trace, TraceData, Traces } from '../../traces/trace.js';
 import { Var } from '../../vars/var.js';
 
-abstract class TraceBaseCmdLet<T extends Trace, M> extends CmdLet {
+abstract class TraceBaseCmdLet<T extends Trace, M> extends CmdLetBase {
   private static readonly STOP_CHAR: string = 'x';
   category = 'trace';
 
@@ -173,21 +173,21 @@ ${Output.bold('show:')}
 
 ${this.name} - show all ${this.traceType} traces
 
-${this.name} ${CmdLet.NUM_CHAR}n - show ${this.traceType} trace with the given index
-  ${CmdLet.NUM_CHAR}n           the index of the trace to display
+${this.name} ${CmdLetBase.NUM_CHAR}n - show ${this.traceType} trace with the given index
+  ${CmdLetBase.NUM_CHAR}n           the index of the trace to display
 
 ${Output.bold('create:')}
 ${create}
 
 ${Output.bold('stop:')}
 
-${this.name} ${CmdLet.NUM_CHAR}n ${TraceBaseCmdLet.STOP_CHAR} - stop ${this.traceType} trace with the given index
-  ${CmdLet.NUM_CHAR}n           the index of the trace to stop
+${this.name} ${CmdLetBase.NUM_CHAR}n ${TraceBaseCmdLet.STOP_CHAR} - stop ${this.traceType} trace with the given index
+  ${CmdLetBase.NUM_CHAR}n           the index of the trace to stop
 
 ${Output.bold('delete:')}
 
-${this.name} ${CmdLet.NUM_CHAR}n ${CmdLet.DELETE_CHAR} - delete ${this.traceType} trace with the given index
-  ${CmdLet.NUM_CHAR}n           the index of the trace to stop`;
+${this.name} ${CmdLetBase.NUM_CHAR}n ${CmdLetBase.DELETE_CHAR} - delete ${this.traceType} trace with the given index
+  ${CmdLetBase.NUM_CHAR}n           the index of the trace to stop`;
 
     Output.writeln(usage);
     return Var.ZERO;

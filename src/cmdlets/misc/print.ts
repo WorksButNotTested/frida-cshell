@@ -1,9 +1,9 @@
-import { CmdLet } from '../../commands/cmdlet.js';
+import { CmdLetBase } from '../../commands/cmdlet.js';
 import { Output } from '../../io/output.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 
-export class PrintCmdLet extends CmdLet {
+export class PrintCmdLet extends CmdLetBase {
   name = 'p';
   category = 'misc';
   help = 'print an expression';

@@ -1,11 +1,11 @@
-import { CmdLet } from '../../commands/cmdlet.js';
+import { CmdLetBase } from '../../commands/cmdlet.js';
 import { Output } from '../../io/output.js';
 import { Vars } from '../../vars/vars.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 import { Regs } from '../../breakpoints/regs.js';
 
-export class RegCmdLet extends CmdLet {
+export class RegCmdLet extends CmdLetBase {
   name = 'R';
   category = 'breakpoints';
   help = 'register management';

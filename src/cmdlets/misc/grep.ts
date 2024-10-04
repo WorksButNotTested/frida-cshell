@@ -1,9 +1,9 @@
-import { CmdLet } from '../../commands/cmdlet.js';
+import { CmdLetBase } from '../../commands/cmdlet.js';
 import { Output } from '../../io/output.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 
-export class GrepCmdLet extends CmdLet {
+export class GrepCmdLet extends CmdLetBase {
   name = 'grep';
   category = 'misc';
   help = 'filter output';

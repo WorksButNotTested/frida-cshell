@@ -1,9 +1,9 @@
-import { CmdLet } from '../../commands/cmdlet.js';
+import { CmdLetBase } from '../../commands/cmdlet.js';
 import { Output } from '../../io/output.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 
-export class ExitCmdLet extends CmdLet {
+export class ExitCmdLet extends CmdLetBase {
   name = 'exit';
   category = 'misc';
   help = 'exits the shell';

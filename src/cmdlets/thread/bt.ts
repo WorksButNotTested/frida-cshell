@@ -1,11 +1,11 @@
-import { CmdLet } from '../../commands/cmdlet.js';
+import { CmdLetBase } from '../../commands/cmdlet.js';
 import { Output } from '../../io/output.js';
 import { Regs } from '../../breakpoints/regs.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 import { Format } from '../../misc/format.js';
 
-export class BtCmdLet extends CmdLet {
+export class BtCmdLet extends CmdLetBase {
   name = 'bt';
   category = 'thread';
   help = 'display backtrace information';

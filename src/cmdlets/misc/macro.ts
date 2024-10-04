@@ -1,4 +1,4 @@
-import { CmdLet } from '../../commands/cmdlet.js';
+import { CmdLetBase } from '../../commands/cmdlet.js';
 import { Command } from '../../commands/command.js';
 import { Input, InputInterceptLine } from '../../io/input.js';
 import { Output } from '../../io/output.js';
@@ -8,7 +8,7 @@ import { Macro, Macros } from '../../macros/macros.js';
 import { Var } from '../../vars/var.js';
 import { Vars } from '../../vars/vars.js';
 
-export class MacroCmdLet extends CmdLet implements InputInterceptLine {
+export class MacroCmdLet extends CmdLetBase implements InputInterceptLine {
   private static readonly PARAM_PREFIX: string = '$';
   name = 'm';
   category = 'misc';
@@ -19,7 +19,7 @@ m - show all macros
 m name - create, modify or display a macro
   name    the name of the macro
 
-m name ${CmdLet.DELETE_CHAR} - delete a macro
+m name ${CmdLetBase.DELETE_CHAR} - delete a macro
   name    the name of the macro to delete`;
 
   private current: string | null = null;

@@ -1,9 +1,9 @@
-import { CmdLet } from '../../commands/cmdlet.js';
+import { CmdLetBase } from '../../commands/cmdlet.js';
 import { Output } from '../../io/output.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 
-export class DebugCmdLet extends CmdLet {
+export class DebugCmdLet extends CmdLetBase {
   name = 'debug';
   category = 'development';
   help = 'toggle debug mode';

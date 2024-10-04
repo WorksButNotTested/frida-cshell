@@ -1,11 +1,11 @@
-import { CmdLet } from '../../commands/cmdlet.js';
+import { CmdLetBase } from '../../commands/cmdlet.js';
 import { Output } from '../../io/output.js';
 import { Format } from '../../misc/format.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 import { Mem } from '../../memory/mem.js';
 
-export class CopyCmdLet extends CmdLet {
+export class CopyCmdLet extends CmdLetBase {
   name = 'cp';
   category = 'data';
   help = 'copy data in memory';

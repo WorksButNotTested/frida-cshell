@@ -1,7 +1,18 @@
 import { Token } from '../io/token.js';
 import { Var } from '../vars/var.js';
 
-export abstract class CmdLet {
+export interface CmdLet {
+  readonly name: string;
+  category: string;
+  help: string;
+  visible: boolean;
+  usage(): Var;
+  runSync(tokens: Token[]): Var;
+  run(tokens: Token[]): Promise<Var>;
+  isSupported(): boolean;
+}
+
+export abstract class CmdLetBase implements CmdLet {
   private static readonly UNLIMITED_CHAR: string = '*';
   public static readonly NUM_CHAR: string = '#';
   public static readonly DELETE_CHAR: string = '#';
@@ -93,12 +104,12 @@ export abstract class CmdLet {
 
   protected parseDelete(token: Token): string | null {
     const literal = token.getLiteral();
-    if (literal !== CmdLet.DELETE_CHAR) return null;
+    if (literal !== CmdLetBase.DELETE_CHAR) return null;
     return literal;
   }
 
   protected parseNumberOrAll(token: Token): number | null {
-    if (token.getLiteral() === CmdLet.UNLIMITED_CHAR) return -1;
+    if (token.getLiteral() === CmdLetBase.UNLIMITED_CHAR) return -1;
 
     const v = token.toVar();
     if (v === null) return null;
@@ -109,7 +120,7 @@ export abstract class CmdLet {
 
   protected parseIndex(token: Token): number | null {
     const literal = token.getLiteral();
-    if (!literal.startsWith(CmdLet.NUM_CHAR)) return null;
+    if (!literal.startsWith(CmdLetBase.NUM_CHAR)) return null;
 
     const numStr = literal.slice(1);
     const val = parseInt(numStr);

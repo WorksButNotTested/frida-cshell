@@ -1,10 +1,10 @@
-import { CmdLet } from '../../commands/cmdlet.js';
+import { CmdLetBase } from '../../commands/cmdlet.js';
 import { Output } from '../../io/output.js';
 import { Vars } from '../../vars/vars.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 
-export class VarCmdLet extends CmdLet {
+export class VarCmdLet extends CmdLetBase {
   name = 'v';
   category = 'misc';
   help = 'variable management';
@@ -19,7 +19,7 @@ v name value - assign a value to a variable
   name    the name of the variable to assign
   value   the value to assign
 
-v name ${CmdLet.DELETE_CHAR} - delete a variable
+v name ${CmdLetBase.DELETE_CHAR} - delete a variable
   name    the name of the variable to delete`;
 
   public runSync(tokens: Token[]): Var {

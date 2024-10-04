@@ -1,12 +1,12 @@
 import { Numeric } from '../../misc/numeric.js';
-import { CmdLet } from '../../commands/cmdlet.js';
+import { CmdLetBase } from '../../commands/cmdlet.js';
 import { Output } from '../../io/output.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 import { Format } from '../../misc/format.js';
 import { Input } from '../../io/input.js';
 
-export class HotCmdLet extends CmdLet {
+export class HotCmdLet extends CmdLetBase {
   name = 'hot';
   category = 'thread';
   help = 'display thread execution time information';

@@ -1,10 +1,10 @@
-import { CmdLet } from '../../commands/cmdlet.js';
+import { CmdLetBase } from '../../commands/cmdlet.js';
 import { Output } from '../../io/output.js';
 import { History } from '../../terminal/history.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 
-export class HistoryCmdLet extends CmdLet {
+export class HistoryCmdLet extends CmdLetBase {
   name = 'h';
   category = 'misc';
   help = 'command history';

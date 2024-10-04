@@ -1,10 +1,10 @@
-import { CmdLet } from '../../commands/cmdlet.js';
+import { CmdLetBase, CmdLet } from '../../commands/cmdlet.js';
 import { Output } from '../../io/output.js';
 import { CmdLets } from '../../commands/cmdlets.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 
-export class HelpCmdLet extends CmdLet {
+export class HelpCmdLet extends CmdLetBase {
   name = 'help';
   category = 'misc';
   help = 'print this message';

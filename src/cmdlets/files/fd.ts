@@ -1,4 +1,4 @@
-import { CmdLet } from '../../commands/cmdlet.js';
+import { CmdLetBase } from '../../commands/cmdlet.js';
 import { Output } from '../../io/output.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
@@ -19,7 +19,7 @@ type Fds = {
   [key: number]: string;
 };
 
-export class FdCmdLet extends CmdLet {
+export class FdCmdLet extends CmdLetBase {
   name = 'fd';
   category = 'files';
   help = 'display file descriptors';

@@ -4,16 +4,18 @@ v p ret
 d p
 
 # load a new commandlet from a script file and execute
-js src.js
-test malloc
+js cmdlet.js
+test1 malloc
 
 # show the first instruction of exit
 l exit 1
 
 # set up a macro
-m test2
+m test3
   l main
   q
+
+!test3
 
 # set up a breakpoint
 @f malloc 1 ?

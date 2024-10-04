@@ -1,4 +1,4 @@
-import { CmdLet } from '../../commands/cmdlet.js';
+import { CmdLetBase } from '../../commands/cmdlet.js';
 import { CharCode } from '../../io/char.js';
 import { Input } from '../../io/input.js';
 import { Output } from '../../io/output.js';
@@ -6,7 +6,7 @@ import { Token } from '../../io/token.js';
 import { History } from '../../terminal/history.js';
 import { Var } from '../../vars/var.js';
 
-export class SrcCmdLet extends CmdLet {
+export class SrcCmdLet extends CmdLetBase {
   name = 'src';
   category = 'files';
   help = 'run commands from file';

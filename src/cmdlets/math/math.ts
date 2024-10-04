@@ -1,10 +1,10 @@
-import { CmdLet } from '../../commands/cmdlet.js';
+import { CmdLetBase } from '../../commands/cmdlet.js';
 import { Output } from '../../io/output.js';
 import { Format } from '../../misc/format.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 
-abstract class BinaryOpCmdLet extends CmdLet {
+abstract class BinaryOpCmdLet extends CmdLetBase {
   category = 'math';
 
   private static readonly HEX_LABEL: string = 'HEXADECIMAL';
@@ -90,7 +90,7 @@ ${this.name} op1 op2 - ${this.OPERATION} two values together
   }
 }
 
-abstract class UnaryOpCmdLet extends CmdLet {
+abstract class UnaryOpCmdLet extends CmdLetBase {
   category = 'math';
 
   private static readonly HEX_LABEL: string = 'HEXADECIMAL';

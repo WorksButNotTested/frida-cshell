@@ -1,6 +1,6 @@
 import { Bp, BpType } from '../../breakpoints/bp.js';
 import { Bps } from '../../breakpoints/bps.js';
-import { CmdLet } from '../../commands/cmdlet.js';
+import { CmdLetBase } from '../../commands/cmdlet.js';
 import { Input, InputInterceptLine } from '../../io/input.js';
 import { Output } from '../../io/output.js';
 import { Token } from '../../io/token.js';
@@ -11,7 +11,7 @@ enum InputMode {
   Commands = 'commands',
 }
 
-abstract class TypedBpCmdLet extends CmdLet implements InputInterceptLine {
+abstract class TypedBpCmdLet extends CmdLetBase implements InputInterceptLine {
   protected static readonly CONDITIONAL_CHAR: string = '?';
   public abstract readonly bpType: BpType;
   protected abstract runCreate(tokens: Token[]): Var | null;
@@ -82,8 +82,8 @@ ${Output.bold('show:')}
 
 ${this.name} - show all ${this.bpType} breakpoints
 
-${this.name} ${CmdLet.NUM_CHAR}n - show a ${this.bpType} breakpoint
-   ${CmdLet.NUM_CHAR}n      the number of the breakpoint to show
+${this.name} ${CmdLetBase.NUM_CHAR}n - show a ${this.bpType} breakpoint
+   ${CmdLetBase.NUM_CHAR}n      the number of the breakpoint to show
 
 ${Output.bold('create:')}
 ${create}
@@ -93,8 +93,8 @@ ${modify}
 
 ${Output.bold('delete:')}
 
-${this.name} ${CmdLet.NUM_CHAR}n # - delete a ${this.bpType} breakpoint
-   ${CmdLet.NUM_CHAR}n      the number of the breakpoint to delete
+${this.name} ${CmdLetBase.NUM_CHAR}n # - delete a ${this.bpType} breakpoint
+   ${CmdLetBase.NUM_CHAR}n      the number of the breakpoint to delete
 
 ${Output.bold('NOTE:')} Set hits to '*' for unlimited breakpoint.`;
 
@@ -329,17 +329,17 @@ ${this.name} addr hits ${TypedBpCmdLet.CONDITIONAL_CHAR} - create ${this.bpType}
 
   protected override usageModify(): string {
     const usage: string = `
-${this.name} ${CmdLet.NUM_CHAR}n addr - modify a ${this.bpType} breakpoint without a hit limit
-   ${CmdLet.NUM_CHAR}n      the number of the breakpoint to modify
+${this.name} ${CmdLetBase.NUM_CHAR}n addr - modify a ${this.bpType} breakpoint without a hit limit
+   ${CmdLetBase.NUM_CHAR}n      the number of the breakpoint to modify
    addr    the address to move the breakpoint
 
-${this.name} ${CmdLet.NUM_CHAR}n addr hits - modify a ${this.bpType} breakpoint
-   ${CmdLet.NUM_CHAR}n      the number of the breakpoint to modify
+${this.name} ${CmdLetBase.NUM_CHAR}n addr hits - modify a ${this.bpType} breakpoint
+   ${CmdLetBase.NUM_CHAR}n      the number of the breakpoint to modify
    addr    the address to move the breakpoint
    hits    the number of times the breakpoint should fire
 
-${this.name} ${CmdLet.NUM_CHAR}n addr hits ${TypedBpCmdLet.CONDITIONAL_CHAR} - modify a ${this.bpType} breakpoint with conditions
-   ${CmdLet.NUM_CHAR}n      the number of the breakpoint to modify
+${this.name} ${CmdLetBase.NUM_CHAR}n addr hits ${TypedBpCmdLet.CONDITIONAL_CHAR} - modify a ${this.bpType} breakpoint with conditions
+   ${CmdLetBase.NUM_CHAR}n      the number of the breakpoint to modify
    addr    the address to move the breakpoint
    hits    the number of times the breakpoint should fire`;
     return usage;
@@ -464,19 +464,19 @@ ${this.name} addr len hits ${TypedBpCmdLet.CONDITIONAL_CHAR} - create ${this.bpT
 
   protected override usageModify(): string {
     const usage: string = `
-${this.name} ${CmdLet.NUM_CHAR}n addr len - modify a ${this.bpType} breakpoint without a hit limit
-   ${CmdLet.NUM_CHAR}n      the number of the breakpoint to modify
+${this.name} ${CmdLetBase.NUM_CHAR}n addr len - modify a ${this.bpType} breakpoint without a hit limit
+   ${CmdLetBase.NUM_CHAR}n      the number of the breakpoint to modify
    addr    the address to move the breakpoint
    len     the length of the memory region to watch
 
-${this.name} ${CmdLet.NUM_CHAR}n addr len hits - modify a ${this.bpType} breakpoint
-   ${CmdLet.NUM_CHAR}n      the number of the breakpoint to modify
+${this.name} ${CmdLetBase.NUM_CHAR}n addr len hits - modify a ${this.bpType} breakpoint
+   ${CmdLetBase.NUM_CHAR}n      the number of the breakpoint to modify
    addr    the address to move the breakpoint
    len     the length of the memory region to watch
    hits    the number of times the breakpoint should fire
 
-${this.name} ${CmdLet.NUM_CHAR}n addr len hits ${TypedBpCmdLet.CONDITIONAL_CHAR} - modify a ${this.bpType} breakpoint with conditions
-   ${CmdLet.NUM_CHAR}n      the number of the breakpoint to modify
+${this.name} ${CmdLetBase.NUM_CHAR}n addr len hits ${TypedBpCmdLet.CONDITIONAL_CHAR} - modify a ${this.bpType} breakpoint with conditions
+   ${CmdLetBase.NUM_CHAR}n      the number of the breakpoint to modify
    addr    the address to move the breakpoint
    len     the length of the memory region to watch
    hits    the number of times the breakpoint should fire`;
@@ -611,19 +611,19 @@ ${this.name} addr depth hits ${TypedBpCmdLet.CONDITIONAL_CHAR} - create ${this.b
 
   protected override usageModify(): string {
     const usage: string = `
-${this.name} ${CmdLet.NUM_CHAR}n addr depth - modify a ${this.bpType} breakpoint without a hit limit
-   ${CmdLet.NUM_CHAR}n      the number of the breakpoint to modify
+${this.name} ${CmdLetBase.NUM_CHAR}n addr depth - modify a ${this.bpType} breakpoint without a hit limit
+   ${CmdLetBase.NUM_CHAR}n      the number of the breakpoint to modify
    addr    the address to move the breakpoint
    depth   the maximum depth of callstack to follow
 
-${this.name} ${CmdLet.NUM_CHAR}n addr depth hits - modify a ${this.bpType} breakpoint
-   ${CmdLet.NUM_CHAR}n      the number of the breakpoint to modify
+${this.name} ${CmdLetBase.NUM_CHAR}n addr depth hits - modify a ${this.bpType} breakpoint
+   ${CmdLetBase.NUM_CHAR}n      the number of the breakpoint to modify
    addr    the address to move the breakpoint
    depth   the maximum depth of callstack to follow
    hits    the number of times the breakpoint should fire
 
-${this.name} ${CmdLet.NUM_CHAR}n addr depth hits ${TypedBpCmdLet.CONDITIONAL_CHAR} - modify a ${this.bpType} breakpoint with conditions
-   ${CmdLet.NUM_CHAR}n      the number of the breakpoint to modify
+${this.name} ${CmdLetBase.NUM_CHAR}n addr depth hits ${TypedBpCmdLet.CONDITIONAL_CHAR} - modify a ${this.bpType} breakpoint with conditions
+   ${CmdLetBase.NUM_CHAR}n      the number of the breakpoint to modify
    addr    the address to move the breakpoint
    depth   the maximum depth of callstack to follow
    hits    the number of times the breakpoint should fire`;

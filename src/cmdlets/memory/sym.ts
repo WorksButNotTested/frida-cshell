@@ -1,11 +1,11 @@
-import { CmdLet } from '../../commands/cmdlet.js';
+import { CmdLetBase } from '../../commands/cmdlet.js';
 import { Output } from '../../io/output.js';
 import { Token } from '../../io/token.js';
 import { Format } from '../../misc/format.js';
 import { Var } from '../../vars/var.js';
 import { Regex } from '../../misc/regex.js';
 
-export class SymCmdLet extends CmdLet {
+export class SymCmdLet extends CmdLetBase {
   name = 'sym';
   category = 'memory';
   help = 'look up a symbol information';

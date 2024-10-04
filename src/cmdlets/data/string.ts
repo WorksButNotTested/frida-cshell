@@ -1,11 +1,11 @@
-import { CmdLet } from '../../commands/cmdlet.js';
+import { CmdLetBase } from '../../commands/cmdlet.js';
 import { Output } from '../../io/output.js';
 import { Format } from '../../misc/format.js';
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 import { Mem } from '../../memory/mem.js';
 
-export class DumpStringCmdLet extends CmdLet {
+export class DumpStringCmdLet extends CmdLetBase {
   name = 'ds';
   category = 'data';
   help = 'dump string';

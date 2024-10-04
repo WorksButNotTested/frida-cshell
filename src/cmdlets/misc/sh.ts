@@ -1,4 +1,4 @@
-import { CmdLet } from '../../commands/cmdlet.js';
+import { CmdLetBase } from '../../commands/cmdlet.js';
 import { Input, InputInterceptRaw } from '../../io/input.js';
 import { Output } from '../../io/output.js';
 import { Token } from '../../io/token.js';
@@ -7,7 +7,7 @@ import { Var } from '../../vars/var.js';
 
 type Pipe = { readFd: number; writeFd: number };
 
-export class ShCmdLet extends CmdLet {
+export class ShCmdLet extends CmdLetBase {
   name = 'sh';
   category = 'misc';
   help = 'run a shell';

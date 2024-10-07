@@ -79,7 +79,7 @@ fi
 if [ \${debug} ]; then
     opt="{\"debug\":true}"
 else
-    opt="{}"
+    opt="{\"debug\":false}"
 fi
 
 if [ -z \${file} ] && [ -z \${name} ] && [ -z \${pid} ]; then

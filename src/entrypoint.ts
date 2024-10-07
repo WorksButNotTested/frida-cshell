@@ -11,6 +11,8 @@ import { Input } from './io/input.js';
 import { Output } from './io/output.js';
 import { SrcCmdLet } from './cmdlets/files/src.js';
 import { Exception } from './misc/exception.js';
+import { Version } from './misc/version.js';
+import { Format } from './misc/format.js';
 
 export const DEFAULT_SRC_PATH: string = `${Process.getHomeDir()}/.cshellrc`;
 
@@ -20,9 +22,11 @@ type InitParams = {
 
 rpc.exports = {
   async init(stage: string, params: InitParams | null = null) {
-    const debug = params?.debug ?? false;
-    Output.setDebugging(debug);
-    Output.debug(`init - stage: ${stage}, debug: ${debug}`);
+    if (params != null) {
+      Output.writeln(`params: ${JSON.stringify(params)}`);
+      Output.setDebugging(params.debug);
+    }
+    Output.debug(`init - stage: ${stage}`);
     Output.banner();
     Process.setExceptionHandler(Exception.exceptionHandler);
     await SrcCmdLet.loadInitScript(DEFAULT_SRC_PATH);
@@ -35,14 +39,22 @@ rpc.exports = {
    * in the script as follows. Here, the data parameter is the string typed
    * by the user including the newline.
    */
-  async onFridaStdin(data: string) {
-    await Input.read(data);
+  async onFridaStdin(data: string, bytes: ArrayBuffer | null) {
+    if (bytes === null) {
+      await Input.read(Format.toByteArray(data));
+    } else {
+      await Input.read(bytes);
+    }
   },
   /*
    * If getFridaTerminalMode returns "raw", then frida-inject will set the
    * console mode to RAW
    */
   getFridaTerminalMode() {
-    return 'raw';
+    if (Version.VERSION >= Version.BINARY_MODE_MIN_VERSION) {
+      return 'binary';
+    } else {
+      return 'raw';
+    }
   },
 };

@@ -1,0 +1,18 @@
+#!/bin/bash
+cmd="$@"
+# see https://bugs.launchpad.net/qemu/+bug/1790975
+qemu-system-arm \
+    -machine virtualization=true \
+    -machine virt,highmem=off \
+    -smp 4 \
+    -kernel /root/zImage-arm32 \
+    -initrd /root/initramfs-arm32.img \
+    -append "earlyprintk=serial,ttyAMA0 console=ttyAMA0 coredump_filter=0x3f FRIDA_INJECT=$FRIDA_INJECT cmd=\"$cmd\"" \
+    -m 4096M \
+    -net nic,id=eth \
+    -net user,id=mynet,net=192.168.76.0/24 \
+    -virtfs local,path=/home/share/,mount_tag=host0,security_model=passthrough,id=host0 \
+    -virtfs local,path=/home/ws/,mount_tag=host1,security_model=passthrough,id=host1 \
+    -nographic \
+    -no-reboot \
+    -serial pty

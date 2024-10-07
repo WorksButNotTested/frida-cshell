@@ -3,6 +3,7 @@ import { CharCode } from '../../io/char.js';
 import { Input } from '../../io/input.js';
 import { Output } from '../../io/output.js';
 import { Token } from '../../io/token.js';
+import { Format } from '../../misc/format.js';
 import { History } from '../../terminal/history.js';
 import { Var } from '../../vars/var.js';
 
@@ -64,7 +65,10 @@ src path - run commands from file
         if (line.length === 0) continue;
         if (line.charAt(0) === '#') continue;
         Output.write(line);
-        await Input.read(`${line}${String.fromCharCode(CharCode.CR)}`);
+        const bytes = Format.toByteArray(
+          `${line}${String.fromCharCode(CharCode.CR)}`,
+        );
+        await Input.read(bytes);
       }
 
       Output.clearLine();

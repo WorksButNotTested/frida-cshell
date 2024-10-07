@@ -80,13 +80,13 @@ sh - run a shell`;
       throw new Error('failed to find necessary native functions');
 
     const shell = Memory.allocUtf8String('SHELL');
-    const { value: shellVar, errno: getenvErrno } = this.fnGetEnv(
+    const { value: shellVar, errno: _getenvErrno } = this.fnGetEnv(
       shell,
     ) as UnixSystemFunctionResult<NativePointer>;
-    if (shellVar.equals(ptr(0)))
-      throw new Error(`failed to getenv("SHELL"), errno: ${getenvErrno}`);
 
-    const shellPath = shellVar.readUtf8String();
+    const shellPath = shellVar.equals(ptr(0))
+      ? '/bin/sh'
+      : shellVar.readUtf8String();
     Output.debug(`SHELL: ${shellPath}`);
 
     if (shellPath === null) throw new Error('failed to read SHELL');
@@ -225,8 +225,8 @@ sh - run a shell`;
       });
 
       const onRaw: InputInterceptRaw = {
-        addRaw(raw: string) {
-          output.write(Format.toByteArray(raw));
+        addRaw(bytes: ArrayBuffer) {
+          output.write(bytes);
         },
         abortRaw() {},
       };

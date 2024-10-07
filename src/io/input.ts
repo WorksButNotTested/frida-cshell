@@ -3,6 +3,7 @@ import { History } from '../terminal/history.js';
 import { Vars } from '../vars/vars.js';
 import { CharCode, Vt } from './char.js';
 import { EchoCmdLet } from '../cmdlets/misc/echo.js';
+import { Format } from '../misc/format.js';
 
 enum InputState {
   Default,
@@ -28,15 +29,15 @@ export class Input {
 
   private constructor() {}
 
-  public static async read(buffer: string) {
+  public static async read(bytes: ArrayBuffer) {
     if (this.interceptRaw !== null) {
-      if (this.buffer.length === 0) {
-        this.interceptRaw.addRaw(buffer);
+      if (this.buffer.length !== 0) {
+        this.interceptRaw.addRaw(Format.toByteArray(this.buffer));
         this.buffer = '';
       }
-      this.interceptRaw.addRaw(buffer);
+      this.interceptRaw.addRaw(bytes);
     } else {
-      this.buffer += buffer;
+      this.buffer += Format.toTextString(bytes);
       while (this.buffer.length !== 0) {
         await this.parse();
       }
@@ -291,6 +292,6 @@ export interface InputInterceptLine {
 }
 
 export interface InputInterceptRaw {
-  addRaw(c: string): void;
+  addRaw(bytes: ArrayBuffer): void;
   abortRaw(): void;
 }

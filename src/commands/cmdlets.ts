@@ -70,6 +70,7 @@ import { ReplaceCmdLet } from '../cmdlets/breakpoints/replace.js';
 import { EchoCmdLet } from '../cmdlets/misc/echo.js';
 import { CorpseCmdLet } from '../cmdlets/misc/corpse/corpse.js';
 import { ErrnoCmdLet } from '../cmdlets/misc/errno.js';
+import { SzCmdLet } from '../cmdlets/files/sz.js';
 
 export class CmdLets {
   private static byName: Map<string, CmdLet> = new Map<string, CmdLet>();
@@ -126,6 +127,7 @@ export class CmdLets {
     this.registerCmdletType(ShrCmdLet);
     this.registerCmdletType(SrcCmdLet);
     this.registerCmdletType(SymCmdLet);
+    this.registerCmdletType(SzCmdLet);
     this.registerCmdletType(ThreadCmdLet);
     this.registerCmdletType(TraceBlockCmdLet);
     this.registerCmdletType(TraceCallCmdLet);

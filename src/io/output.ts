@@ -115,6 +115,10 @@ export class Output {
     send(['frida:stderr', text]);
   }
 
+  public static writeRaw(bytes: ArrayBuffer) {
+    send(['frida:stdout'], bytes);
+  }
+
   public static clearLine() {
     this.write(CharCode.ERASE_LINE);
     this.write(String.fromCharCode(CharCode.CR));

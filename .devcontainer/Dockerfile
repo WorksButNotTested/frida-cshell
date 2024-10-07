@@ -757,6 +757,7 @@ COPY assets/cshell/vm-arm32 /bin/vm-arm32
 COPY assets/cshell/vm-arm64 /bin/vm-arm64
 COPY assets/cshell/vm-x64 /bin/vm-x64
 COPY assets/cshell/vm-x86 /bin/vm-x86
+COPY assets/cshell/vm-pty /bin/vm-pty
 WORKDIR /root/
 
 ################################################################################
@@ -787,7 +788,9 @@ FROM cshell AS frida-cshell
 RUN apt-get update && \
     apt-get install -y \
     nano \
-    psmisc
+    psmisc \
+    picocom \
+    lrzsz
 
 ARG VSCODE_COMMIT_ID
 ENV VSCODE_COMMIT_ID=$VSCODE_COMMIT_ID

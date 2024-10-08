@@ -74,6 +74,7 @@ import {
   TraceCoverageCmdLet,
 } from '../trace/trace.js';
 import { MacroCmdLet } from '../misc/macro.js';
+import { ReplaceCmdLet } from '../data/replace.js';
 
 export class JsCmdLet extends CmdLetBase {
   name = 'js';
@@ -148,6 +149,7 @@ js path - load commandlet JS script
       ReadCmdLet: ReadCmdLet,
       RegCmdLet: RegCmdLet,
       Regs: Regs,
+      ReplaceCmdLet: ReplaceCmdLet,
       ShlCmdLet: ShlCmdLet,
       ShrCmdLet: ShrCmdLet,
       SrcCmdLet: JsCmdLet,

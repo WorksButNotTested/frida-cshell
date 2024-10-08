@@ -27,9 +27,14 @@ export class ReplaceCmdLet extends CmdLetBase {
 
   private static readonly USAGE: string = `Usage: replace
 
+replace - show all replacements
+
 replace dest src - replace function
-  dest   the address/symbol to replace
-  src    the address/symbol to replace with`;
+  dest   the address/symbol of the function to replace
+  src    the address/symbol of the function to replace with
+
+replace ${CmdLetBase.NUM_CHAR}n ${CmdLetBase.DELETE_CHAR} - delete a replacement
+  ${CmdLetBase.NUM_CHAR}n     the number of the replacement to delete`;
 
   public runSync(tokens: Token[]): Var {
     const retDelete = this.runDelete(tokens);

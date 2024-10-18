@@ -125,6 +125,15 @@ export abstract class CmdLetBase implements CmdLet {
 
   protected parseIndex(token: Token): number | null {
     const literal = token.getLiteral();
+    if (literal.startsWith(CmdLetBase.NUM_CHAR))
+      return CmdLetBase.parseIndexString(literal);
+
+    const v = token.toVar();
+    if (v === null) return null;
+    return CmdLetBase.parseIndexString(v.getLiteral());
+  }
+
+  private static parseIndexString(literal: string): number | null {
     if (!literal.startsWith(CmdLetBase.NUM_CHAR)) return null;
 
     const numStr = literal.slice(1);

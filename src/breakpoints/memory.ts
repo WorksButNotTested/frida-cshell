@@ -93,6 +93,7 @@ export abstract class BpMemory extends Bp {
 
     Regs.setAddress(details.address);
     Regs.setPc(details.from);
+    Regs.setBreakpointId(this.index);
 
     try {
       if (this.runConditions()) {

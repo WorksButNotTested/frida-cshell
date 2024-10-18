@@ -52,6 +52,7 @@ export abstract class BpCode extends Bp {
     Regs.setThreadId(threadId);
     Regs.setContext(ctx);
     Regs.setReturnAddress(returnAddress);
+    Regs.setBreakpointId(this.index);
     if (retVal !== null) Regs.setRetVal(retVal);
 
     try {

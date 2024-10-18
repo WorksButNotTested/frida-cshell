@@ -1,37 +1,75 @@
 import { Var } from '../vars/var.js';
 
-export class Regs {
-  private static readonly THREAD_ID_NAME: string = 'tid';
-  private static readonly RETURN_ADDRESS_NAME: string = 'ra';
-  private static readonly ADDR_NAME: string = 'addr';
-  private static readonly PC_NAME: string = 'pc';
-  private static readonly RETVAL_NAME: string = 'ret';
+enum PseudoRegNames {
+  TID = 'tid',
+  RA = 'ra',
+  ADDRESS = 'addr',
+  BP = 'bp',
+}
 
-  private static threadId: ThreadId | null = null;
+type PseudoRegs = {
+  [K in PseudoRegNames]: Var | null;
+};
+
+export class Regs {
+  private static readonly PC_NAME: string = 'pc';
+  private static readonly RETVAL_NAME = 'ret';
   private static ctx: CpuContext | null = null;
-  private static returnAddress: NativePointer | null = null;
-  private static addr: NativePointer | null = null;
-  private static pc: NativePointer | null = null;
+  private static pc: Var | null = null;
   private static retVal: InvocationReturnValue | null = null;
+
+  private static pseudoRegs: PseudoRegs = {
+    [PseudoRegNames.TID]: null,
+    [PseudoRegNames.RA]: null,
+    [PseudoRegNames.ADDRESS]: null,
+    [PseudoRegNames.BP]: null,
+  };
 
   private constructor() {}
 
+  public static setPc(pc: NativePointer) {
+    this.pc = new Var(uint64(pc.toString()), Regs.PC_NAME);
+  }
+
+  public static setThreadId(threadId: ThreadId) {
+    this.pseudoRegs[PseudoRegNames.TID] = new Var(
+      uint64(threadId),
+      PseudoRegNames.TID,
+    );
+  }
+
+  public static setReturnAddress(returnAddress: NativePointer) {
+    this.pseudoRegs[PseudoRegNames.RA] = new Var(
+      uint64(returnAddress.toString()),
+      PseudoRegNames.RA,
+    );
+  }
+
+  public static setAddress(addr: NativePointer) {
+    this.pseudoRegs[PseudoRegNames.ADDRESS] = new Var(
+      uint64(addr.toString()),
+      PseudoRegNames.ADDRESS,
+    );
+  }
+
+  public static setRetVal(retVal: InvocationReturnValue) {
+    this.retVal = retVal;
+  }
+
+  public static setBreakpointId(breakpointId: number) {
+    this.pseudoRegs[PseudoRegNames.BP] = new Var(
+      uint64(breakpointId.toString()),
+      `#${breakpointId}`,
+    );
+  }
+
   public static get(name: string): Var {
-    if (name === Regs.THREAD_ID_NAME) {
-      if (this.threadId === null)
-        throw new Error('thread ID not available outside of a breakpoint');
-      return new Var(uint64(this.threadId), Regs.THREAD_ID_NAME);
-    } else if (name === Regs.RETURN_ADDRESS_NAME) {
-      if (this.returnAddress === null)
-        throw new Error('return address not available outside of a breakpoint');
-      return new Var(
-        uint64(this.returnAddress.toString()),
-        Regs.RETURN_ADDRESS_NAME,
-      );
-    } else if (name === Regs.ADDR_NAME) {
-      if (this.addr === null)
-        throw new Error('addr not available outside of a breakpoint');
-      return new Var(uint64(this.addr.toString()), Regs.ADDR_NAME);
+    if (name in this.pseudoRegs) {
+      const key = name as PseudoRegNames;
+      const v = this.pseudoRegs[key];
+      if (v === null)
+        throw new Error(`${name} not available outside of a breakpoint`);
+      return v;
     } else if (name === Regs.RETVAL_NAME) {
       if (this.retVal === null)
         throw new Error(
@@ -43,7 +81,7 @@ export class Regs {
         if (this.pc === null) {
           throw new Error('pc not available outside of a breakpoint');
         }
-        return new Var(uint64(this.pc.toString()), Regs.PC_NAME);
+        return this.pc;
       } else {
         throw new Error('registers not available outside of a breakpoint');
       }
@@ -53,6 +91,31 @@ export class Regs {
         throw new Error(`variable name '${name}' is invalid`);
       const val = regs.get(name) as Var;
       return val;
+    }
+  }
+
+  public static set(name: string, value: Var) {
+    if (name in this.pseudoRegs) {
+      throw new Error(`${name} cannot be set`);
+    } else if (name === Regs.RETVAL_NAME) {
+      if (this.retVal === null)
+        throw new Error(
+          'return Value not available outside of a function exit breakpoint',
+        );
+      const ptr = value.toPointer();
+      this.retVal.replace(ptr);
+    } else if (this.ctx === null) {
+      if (name === Regs.PC_NAME) {
+        throw new Error('pc cannot be set');
+      } else {
+        throw new Error('registers not available outside of a breakpoint');
+      }
+    } else {
+      const regs = this.getRegs(this.ctx);
+      if (!regs.has(name))
+        throw new Error(`register name '${name}' is invalid`);
+      regs.set(name, value);
+      this.setRegs(this.ctx, regs);
     }
   }
 
@@ -159,35 +222,6 @@ export class Regs {
       default:
         throw new Error(`unknown or unsupported architecture: ${Process.arch}`);
         break;
-    }
-  }
-
-  public static set(name: string, value: Var) {
-    if (name === Regs.THREAD_ID_NAME) {
-      throw new Error('thread ID cannot be set');
-    } else if (name === Regs.RETURN_ADDRESS_NAME) {
-      throw new Error('return address cannot be set');
-    } else if (name === Regs.ADDR_NAME) {
-      throw new Error('addr cannot be set');
-    } else if (name === Regs.RETVAL_NAME) {
-      if (this.retVal === null)
-        throw new Error(
-          'return Value not available outside of a function exit breakpoint',
-        );
-      const ptr = value.toPointer();
-      this.retVal.replace(ptr);
-    } else if (this.ctx === null) {
-      if (name === Regs.PC_NAME) {
-        throw new Error('pc cannot be set');
-      } else {
-        throw new Error('registers not available outside of a breakpoint');
-      }
-    } else {
-      const regs = this.getRegs(this.ctx);
-      if (!regs.has(name))
-        throw new Error(`register name '${name}' is invalid`);
-      regs.set(name, value);
-      this.setRegs(this.ctx, regs);
     }
   }
 
@@ -310,58 +344,19 @@ export class Regs {
       regs.forEach(r => result.push(r));
     }
 
-    if (this.threadId !== null) {
-      result.push([
-        Regs.THREAD_ID_NAME,
-        new Var(uint64(this.threadId), Regs.THREAD_ID_NAME),
-      ]);
-    }
-
-    if (this.returnAddress !== null) {
-      result.push([
-        Regs.RETURN_ADDRESS_NAME,
-        new Var(
-          uint64(this.returnAddress.toString()),
-          Regs.RETURN_ADDRESS_NAME,
-        ),
-      ]);
-    }
-
-    if (this.addr !== null) {
-      result.push([
-        Regs.ADDR_NAME,
-        new Var(uint64(this.addr.toString()), Regs.ADDR_NAME),
-      ]);
-    }
-
-    if (this.retVal !== null) {
-      result.push([
-        Regs.RETVAL_NAME,
-        new Var(uint64(this.retVal.toString()), Regs.RETVAL_NAME),
-      ]);
+    for (const [k, v] of Object.entries(this.pseudoRegs)) {
+      if (v === null) continue;
+      result.push([k, v]);
     }
 
     return result;
   }
 
   private static isClear() {
-    if (this.threadId !== null) return false;
-
     if (this.ctx !== null) return false;
-
-    if (this.returnAddress !== null) return false;
-
-    if (this.addr !== null) return false;
-
     if (this.pc !== null) return false;
-
-    if (this.retVal !== null) return false;
-
+    if (Object.values(this.pseudoRegs).some(v => v !== null)) return false;
     return true;
-  }
-
-  public static setThreadId(threadId: ThreadId) {
-    this.threadId = threadId;
   }
 
   public static setContext(ctx: CpuContext) {
@@ -372,27 +367,11 @@ export class Regs {
     return this.ctx;
   }
 
-  public static setReturnAddress(returnAddress: NativePointer) {
-    this.returnAddress = returnAddress;
-  }
-
-  public static setAddress(addr: NativePointer) {
-    this.addr = addr;
-  }
-
-  public static setPc(pc: NativePointer) {
-    this.pc = pc;
-  }
-
-  public static setRetVal(retVal: InvocationReturnValue) {
-    this.retVal = retVal;
-  }
-
   public static clear() {
-    this.threadId = null;
-    this.ctx = null;
-    this.returnAddress = null;
-    this.addr = null;
+    for (const name of Object.keys(this.pseudoRegs)) {
+      const key = name as PseudoRegNames;
+      this.pseudoRegs[key] = null;
+    }
     this.pc = null;
     this.retVal = null;
   }

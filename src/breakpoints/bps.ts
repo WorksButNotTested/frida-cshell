@@ -20,9 +20,7 @@ export class Bps {
     );
 
     if (overlapping) {
-      throw new Error(
-        `breakpoint overlaps existing breakpoint:\n\t`,
-      );
+      throw new Error(`breakpoint overlaps existing breakpoint:\n\t`);
     }
   }
 

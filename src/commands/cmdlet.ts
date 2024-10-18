@@ -48,19 +48,22 @@ export abstract class CmdLetBase implements CmdLet {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public transformOptional<M extends any[], O extends any[]>(
     tokens: Token[],
-    madatory: { [K in keyof M]: (token: Token) => M[K] | null },
+    mandatory: { [K in keyof M]: (token: Token) => M[K] | null }, // Fixed typo
     optional: { [K in keyof O]: (token: Token) => O[K] | null },
   ): [M, { [K in keyof O]: O[K] | null }] | null {
-    if (tokens.length < madatory.length) return null;
-    if (tokens.length > madatory.length + optional.length) return null;
+    if (tokens.length < mandatory.length) return null;
+    if (tokens.length > mandatory.length + optional.length) return null;
 
-    const mVars = madatory.map((operation, index) =>
+    // Mandatory variables
+    const mVars = mandatory.map((operation, index) =>
       operation(tokens[index] as Token),
     );
 
     let failed = false;
+
+    // Optional variables
     const oVars = optional.map((operation, index) => {
-      const token = tokens[index + madatory.length];
+      const token = tokens[index + mandatory.length];
       if (token === undefined) return null;
       const result = operation(token);
       if (result === null) failed = true;
@@ -69,9 +72,11 @@ export abstract class CmdLetBase implements CmdLet {
 
     if (failed) return null;
 
+    // If any mandatory variable is null, return null
     if (mVars.some(v => v === null)) {
       return null;
     } else {
+      // Return both mandatory and optional variables
       return [mVars as M, oVars as O];
     }
   }

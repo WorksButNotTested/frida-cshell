@@ -9,7 +9,7 @@
  */
 import { Input } from './io/input.js';
 import { Output } from './io/output.js';
-import { MemoryBps } from './breakpoints/memory.js';
+import { BpMemory } from './breakpoints/memory.js';
 import { Regs } from './breakpoints/regs.js';
 import { Format } from './misc/format.js';
 import { SrcCmdLet } from './cmdlets/files/src.js';
@@ -54,7 +54,7 @@ function exceptionHandler(details: ExceptionDetails) {
   if (details.type === 'access-violation') {
     const address = details.memory?.address;
     if (address !== undefined) {
-      if (MemoryBps.containsAddress(address)) {
+      if (BpMemory.addressHasBreakpoint(address)) {
         return;
       }
     }

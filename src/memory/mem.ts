@@ -1,10 +1,10 @@
-import { MemoryBps } from '../breakpoints/memory.js';
+import { BpMemory } from '../breakpoints/memory.js';
 import { Overlay } from './overlay.js';
 import { Format } from '../misc/format.js';
 
 export class Mem {
   public static readBytes(address: NativePointer, length: number): Uint8Array {
-    MemoryBps.disable();
+    BpMemory.disableAll();
     try {
       const data = address.readByteArray(length);
       if (data === null)
@@ -15,12 +15,12 @@ export class Mem {
       Overlay.fix(address, buffer);
       return buffer;
     } finally {
-      MemoryBps.enable();
+      BpMemory.enableAll();
     }
   }
 
   public static writeBytes(address: NativePointer, data: Uint8Array) {
-    MemoryBps.disable();
+    BpMemory.disableAll();
     try {
       if (Overlay.overlaps(address, data.length)) {
         throw new Error(
@@ -29,7 +29,7 @@ export class Mem {
       }
       this.modifyMemory(address, data);
     } finally {
-      MemoryBps.enable();
+      BpMemory.enableAll();
     }
   }
 

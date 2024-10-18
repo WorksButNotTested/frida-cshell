@@ -1,6 +1,6 @@
 import { Bp } from '../../breakpoints/bp.js';
 import { Bps } from '../../breakpoints/bps.js';
-import { MemoryBps } from '../../breakpoints/memory.js';
+import { BpMemory } from '../../breakpoints/memory.js';
 import { Regs } from '../../breakpoints/regs.js';
 import { CmdLetBase, CmdLet } from '../../commands/cmdlet.js';
 import { CmdLets } from '../../commands/cmdlets.js';
@@ -20,13 +20,18 @@ import { Line } from '../../terminal/line.js';
 import { Var } from '../../vars/var.js';
 import { Vars } from '../../vars/vars.js';
 import { AssemblyCmdLet } from '../data/assembly.js';
+import { ReadBpCmdLet, WriteBpCmdLet } from '../breakpoints/mem.js';
 import {
+  InsnBpCmdLet,
   FunctionEntryBpCmdLet,
   FunctionExitBpCmdLet,
-  InsnBpCmdLet,
-  ReadBpCmdLet,
-  WriteBpCmdLet,
-} from '../breakpoints/bp.js';
+  CoverageBpCmdLet,
+} from '../breakpoints/code.js';
+import {
+  BlockTraceBpCmdLet,
+  CallTraceBpCmdLet,
+  UniqueBlockTraceBpCmdLet,
+} from '../breakpoints/trace.js';
 import { BtCmdLet } from '../thread/bt.js';
 import { CopyCmdLet } from '../data/copy.js';
 import { DumpCmdLet } from '../data/dump.js';
@@ -74,7 +79,7 @@ import {
   TraceCoverageCmdLet,
 } from '../trace/trace.js';
 import { MacroCmdLet } from '../misc/macro.js';
-import { ReplaceCmdLet } from '../data/replace.js';
+import { ReplaceCmdLet } from '../breakpoints/replace.js';
 
 export class JsCmdLet extends CmdLetBase {
   name = 'js';
@@ -102,14 +107,18 @@ js path - load commandlet JS script
       AndCmdLet: AndCmdLet,
       AssemblyCmdLet: AssemblyCmdLet,
       Base64: Base64,
+      BlockTraceBpCmdLet: BlockTraceBpCmdLet,
       Bp: Bp,
+      BpMemory: BpMemory,
       Bps: Bps,
       BtCmdLet: BtCmdLet,
+      CallTraceBpCmdLet: CallTraceBpCmdLet,
       CatCmdLet: CatCmdLet,
       CharCode: CharCode,
       CmdLets: CmdLets,
       Command: Command,
       CopyCmdLet: CopyCmdLet,
+      CoverageBpCmdLet: CoverageBpCmdLet,
       DivCmdLet: DivCmdLet,
       DumpCmdLet: DumpCmdLet,
       EqCmdLet: EqCmdLet,
@@ -135,7 +144,6 @@ js path - load commandlet JS script
       LogCmdLet: LogCmdLet,
       MacroCmdLet: MacroCmdLet,
       Mem: Mem,
-      MemoryBps: MemoryBps,
       ModCmdLet: ModCmdLet,
       MulCmdLet: MulCmdLet,
       NeCmdLet: NeCmdLet,
@@ -162,6 +170,7 @@ js path - load commandlet JS script
       TraceUniqueBlockCmdLet: TraceUniqueBlockCmdLet,
       Token: Token,
       TrueCmdLet: TrueCmdLet,
+      UniqueBlockTraceBpCmdLet: UniqueBlockTraceBpCmdLet,
       Var: Var,
       VarCmdLet: VarCmdLet,
       Vars: Vars,

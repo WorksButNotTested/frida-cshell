@@ -35,17 +35,18 @@ import {
 import { HistoryCmdLet } from '../cmdlets/misc/history.js';
 import { HelpCmdLet } from '../cmdlets/misc/help.js';
 import { CopyCmdLet } from '../cmdlets/data/copy.js';
+import { ReadBpCmdLet, WriteBpCmdLet } from '../cmdlets/breakpoints/mem.js';
 import {
+  InsnBpCmdLet,
   FunctionEntryBpCmdLet,
   FunctionExitBpCmdLet,
+  CoverageBpCmdLet,
+} from '../cmdlets/breakpoints/code.js';
+import {
   BlockTraceBpCmdLet,
   CallTraceBpCmdLet,
   UniqueBlockTraceBpCmdLet,
-  CoverageBpCmdLet,
-  InsnBpCmdLet,
-  ReadBpCmdLet,
-  WriteBpCmdLet,
-} from '../cmdlets/breakpoints/bp.js';
+} from '../cmdlets/breakpoints/trace.js';
 import { RegCmdLet } from '../cmdlets/breakpoints/reg.js';
 import { LdCmdLet } from '../cmdlets/modules/ld.js';
 import { FdCmdLet } from '../cmdlets/files/fd.js';
@@ -65,7 +66,7 @@ import {
   TraceCoverageCmdLet,
 } from '../cmdlets/trace/trace.js';
 import { MacroCmdLet } from '../cmdlets/misc/macro.js';
-import { ReplaceCmdLet } from '../cmdlets/data/replace.js';
+import { ReplaceCmdLet } from '../cmdlets/breakpoints/replace.js';
 
 export class CmdLets {
   private static byName: Map<string, CmdLet> = new Map<string, CmdLet>();

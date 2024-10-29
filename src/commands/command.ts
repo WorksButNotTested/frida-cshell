@@ -6,35 +6,54 @@ import { Token } from '../io/token.js';
 import { CmdLet } from './cmdlet.js';
 import { Macro, Macros } from '../macros/macros.js';
 import { MacroCmdLet } from '../cmdlets/misc/macro.js';
+import { EchoCmdLet } from '../cmdlets/misc/echo.js';
 
 export class Command {
   private static readonly MACRO_PREFIX: string = '!';
   public static async run(tokens: Token[]): Promise<Var> {
-    const cmdlet = this.getCmdlet(tokens);
-    if (cmdlet !== null) {
-      return cmdlet.run(tokens.slice(1));
+    let suppressed = false;
+    if (!EchoCmdLet.echo && !Output.isSuppressed()) {
+      Output.suppress(true);
+      suppressed = true;
     }
+    try {
+      const cmdlet = this.getCmdlet(tokens);
+      if (cmdlet !== null) {
+        return cmdlet.run(tokens.slice(1));
+      }
 
-    const macro = this.getMacro(tokens);
-    if (macro !== null) {
-      return MacroCmdLet.runSync(macro, tokens.slice(1));
+      const macro = this.getMacro(tokens);
+      if (macro !== null) {
+        return MacroCmdLet.runSync(macro, tokens.slice(1));
+      }
+
+      return this.runFunction(tokens);
+    } finally {
+      if (suppressed) Output.suppress(false);
     }
-
-    return this.runFunction(tokens);
   }
 
   public static runSync(tokens: Token[]): Var {
-    const cmdlet = this.getCmdlet(tokens);
-    if (cmdlet !== null) {
-      return cmdlet.runSync(tokens.slice(1));
+    let suppressed = false;
+    if (!EchoCmdLet.echo && !Output.isSuppressed()) {
+      Output.suppress(true);
+      suppressed = true;
     }
+    try {
+      const cmdlet = this.getCmdlet(tokens);
+      if (cmdlet !== null) {
+        return cmdlet.runSync(tokens.slice(1));
+      }
 
-    const macro = this.getMacro(tokens);
-    if (macro !== null) {
-      return MacroCmdLet.runSync(macro, tokens.slice(1));
+      const macro = this.getMacro(tokens);
+      if (macro !== null) {
+        return MacroCmdLet.runSync(macro, tokens.slice(1));
+      }
+
+      return this.runFunction(tokens);
+    } finally {
+      if (suppressed) Output.suppress(false);
     }
-
-    return this.runFunction(tokens);
   }
 
   private static getCmdlet(tokens: Token[]): CmdLet | null {

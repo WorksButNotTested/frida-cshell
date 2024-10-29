@@ -182,4 +182,8 @@ export class Output {
   public static suppress(suppressed: boolean) {
     this.suppressed = suppressed;
   }
+
+  public static isSuppressed(): boolean {
+    return this.suppressed;
+  }
 }

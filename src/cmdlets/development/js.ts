@@ -80,6 +80,7 @@ import {
 } from '../trace/trace.js';
 import { MacroCmdLet } from '../misc/macro.js';
 import { ReplaceCmdLet } from '../breakpoints/replace.js';
+import { EchoCmdLet } from '../misc/echo.js';
 
 export class JsCmdLet extends CmdLetBase {
   name = 'js';
@@ -121,6 +122,7 @@ js path - load commandlet JS script
       CoverageBpCmdLet: CoverageBpCmdLet,
       DivCmdLet: DivCmdLet,
       DumpCmdLet: DumpCmdLet,
+      EchoCmdLet: EchoCmdLet,
       EqCmdLet: EqCmdLet,
       ExitCmdLet: ExitCmdLet,
       FalseCmdLet: FalseCmdLet,

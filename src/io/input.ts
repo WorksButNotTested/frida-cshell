@@ -2,6 +2,7 @@ import { Output } from './output.js';
 import { History } from '../terminal/history.js';
 import { Vars } from '../vars/vars.js';
 import { CharCode, Vt } from './char.js';
+import { EchoCmdLet } from '../cmdlets/misc/echo.js';
 
 enum InputState {
   Default,
@@ -12,6 +13,7 @@ enum InputState {
 export class Input {
   public static readonly PROMPT: string = '-> ';
   public static readonly FILTERED_PROMPT: string = '~> ';
+  public static readonly NO_ECHO_PROMPT: string = '#> ';
   private static readonly EDIT_PROMPT: string = '. ';
 
   private static readonly QUIT_CHAR: string = 'q';
@@ -121,7 +123,9 @@ export class Input {
   public static prompt() {
     Output.clearLine();
     if (this.interceptLine === null) {
-      if (Output.isFiltered()) {
+      if (!EchoCmdLet.echo) {
+        Output.write(Output.bold(this.NO_ECHO_PROMPT));
+      } else if (Output.isFiltered()) {
         Output.write(Output.bold(this.FILTERED_PROMPT));
       } else {
         Output.write(Output.bold(this.PROMPT));

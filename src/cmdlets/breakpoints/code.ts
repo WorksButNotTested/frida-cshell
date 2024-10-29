@@ -1,4 +1,4 @@
-import { BpType } from '../../breakpoints/bp.js';
+import { Bp, BpType } from '../../breakpoints/bp.js';
 import { Bps } from '../../breakpoints/bps.js';
 import {
   BpCodeInstruction,
@@ -52,7 +52,7 @@ abstract class CodeBpCmdLet extends TypedBpCmdLet {
         throw new Error(`unexpected breakpoint type: ${this.bpType}`);
     }
 
-    return addr;
+    return Bp.idToVar(idx);
   }
 
   protected runModify(tokens: Token[]): Var | null {
@@ -81,7 +81,7 @@ abstract class CodeBpCmdLet extends TypedBpCmdLet {
     Output.writeln(`Modified ${bp.toString()}`);
     this.editBreakpoint(bp, conditional);
 
-    return addr ?? Var.ZERO;
+    return Bp.idToVar(index);
   }
 
   protected override usageCreate(): string {

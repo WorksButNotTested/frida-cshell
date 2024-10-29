@@ -46,6 +46,10 @@ export class BpReplacement extends Bp {
     const idxString = Output.green(`#${this.index.toString()}.`.padEnd(4, ' '));
     const targetString = `target: ${Output.blue(this.target.getLiteral())}`;
     const addressString = `address: ${Output.blue(this.literal)}`;
-    return `${idxString} ${addressString} -> ${targetString}`;
+    let tranmpolineString = '';
+    if (this.trampoline !== null) {
+      tranmpolineString = `trampoline: ${Output.blue(Format.toHexString(this.trampoline.toPointer()))}`;
+    }
+    return `${idxString} ${addressString} -> ${targetString} [${tranmpolineString}]`;
   }
 }

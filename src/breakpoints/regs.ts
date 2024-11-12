@@ -131,6 +131,8 @@ export class Regs {
           ['esi', new Var(uint64(ctx.esi.toString()), 'esi')],
           ['edi', new Var(uint64(ctx.edi.toString()), 'edi')],
           ['eip', new Var(uint64(ctx.eip.toString()), 'eip')],
+          ['pc', new Var(uint64(ctx.pc.toString()), 'pc')],
+          ['sp', new Var(uint64(ctx.sp.toString()), 'sp')],
         ]);
       }
       case 'x64': {
@@ -153,6 +155,8 @@ export class Regs {
           ['r14', new Var(uint64(ctx.r14.toString()), 'r14')],
           ['r15', new Var(uint64(ctx.r15.toString()), 'r15')],
           ['rip', new Var(uint64(ctx.rip.toString()), 'rip')],
+          ['pc', new Var(uint64(ctx.pc.toString()), 'pc')],
+          ['sp', new Var(uint64(ctx.sp.toString()), 'sp')],
         ]);
       }
       case 'arm': {

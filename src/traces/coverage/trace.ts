@@ -1,4 +1,5 @@
 import { Output } from '../../io/output.js';
+import { Files } from '../../misc/files.js';
 import { TraceBase, TraceData, Traces } from '../trace.js';
 import { Coverage, CoverageSession } from './coverage.js';
 
@@ -11,25 +12,8 @@ class CoverageTraceData extends TraceData {
   public constructor(threadId: ThreadId, filename: string | null) {
     super();
     this.threadId = threadId;
-    this.filename = filename ?? CoverageTraceData.getRandomFileName();
+    this.filename = filename ?? Files.getRandomFileName('cov');
     this.file = new File(this.filename, 'wb+');
-  }
-
-  private static getRandomString(length: number): string {
-    let output: string = '';
-    const lookup = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    for (let i = 0; i < length; i++) {
-      const idx = Math.floor(Math.random() * lookup.length);
-      const value = lookup[idx];
-      output += value;
-    }
-    return output;
-  }
-
-  private static getRandomFileName(): string {
-    const rand = CoverageTraceData.getRandomString(16);
-    const filename = `/tmp/${rand}.cov`;
-    return filename;
   }
 
   public append(events: ArrayBuffer) {

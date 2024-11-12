@@ -81,6 +81,7 @@ import {
 import { MacroCmdLet } from '../misc/macro.js';
 import { ReplaceCmdLet } from '../breakpoints/replace.js';
 import { EchoCmdLet } from '../misc/echo.js';
+import { CorpseCmdLet } from '../misc/corpse.js';
 
 export class JsCmdLet extends CmdLetBase {
   name = 'js';
@@ -119,6 +120,7 @@ js path - load commandlet JS script
       CmdLets: CmdLets,
       Command: Command,
       CopyCmdLet: CopyCmdLet,
+      CorpseCmdLet: CorpseCmdLet,
       CoverageBpCmdLet: CoverageBpCmdLet,
       DivCmdLet: DivCmdLet,
       DumpCmdLet: DumpCmdLet,

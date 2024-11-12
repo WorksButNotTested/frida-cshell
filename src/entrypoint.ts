@@ -9,11 +9,8 @@
  */
 import { Input } from './io/input.js';
 import { Output } from './io/output.js';
-import { BpMemory } from './breakpoints/memory.js';
-import { Regs } from './breakpoints/regs.js';
-import { Format } from './misc/format.js';
 import { SrcCmdLet } from './cmdlets/files/src.js';
-import { BtCmdLet } from './cmdlets/thread/bt.js';
+import { Exception } from './misc/exception.js';
 
 export const DEFAULT_SRC_PATH: string = `${Process.getHomeDir()}/.cshellrc`;
 
@@ -27,7 +24,7 @@ rpc.exports = {
     Output.setDebugging(debug);
     Output.debug(`init - stage: ${stage}, debug: ${debug}`);
     Output.banner();
-    Process.setExceptionHandler(exceptionHandler);
+    Process.setExceptionHandler(Exception.exceptionHandler);
     await SrcCmdLet.loadInitScript(DEFAULT_SRC_PATH);
     Input.prompt();
   },
@@ -49,37 +46,3 @@ rpc.exports = {
     return 'raw';
   },
 };
-
-function exceptionHandler(details: ExceptionDetails) {
-  if (details.type === 'access-violation') {
-    const address = details.memory?.address;
-    if (address !== undefined) {
-      if (BpMemory.addressHasBreakpoint(address)) {
-        return;
-      }
-    }
-  }
-  Output.writeln();
-  Output.writeln(`${Output.bold(Output.red('*** EXCEPTION ***'))}`);
-  Output.writeln();
-  Output.writeln(`${Output.bold('type:   ')} ${details.type}`);
-  Output.writeln(
-    `${Output.bold('address:')} ${Format.toHexString(details.address)}`,
-  );
-  if (details.memory !== undefined) {
-    Output.writeln(
-      `${Output.bold('memory: ')} ${Format.toHexString(details.memory.address)} [${details.memory.operation}]`,
-    );
-  }
-  Output.writeln();
-  const regs = Regs.getRegs(details.context);
-  Output.writeln(Output.bold('Registers:'));
-  for (const [key, value] of regs) {
-    Output.writeln(`${Output.bold(key.padEnd(4, ' '))}: ${value.toString()}`);
-  }
-  Output.writeln();
-
-  BtCmdLet.printBacktrace(details.context);
-  Output.writeln(`${Output.bold(Output.red('*****************'))}`);
-  Thread.sleep(1);
-}

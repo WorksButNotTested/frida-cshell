@@ -19,7 +19,7 @@ m test3
 
 # set up a breakpoint
 @f malloc 1 ?
-  != $eip 0
+  != $pc 0
   q
   bt
   @f #1 #

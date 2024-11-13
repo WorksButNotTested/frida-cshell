@@ -168,11 +168,7 @@ export class BpUniqueBlockTrace extends BpTrace {
 export class BpCoverage extends BpTrace {
   public type: BpType = BpType.Coverage;
 
-  public constructor(
-    index: number,
-    address: Var | null,
-    hits: number | null,
-  ) {
+  public constructor(index: number, address: Var | null, hits: number | null) {
     super(index, address, hits);
   }
 

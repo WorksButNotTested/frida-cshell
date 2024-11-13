@@ -68,7 +68,7 @@ import {
 import { MacroCmdLet } from '../cmdlets/misc/macro.js';
 import { ReplaceCmdLet } from '../cmdlets/breakpoints/replace.js';
 import { EchoCmdLet } from '../cmdlets/misc/echo.js';
-import { CorpseCmdLet } from '../cmdlets/misc/corpse.js';
+import { CorpseCmdLet } from '../cmdlets/misc/corpse/corpse.js';
 
 export class CmdLets {
   private static byName: Map<string, CmdLet> = new Map<string, CmdLet>();

@@ -81,7 +81,7 @@ import {
 import { MacroCmdLet } from '../misc/macro.js';
 import { ReplaceCmdLet } from '../breakpoints/replace.js';
 import { EchoCmdLet } from '../misc/echo.js';
-import { CorpseCmdLet } from '../misc/corpse.js';
+import { CorpseCmdLet } from '../misc/corpse/corpse.js';
 
 export class JsCmdLet extends CmdLetBase {
   name = 'js';

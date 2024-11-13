@@ -2,8 +2,14 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"type": "npm",
-			"script": "install",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"install",
+				"--no-audit",
+				"--offline",
+				"--cache /root/npm-cache"
+			],
 			"problemMatcher": [],
 			"label": "Build",
 			"group": {
@@ -280,6 +286,43 @@
 					"FRIDA_INJECT": "frida-inject-64"
 				}
 			}
-		}
+		},
+		{
+			"label": "Build Image",
+			"type": "shell",
+			"command": "docker buildx build --build-arg VSCODE_COMMIT_ID=$(code --version |sed -n '2p') -f .devcontainer/Dockerfile -t frida-cshell --target frida-cshell ${workspaceFolder}",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"options": {
+					"cwd": "${workspaceFolder}"
+			},
+			"presentation": {
+					"clear": false,
+					"reveal": "always",
+					"focus": true,
+			}
+    },
+    {
+			"label": "Export Image",
+			"type": "shell",
+			"command": "docker save -o ${workspaceFolder}/frida-cshell.tar frida-cshell",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"options": {
+					"cwd": "${workspaceFolder}"
+			},
+			"presentation": {
+					"clear": false,
+					"reveal": "always",
+					"focus": true,
+			},
+			"dependsOn": [
+				"Build Image"
+			]
+    },
 	]
 }

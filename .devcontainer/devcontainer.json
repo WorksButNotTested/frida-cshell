@@ -1,13 +1,6 @@
 {
-  "build": {
-    "target": "frida-cshell",
-    "args": {
-      "DOCKER_BUILDKIT": "1"
-    }
-  },
   "name": "Frida C-Shell",
-  "context": "..",
-  "dockerFile": "Dockerfile",
+  "image": "frida-cshell",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -25,7 +18,6 @@
     "--security-opt",
     "seccomp=unconfined"
   ],
-  "initializeCommand": "DOCKER_BUILDKIT=1 docker build -t cshell --target cshell .",
   "mounts": [
     "source=${localWorkspaceFolder},target=/home/ws,type=bind",
     "source=${localEnv:HOME},target=/home/share,type=bind"

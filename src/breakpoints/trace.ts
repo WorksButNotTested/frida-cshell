@@ -12,14 +12,14 @@ import { BpCode } from './code.js';
 
 export abstract class BpTrace extends BpCode {
   public readonly supports_commands: boolean = false;
-  public depth: number;
+  public depth: number | null = null;
   protected trace: Trace | null = null;
 
   protected constructor(
     index: number,
     address: Var | null,
     hits: number | null,
-    depth: number,
+    depth: number | null = null,
   ) {
     super(index, address, hits);
     this.depth = depth;
@@ -49,7 +49,8 @@ export abstract class BpTrace extends BpCode {
         `[${this.type}]`,
         Output.yellow(this.literal),
         `@ $pc=${Output.blue(Format.toHexString(ctx.pc))}`,
-        `$tid=${threadId}, depth=${this.depth}`,
+        `$tid=${threadId},`,
+        `depth=${this.depth ?? 'unlimited'}`,
       ].join(' '),
     );
     Output.writeln(Output.yellow('-'.repeat(80)));
@@ -71,7 +72,8 @@ export abstract class BpTrace extends BpCode {
           `[${this.type}]`,
           Output.yellow(this.literal),
           `@ $pc=${Output.blue(Format.toHexString(ctx.pc))}`,
-          `$tid=${threadId}, depth=${this.depth}`,
+          `$tid=${threadId},`,
+          `depth=${this.depth ?? 'ulimited'}`,
         ].join(' '),
       );
       Output.writeln(Output.yellow('-'.repeat(80)));
@@ -125,7 +127,7 @@ export class BpBlockTrace extends BpTrace {
   }
 
   protected override startTrace(threadId: ThreadId): Trace {
-    return BlockTrace.create(threadId, this.depth, false);
+    return BlockTrace.create(threadId, this.depth as number, false);
   }
 }
 
@@ -142,7 +144,7 @@ export class BpCallTrace extends BpTrace {
   }
 
   protected override startTrace(threadId: ThreadId): Trace {
-    return CallTrace.create(threadId, this.depth);
+    return CallTrace.create(threadId, this.depth as number);
   }
 }
 
@@ -159,7 +161,7 @@ export class BpUniqueBlockTrace extends BpTrace {
   }
 
   protected override startTrace(threadId: ThreadId): Trace {
-    return BlockTrace.create(threadId, this.depth, true);
+    return BlockTrace.create(threadId, this.depth as number, true);
   }
 }
 
@@ -170,9 +172,8 @@ export class BpCoverage extends BpTrace {
     index: number,
     address: Var | null,
     hits: number | null,
-    depth: number,
   ) {
-    super(index, address, hits, depth);
+    super(index, address, hits);
   }
 
   protected override startTrace(threadId: ThreadId): Trace {

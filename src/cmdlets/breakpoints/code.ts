@@ -5,6 +5,7 @@ import {
   BpFunctionEntry,
   BpFunctionExit,
 } from '../../breakpoints/code.js';
+import { BpCoverage } from '../../breakpoints/trace.js';
 import { CmdLetBase } from '../../commands/cmdlet.js';
 import { Output } from '../../io/output.js';
 import { Token } from '../../io/token.js';
@@ -43,6 +44,13 @@ abstract class CodeBpCmdLet extends TypedBpCmdLet {
       }
       case BpType.FunctionExit: {
         const bp = new BpFunctionExit(idx, addr, hits);
+        Bps.add(bp);
+        Output.writeln(`Created ${bp.toString()}`);
+        this.editBreakpoint(bp, conditional);
+        break;
+      }
+      case BpType.Coverage: {
+        const bp = new BpCoverage(idx, addr, hits);
         Bps.add(bp);
         Output.writeln(`Created ${bp.toString()}`);
         this.editBreakpoint(bp, conditional);

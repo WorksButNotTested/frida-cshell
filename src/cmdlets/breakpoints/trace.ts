@@ -3,7 +3,6 @@ import { Bps } from '../../breakpoints/bps.js';
 import {
   BpBlockTrace,
   BpCallTrace,
-  BpCoverage,
   BpTrace,
   BpUniqueBlockTrace,
 } from '../../breakpoints/trace.js';
@@ -52,13 +51,6 @@ abstract class TraceBpCmdLet extends TypedBpCmdLet {
           hits,
           depth.toU64().toNumber(),
         );
-        Bps.add(bp);
-        Output.writeln(`Created ${bp.toString()}`);
-        this.editBreakpoint(bp, conditional);
-        break;
-      }
-      case BpType.Coverage: {
-        const bp = new BpCoverage(idx, addr, hits, depth.toU64().toNumber());
         Bps.add(bp);
         Output.writeln(`Created ${bp.toString()}`);
         this.editBreakpoint(bp, conditional);

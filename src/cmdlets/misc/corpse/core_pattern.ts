@@ -9,7 +9,9 @@ export class CorePattern {
   public static get(): string {
     const value = File.readAllText(CorePattern.CORE_PATTERN).trimEnd();
     if (value.startsWith('|'))
-      throw new Error(`core pattern must not start with '|' - value: '${value}'`);
+      throw new Error(
+        `core pattern must not start with '|' - value: '${value}'`,
+      );
 
     if (value.indexOf('%') !== -1)
       throw new Error(`core pattern must not contain '%' - value: '${value}'`);

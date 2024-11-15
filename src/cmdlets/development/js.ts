@@ -82,6 +82,7 @@ import { MacroCmdLet } from '../misc/macro.js';
 import { ReplaceCmdLet } from '../breakpoints/replace.js';
 import { EchoCmdLet } from '../misc/echo.js';
 import { CorpseCmdLet } from '../misc/corpse/corpse.js';
+import { ErrnoCmdLet } from '../misc/errno.js';
 
 export class JsCmdLet extends CmdLetBase {
   name = 'js';
@@ -126,6 +127,7 @@ js path - load commandlet JS script
       DumpCmdLet: DumpCmdLet,
       EchoCmdLet: EchoCmdLet,
       EqCmdLet: EqCmdLet,
+      ErrnoCmdLet: ErrnoCmdLet,
       ExitCmdLet: ExitCmdLet,
       FalseCmdLet: FalseCmdLet,
       FdCmdLet: FdCmdLet,

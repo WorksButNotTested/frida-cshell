@@ -69,6 +69,7 @@ import { MacroCmdLet } from '../cmdlets/misc/macro.js';
 import { ReplaceCmdLet } from '../cmdlets/breakpoints/replace.js';
 import { EchoCmdLet } from '../cmdlets/misc/echo.js';
 import { CorpseCmdLet } from '../cmdlets/misc/corpse/corpse.js';
+import { ErrnoCmdLet } from '../cmdlets/misc/errno.js';
 
 export class CmdLets {
   private static byName: Map<string, CmdLet> = new Map<string, CmdLet>();
@@ -91,6 +92,7 @@ export class CmdLets {
     this.registerCmdletType(EchoCmdLet);
     this.registerCmdletType(EndianCmdLet);
     this.registerCmdletType(EqCmdLet);
+    this.registerCmdletType(ErrnoCmdLet);
     this.registerCmdletType(ExitCmdLet);
     this.registerCmdletType(FalseCmdLet);
     this.registerCmdletType(FdCmdLet);

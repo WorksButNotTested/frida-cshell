@@ -1,9 +1,9 @@
 export class Clone {
-  private static readonly SIGCHLD: number = 17;
-  private static readonly CLONE_CLEAR_SIGHAND: number = 0x100000000;
+  private static readonly SIGCHLD: UInt64 = uint64(17);
+  private static readonly CLONE_CLEAR_SIGHAND: UInt64 = uint64(0x100000000);
   private fnSyscall: SystemFunction<
     number,
-    [number | UInt64, number, NativePointer, NativePointer]
+    [number | UInt64, number | UInt64, NativePointer, NativePointer]
   >;
   public constructor() {
     const pSyscall = Module.findExportByName(null, 'syscall');
@@ -11,7 +11,7 @@ export class Clone {
 
     this.fnSyscall = new SystemFunction(pSyscall, 'int', [
       'size_t',
-      'int',
+      'size_t',
       'pointer',
       'pointer',
     ]);
@@ -22,7 +22,7 @@ export class Clone {
     childCallback: () => void,
   ): number {
     const syscallNumber = Clone.getCloneSyscallNumber();
-    const flags = Clone.SIGCHLD | Clone.CLONE_CLEAR_SIGHAND;
+    const flags = Clone.SIGCHLD.or(Clone.CLONE_CLEAR_SIGHAND);
     const ret = this.fnSyscall(
       syscallNumber,
       flags,

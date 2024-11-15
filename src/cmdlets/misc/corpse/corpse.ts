@@ -22,7 +22,9 @@ export class CorpseCmdLet extends CmdLetBase {
 corpse - create a corpse file`;
 
   private static readonly CHILD_SLEEP_DURATION: number = 0.1;
-  private static readonly CHILD_WAIT_DURATION: number = 10;
+  private static readonly PARENT_SLEEP_DURATION: number = 0.5;
+  private static readonly WAIT_DURATION: number = 20;
+  private static readonly PARENT_DELAY_DURATION: number = 2;
   private static readonly ELF_MAGIC: number = 0x7f454c46;
 
   private rlimit: Rlimit | null = null;
@@ -158,15 +160,30 @@ corpse - create a corpse file`;
     this.debug(`Running parent, pid: ${Process.id}, child pid: ${childPid}`);
 
     const proc = this.proc as Proc;
-    for (let i = 0; i < 10; i++) {
+
+    this.debug(`Delaying: ${CorpseCmdLet.PARENT_DELAY_DURATION}s`);
+    Thread.sleep(CorpseCmdLet.PARENT_DELAY_DURATION);
+
+    const limit =
+      CorpseCmdLet.WAIT_DURATION / CorpseCmdLet.PARENT_SLEEP_DURATION;
+
+    this.debug(`Parent limit: ${limit}`);
+    this.debug(`Delay between signals: ${CorpseCmdLet.PARENT_SLEEP_DURATION}s`);
+    for (let i = 0; i < limit; i++) {
       proc.kill(childPid, Proc.SIGABRT);
 
       const status = proc.waitpid(childPid);
-      this.debug(`status - exitStatus: ${status.exitStatus},
-        termSignal: ${status.termSignal}, stopped: ${status.stopped}`);
+      this.debug(
+        [
+          `index: ${i},`,
+          `exitStatus: ${status.exitStatus},`,
+          `termSignal: ${status.termSignal},`,
+          `stopped: ${status.stopped}`,
+        ].join(' '),
+      );
 
       if (status.stopped) return;
-      Thread.sleep(0.5);
+      Thread.sleep(CorpseCmdLet.PARENT_SLEEP_DURATION);
     }
     this.status(`Child not stopped, pid: ${childPid}`);
     proc.kill(childPid, Proc.SIGKILL);
@@ -181,10 +198,13 @@ corpse - create a corpse file`;
 
     try {
       const limit =
-        CorpseCmdLet.CHILD_WAIT_DURATION / CorpseCmdLet.CHILD_SLEEP_DURATION;
+        CorpseCmdLet.WAIT_DURATION / CorpseCmdLet.CHILD_SLEEP_DURATION;
+      debug(`Child limit: ${limit}`);
+      debug(`Delay between sleeps: ${CorpseCmdLet.CHILD_SLEEP_DURATION}s`);
       for (let i = 0; i < limit; i++) {
         Thread.sleep(CorpseCmdLet.CHILD_SLEEP_DURATION);
       }
+      debug(`Child limit exceeded`);
     } catch (error) {
       if (error instanceof Error) {
         debug(`ERROR: ${error.message}`);

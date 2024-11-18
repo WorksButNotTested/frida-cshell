@@ -2,10 +2,9 @@ import { CharCode } from './char.js';
 import { Vars } from '../vars/vars.js';
 import { DEFAULT_SRC_PATH } from '../entrypoint.js';
 import { Format } from '../misc/format.js';
+import { APP_VERSION, GIT_COMMIT_HASH } from '../version.js';
 
 export class Output {
-  private static readonly VERSION = '@VER@';
-
   private static readonly shell: string[] = [
     '     _.---._         ',
     ' .\'"".\'/|\\\'.""\'.',
@@ -42,7 +41,12 @@ export class Output {
     this.writeln();
     this.writeln(
       this.bold(
-        `CSHELL v${this.VERSION}, running in FRIDA ${Frida.version} using ${Script.runtime}`,
+        [
+          `CSHELL: v${APP_VERSION}`,
+          `COMMIT: ${GIT_COMMIT_HASH}`,
+          `FRIDA: ${Frida.version}`,
+          `RUNTIME: ${Script.runtime}`,
+        ].join('\n'),
       ),
     );
     this.writeln(`init script: ${Output.bold(DEFAULT_SRC_PATH)}`);

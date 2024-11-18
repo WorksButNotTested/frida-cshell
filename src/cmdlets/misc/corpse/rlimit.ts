@@ -5,7 +5,6 @@ export type Rlimits = {
 
 export class Rlimit {
   private static readonly RLIMIT_CORE: number = 4;
-  private fnGetrlimit: SystemFunction<number, [number, NativePointer]>;
   private fnSetrlimit: SystemFunction<number, [number, NativePointer]>;
 
   public static readonly UNLIMITED: Rlimits = {
@@ -14,14 +13,6 @@ export class Rlimit {
   };
 
   public constructor() {
-    const pGetrlimit = Module.findExportByName(null, 'getrlimit');
-    if (pGetrlimit === null) throw new Error('failed to find getrlimit');
-
-    this.fnGetrlimit = new SystemFunction(pGetrlimit, 'int', [
-      'int',
-      'pointer',
-    ]);
-
     const pSetrlimit = Module.findExportByName(null, 'setrlimit');
     if (pSetrlimit === null) throw new Error('failed to find setrlimit');
 
@@ -29,24 +20,6 @@ export class Rlimit {
       'int',
       'pointer',
     ]);
-  }
-
-  public get(): Rlimits {
-    const buffer = Memory.alloc(Process.pointerSize * 2);
-    const ret = this.fnGetrlimit(
-      Rlimit.RLIMIT_CORE,
-      buffer,
-    ) as UnixSystemFunctionResult<number>;
-    if (ret.value !== 0)
-      throw new Error(`failed to getrlimit, errno: ${ret.errno}`);
-
-    let cursor = buffer;
-    const sortLimit = cursor.readLong() as Int64;
-    cursor = cursor.add(Process.pointerSize);
-    const hardLimit = cursor.readLong() as Int64;
-    cursor = cursor.add(Process.pointerSize);
-
-    return { sortLimit, hardLimit };
   }
 
   public set(rlimits: Rlimits) {

@@ -9,10 +9,16 @@ export class Proc {
   private static readonly WNOHANG: number = 1;
   public static readonly SIGABRT: number = 6;
   public static readonly SIGKILL: number = 9;
+  private static readonly SIGSET_SIZE: number = 8;
+  public static readonly SIG_DFL: NativePointer = ptr(0);
 
   private fnWaitPid: SystemFunction<number, [number, NativePointer, number]>;
   private fnGetPid: SystemFunction<number, []>;
   private fnKill: SystemFunction<number, [number, number]>;
+  private fnSyscall: SystemFunction<
+    number,
+    [number | UInt64, number, NativePointer, NativePointer, number | UInt64]
+  >;
 
   public constructor() {
     const pWaitPid = Module.findExportByName(null, 'waitpid');
@@ -33,6 +39,17 @@ export class Proc {
     if (pKill === null) throw new Error('failed to find kill');
 
     this.fnKill = new SystemFunction(pKill, 'int', ['int', 'int']);
+
+    const pSyscall = Module.findExportByName(null, 'syscall');
+    if (pSyscall === null) throw new Error('failed to find syscall');
+
+    this.fnSyscall = new SystemFunction(pSyscall, 'int', [
+      'size_t',
+      'int',
+      'pointer',
+      'pointer',
+      'size_t',
+    ]);
   }
 
   public kill(pid: number, signal: number) {
@@ -101,5 +118,39 @@ export class Proc {
   private static wifSignalled(status: number): boolean {
     const signal = Proc.wTermSig(status);
     return signal !== 0 && signal !== 0x7f;
+  }
+
+  public rt_sigaction(signal: number, sa_handler: NativePointer) {
+    const sigactionSize =
+      4 * Process.pointerSize + Proc.INT_SIZE + Proc.SIGSET_SIZE;
+    const sigaction = Memory.alloc(sigactionSize);
+    sigaction.writePointer(sa_handler);
+    const rtSigactionNumber = Proc.getRtSigactionSyscallNumber();
+
+    const ret = this.fnSyscall(
+      rtSigactionNumber,
+      signal,
+      sigaction,
+      ptr(0),
+      Proc.SIGSET_SIZE,
+    ) as UnixSystemFunctionResult<number>;
+    if (ret.value === -1)
+      throw new Error(`failed to rt_sigaction, errno: ${ret.errno}`);
+  }
+
+  private static getRtSigactionSyscallNumber(): number {
+    switch (Process.arch) {
+      case 'arm':
+        return 174;
+      case 'arm64':
+        return 134;
+      case 'ia32':
+        return 174;
+      case 'x64':
+        return 13;
+
+      default:
+        throw new Error(`unsupported architecture: ${Process.arch}`);
+    }
   }
 }

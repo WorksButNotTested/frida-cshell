@@ -4,10 +4,7 @@ import { Output } from '../io/output.js';
 import { Format } from './format.js';
 
 export class Exception {
-  private static propagateExceptions: boolean = true;
-
   public static exceptionHandler(details: ExceptionDetails): boolean {
-    if (Exception.propagateExceptions) return false;
     if (details.type === 'access-violation') {
       const address = details.memory?.address;
       if (address !== undefined) {
@@ -44,14 +41,6 @@ export class Exception {
     Output.writeln(`${Output.bold(Output.red('*****************'))}`);
     Thread.sleep(1);
     return true;
-  }
-
-  public static propagate() {
-    Exception.propagateExceptions = true;
-  }
-
-  public static suppress() {
-    Exception.propagateExceptions = false;
   }
 
   public static printBacktrace(ctx: CpuContext) {

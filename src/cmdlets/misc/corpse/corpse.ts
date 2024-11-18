@@ -1,11 +1,10 @@
 import { CmdLetBase } from '../../../commands/cmdlet.js';
 import { Output } from '../../../io/output.js';
 import { Token } from '../../../io/token.js';
-import { Exception } from '../../../misc/exception.js';
 import { Files } from '../../../misc/files.js';
 import { Format } from '../../../misc/format.js';
 import { Var } from '../../../vars/var.js';
-import { Clone } from './clone.js';
+import { Fork } from './fork.js';
 import { CoreFilter } from './core_filter.js';
 import { CorePattern } from './core_pattern.js';
 import { Dumpable } from './dumpable.js';
@@ -21,22 +20,17 @@ export class CorpseCmdLet extends CmdLetBase {
   private static readonly USAGE: string = `Usage: corpse
 corpse - create a corpse file`;
 
-  private static readonly CHILD_SLEEP_DURATION: number = 0.1;
   private static readonly PARENT_SLEEP_DURATION: number = 0.5;
   private static readonly WAIT_DURATION: number = 20;
-  private static readonly PARENT_DELAY_DURATION: number = 2;
   private static readonly ELF_MAGIC: number = 0x7f454c46;
 
   private rlimit: Rlimit | null = null;
   private dumpable: Dumpable | null = null;
-  private clone: Clone | null = null;
+  private clone: Fork | null = null;
   private proc: Proc | null = null;
 
   public runSync(tokens: Token[]): Var {
-    if (tokens.length != 0) {
-      Output.writeln(CorpseCmdLet.USAGE);
-      return Var.ZERO;
-    }
+    if (tokens.length != 0) return this.usage();
 
     const corePattern = CorePattern.get();
     this.status(`Got core pattern: '${corePattern}'`);
@@ -48,109 +42,33 @@ corpse - create a corpse file`;
         run 'setenforce 0' to disable`);
     }
 
-    /* set the rlimit */
-    const rlimit = this.rlimit as Rlimit;
-    const limit = rlimit.get();
-    this.debug(
-      `Read rlimit - soft: ${limit.sortLimit}, hard: ${limit.hardLimit}`,
-    );
-    if (rlimit.isUnlimited(limit)) {
-      this.debug('Rlimit is unlimited');
-    } else {
-      this.debug('Setting rlimit to unlimited');
-      rlimit.set(Rlimit.UNLIMITED);
-    }
-    this.status('Rlimit has been configured');
+    /* run the clone */
+    const debugFileName = Files.getRandomFileName('debug');
+    this.status(`Creating debug file: '${debugFileName}'`);
+    const debugFile = new File(debugFileName, 'w');
+    const debug = (msg: string) => {
+      debugFile.write(`${msg}\n`);
+      debugFile.flush();
+    };
 
+    this.status('Reconfiguring exception handling');
     try {
-      /* Set the core filter*/
-      const coreFilter = CoreFilter.get();
-      this.status(`Read core filter: 0x${coreFilter.toString(16)}`);
-      if (coreFilter.equals(CoreFilter.NEEDED)) {
-        this.debug('Core filter is already set');
-      } else {
-        this.debug('Setting core filter');
-        CoreFilter.trySet(CoreFilter.NEEDED);
-      }
-      this.status('Core filter has been configured');
-
-      try {
-        /* set dumpable */
-        const dumpable = this.dumpable as Dumpable;
-        const isDumpable = dumpable.get();
-        this.status(`Read dumpable: ${isDumpable}`);
-        if (isDumpable === 0) {
-          this.debug('Setting dumpable');
-          dumpable.set(1);
-        } else {
-          this.debug('Dumpable is already set');
-        }
-        this.status('Dumpable has been configured');
-
-        /* run the clone */
-        try {
-          const debugFileName = Files.getRandomFileName('debug');
-          this.status(`Creating debug file: '${debugFileName}'`);
-          const debugFile = new File(debugFileName, 'w');
-          const debug = (msg: string) => {
-            debugFile.write(`${msg}\n`);
-            debugFile.flush();
-          };
-
-          this.status('Reconfiguring exception handling');
-          Exception.propagate();
-          try {
-            const clone = this.clone as Clone;
-            const childPid = clone.clone(
-              (childPid: number) => {
-                this.runParent(childPid);
-              },
-              () => {
-                this.runChild(debug);
-              },
-            );
-            this.debug(
-              `Checking for corpse - core pattern: '${corePattern}', pid: ${childPid}`,
-            );
-            this.checkCorpse(corePattern, childPid);
-          } finally {
-            this.status('Restoring exception handling');
-            Exception.suppress();
-            this.debug(`Checking debug file: '${debugFileName}'`);
-            this.checkDebugFile(debugFileName);
-          }
-        } finally {
-          /* Restore dumpable */
-          this.status('Restoring dumpable');
-          if (isDumpable === 0) {
-            this.debug('Resetting dumpable');
-            dumpable.set(isDumpable);
-          } else {
-            this.debug('No need to reset dumpable');
-          }
-          this.debug('Restored dumpable');
-        }
-      } finally {
-        /* Restore core filter */
-        this.status('Restoring core filter');
-        if (coreFilter.equals(CoreFilter.NEEDED)) {
-          this.debug('No need to restore core filter');
-        } else {
-          this.debug('Restoring core filter');
-          CoreFilter.trySet(coreFilter);
-        }
-        this.debug('Restored core filter');
-      }
+      const clone = this.clone as Fork;
+      const childPid = clone.fork(
+        (childPid: number) => {
+          this.runParent(childPid);
+        },
+        () => {
+          this.runChild(debug);
+        },
+      );
+      this.debug(
+        `Checking for corpse - core pattern: '${corePattern}', pid: ${childPid}`,
+      );
+      this.checkCorpse(corePattern, childPid);
     } finally {
-      /* Restore rlimit */
-      this.status('Restoring rlimit');
-      if (rlimit.isUnlimited(limit)) {
-        this.debug('No need to restore rlimit');
-      } else {
-        this.debug('Restoring rlimit');
-        rlimit.set(limit);
-      }
-      this.debug('Restored rlimit');
+      this.debug(`Checking debug file: '${debugFileName}'`);
+      this.checkDebugFile(debugFileName);
     }
 
     return Var.ZERO;
@@ -161,17 +79,14 @@ corpse - create a corpse file`;
 
     const proc = this.proc as Proc;
 
-    this.debug(`Delaying: ${CorpseCmdLet.PARENT_DELAY_DURATION}s`);
-    Thread.sleep(CorpseCmdLet.PARENT_DELAY_DURATION);
-
     const limit =
       CorpseCmdLet.WAIT_DURATION / CorpseCmdLet.PARENT_SLEEP_DURATION;
 
     this.debug(`Parent limit: ${limit}`);
-    this.debug(`Delay between signals: ${CorpseCmdLet.PARENT_SLEEP_DURATION}s`);
+    this.debug(
+      `Delay between waitpids: ${CorpseCmdLet.PARENT_SLEEP_DURATION}s`,
+    );
     for (let i = 0; i < limit; i++) {
-      proc.kill(childPid, Proc.SIGABRT);
-
       const status = proc.waitpid(childPid);
       this.debug(
         [
@@ -197,14 +112,22 @@ corpse - create a corpse file`;
     debug(`PID: ${pid}`);
 
     try {
-      const limit =
-        CorpseCmdLet.WAIT_DURATION / CorpseCmdLet.CHILD_SLEEP_DURATION;
-      debug(`Child limit: ${limit}`);
-      debug(`Delay between sleeps: ${CorpseCmdLet.CHILD_SLEEP_DURATION}s`);
-      for (let i = 0; i < limit; i++) {
-        Thread.sleep(CorpseCmdLet.CHILD_SLEEP_DURATION);
-      }
-      debug(`Child limit exceeded`);
+      const rlimit = this.rlimit as Rlimit;
+      rlimit.set(Rlimit.UNLIMITED);
+      debug(`set rlimit`);
+
+      CoreFilter.set(CoreFilter.NEEDED);
+      debug(`set core filter`);
+
+      const dumpable = this.dumpable as Dumpable;
+      dumpable.set(1);
+      debug(`set dumpable`);
+
+      debug(`Restoring default signal action using rt_sigaction`);
+      proc.rt_sigaction(Proc.SIGABRT, Proc.SIG_DFL);
+
+      debug(`Suicide`);
+      proc.kill(pid, Proc.SIGABRT);
     } catch (error) {
       if (error instanceof Error) {
         debug(`ERROR: ${error.message}`);
@@ -283,7 +206,7 @@ corpse - create a corpse file`;
         try {
           this.rlimit = new Rlimit();
           this.dumpable = new Dumpable();
-          this.clone = new Clone();
+          this.clone = new Fork();
           this.proc = new Proc();
         } catch {
           return false;

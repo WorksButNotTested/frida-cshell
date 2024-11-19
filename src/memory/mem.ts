@@ -33,7 +33,7 @@ export class Mem {
     }
   }
 
-  private static modifyMemory(address: NativePointer, data: Uint8Array) {
+  public static modifyMemory(address: NativePointer, data: Uint8Array) {
     const alignStart = this.pageAlignDown(address);
     const alignEnd = this.pageAlignUp(address.add(data.length));
     const pageShift = Math.log2(Process.pageSize);

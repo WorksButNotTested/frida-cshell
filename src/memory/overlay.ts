@@ -81,4 +81,16 @@ export class Overlay {
     if (this.address.compare(addr.add(length)) >= 0) return false;
     return true;
   }
+
+  public static all(): Overlay[] {
+    return Overlay.overlays.map(([_, overlay]) => overlay);
+  }
+
+  public revert() {
+    Mem.modifyMemory(this.address, this.data);
+  }
+
+  public toString(): string {
+    return `addr: ${this.address}, length: ${this.data.length}`;
+  }
 }

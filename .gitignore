@@ -2,3 +2,4 @@ node_modules
 frida-cshell.js
 frida-cshell
 src/version.ts
+core

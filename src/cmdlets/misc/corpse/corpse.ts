@@ -11,6 +11,11 @@ import { Dumpable } from './dumpable.js';
 import { Proc } from './proc.js';
 import { Rlimit } from './rlimit.js';
 import { SeLinux } from './selinux.js';
+import { Mem, MemProtection } from './mem.js';
+import { APP_VERSION, GIT_COMMIT_HASH } from '../../../version.js';
+import { Overlay } from '../../../memory/overlay.js';
+import { Regs } from '../../../breakpoints/regs.js';
+import { Vars } from '../../../vars/vars.js';
 
 export class CorpseCmdLet extends CmdLetBase {
   name = 'corpse';
@@ -28,6 +33,7 @@ corpse - create a corpse file`;
   private dumpable: Dumpable | null = null;
   private clone: Fork | null = null;
   private proc: Proc | null = null;
+  private mem: Mem | null = null;
 
   public runSync(tokens: Token[]): Var {
     if (tokens.length != 0) return this.usage();
@@ -126,6 +132,13 @@ corpse - create a corpse file`;
       debug(`Restoring default signal action using rt_sigaction`);
       proc.rt_sigaction(Proc.SIGABRT, Proc.SIG_DFL);
 
+      for (const overlay of Overlay.all()) {
+        debug(`Reverting overlay: ${overlay.toString()}`);
+        overlay.revert();
+      }
+
+      this.writeMetadata(debug);
+
       debug(`Suicide`);
       proc.kill(pid, Proc.SIGABRT);
     } catch (error) {
@@ -139,6 +152,78 @@ corpse - create a corpse file`;
       debug(`Suicide`);
       proc.kill(pid, Proc.SIGKILL);
     }
+  }
+
+  private writeMetadata(debug: (msg: string) => void) {
+    const magicLen = 8;
+    /* 43 4f 52 50 53 45 20 33                           |CORPSE 3| */
+    const magics: [Uint8Array, Uint8Array] = [
+      new Uint8Array([0xde, 0xad, 0xfa, 0xce, 0xde, 0xad, 0xfa, 0xce]),
+      new Uint8Array([0x9d, 0xe2, 0xa8, 0x9e, 0x8d, 0xe8, 0xda, 0xfd]),
+    ];
+    const ranges = Process.enumerateRanges('---').map(r => {
+      return {
+        base: `0x${r.base.toString(16)}`,
+        size: r.size,
+        protection: r.protection,
+        file_path: r.file?.path ?? null,
+        file_offset: r.file?.offset ?? null,
+        file_size: r.file?.size ?? null,
+      };
+    });
+    const modules = Process.enumerateModules().map(m => {
+      return {
+        name: m.name,
+        base: `0x${m.base.toString(16)}`,
+        size: m.size,
+        path: m.path,
+      };
+    });
+    const regs = Regs.all().map(([name, value]) => {
+      return {
+        name: name,
+        addr: value.toPointer(),
+        value: value.getLiteral(),
+      };
+    });
+    const vars = Vars.all().map(([name, value]) => {
+      return {
+        name: name,
+        addr: value.toPointer(),
+        value: value.getLiteral(),
+      };
+    });
+    const metatdata = {
+      version: APP_VERSION,
+      hash: GIT_COMMIT_HASH,
+      ranges,
+      modules,
+      regs,
+      vars,
+    };
+
+    const data = JSON.stringify(metatdata, null, 2);
+    debug(`data: ${data}`);
+    debug(`metadata size: ${Format.toSize(data.length)}`);
+
+    const alignedSize = Mem.pageAlign(magicLen + data.length);
+    const totalSize = Process.pageSize * 2 + alignedSize;
+    const mem = this.mem as Mem;
+    const buffer = mem.map_anonymous(totalSize);
+    mem.protect(buffer, Process.pageSize, MemProtection.PROT_NONE);
+    mem.protect(
+      buffer.add(Process.pageSize + alignedSize),
+      Process.pageSize,
+      MemProtection.PROT_NONE,
+    );
+    let cursor = buffer.add(Process.pageSize);
+    for (let i = 0; i < magicLen; i++) {
+      const x = magics[0][i] as number;
+      const y = magics[1][i] as number;
+      cursor.writeU8(x ^ y);
+      cursor = cursor.add(1);
+    }
+    cursor.writeUtf8String(data);
   }
 
   private checkCorpse(corePattern: string, pid: number) {
@@ -208,6 +293,7 @@ corpse - create a corpse file`;
           this.dumpable = new Dumpable();
           this.clone = new Fork();
           this.proc = new Proc();
+          this.mem = new Mem();
         } catch {
           return false;
         }

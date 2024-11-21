@@ -337,7 +337,7 @@ RUN aarch64-none-linux-gnu-gcc \
 ################################################################################
 FROM platform AS frida-source
 WORKDIR /root/
-ENV TAG=fd5a2746804336e0a84c97317dc49594990ab67a
+ENV TAG=36a8ffbb994acc0281531f4cf65059488e5cd1f1
 RUN git clone https://github.com/frida/frida-core.git
 
 ################################################################################

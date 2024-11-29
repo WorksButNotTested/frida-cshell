@@ -17,13 +17,11 @@ abstract class TraceBaseCmdLet<T extends Trace, M> extends CmdLetBase {
   protected abstract onShow(trace: T, meta: M): void;
   protected abstract onStop(trace: T, meta: M): void;
   protected abstract formatMeta(meta: M): string;
+  protected abstract getFilename(trace: T, meta: M): string | null;
 
   private byIndex: Map<number, [T, M]> = new Map<number, [T, M]>();
 
   public runSync(tokens: Token[]): Var {
-    const retCreate = this.runCreate(tokens);
-    if (retCreate !== null) return retCreate;
-
     const retShow = this.runShow(tokens);
     if (retShow !== null) return retShow;
 
@@ -32,6 +30,9 @@ abstract class TraceBaseCmdLet<T extends Trace, M> extends CmdLetBase {
 
     const retDelete = this.runDelete(tokens);
     if (retDelete !== null) return retDelete;
+
+    const retCreate = this.runCreate(tokens);
+    if (retCreate !== null) return retCreate;
 
     return this.usage();
   }
@@ -108,7 +109,12 @@ abstract class TraceBaseCmdLet<T extends Trace, M> extends CmdLetBase {
         this.onStop(trace, meta);
         Output.writeln(`trace #${index} stopped`);
       }
-      return Var.ZERO;
+      const filename = this.getFilename(trace, meta);
+      if (filename === null) {
+        return Var.ZERO;
+      } else {
+        return new Var(filename);
+      }
     }
   }
 
@@ -138,7 +144,12 @@ abstract class TraceBaseCmdLet<T extends Trace, M> extends CmdLetBase {
       }
       this.byIndex.delete(index);
       Output.writeln(`trace #${index} deleted`);
-      return Var.ZERO;
+      const filename = this.getFilename(trace, meta);
+      if (filename === null) {
+        return Var.ZERO;
+      } else {
+        return new Var(filename);
+      }
     }
   }
 
@@ -206,7 +217,7 @@ abstract class TraceCmdLet<T extends Trace> extends TraceBaseCmdLet<
     const vars = this.transformOptional(
       tokens,
       [this.parseVar, this.parseVar],
-      [this.parseLiteral],
+      [this.parseString],
     );
     if (vars === null) return null;
     const [[tid, depth], [fileName]] = vars as [[Var, Var], [string | null]];
@@ -219,15 +230,15 @@ abstract class TraceCmdLet<T extends Trace> extends TraceBaseCmdLet<
       const trace = this.createTrace(threadid, depth.toU64().toNumber());
       const id = this.addTrace(trace, meta);
       Output.writeln(`Created trace: #${id}`);
+      return Var.fromId(id);
     } else {
       const file = new File(fileName, 'w+');
       const meta = { fileName: fileName, file: file };
       const trace = this.createTrace(threadid, depth.toU64().toNumber());
       const id = this.addTrace(trace, meta);
       Output.writeln(`Created trace: #${id}`);
+      return Var.fromId(id);
     }
-
-    return Var.ZERO;
   }
 
   protected override onShow(trace: Trace, meta: TraceCmdLetMeta): void {
@@ -276,6 +287,13 @@ abstract class TraceCmdLet<T extends Trace> extends TraceBaseCmdLet<
   protected override formatMeta(meta: TraceCmdLetMeta): string {
     if (meta.fileName === null) return '';
     return `fileName: ${Output.blue(meta.fileName)}`;
+  }
+
+  protected override getFilename(
+    _trace: Trace,
+    meta: TraceCmdLetMeta,
+  ): string | null {
+    return meta.fileName;
   }
 }
 
@@ -334,7 +352,7 @@ ${this.name} tid file mod - start a ${this.traceType} trace
   protected runCreate(tokens: Token[]): Var | null {
     const vars = this.transformOptional(
       tokens,
-      [this.parseVar, this.parseLiteral],
+      [this.parseVar, this.parseString],
       [this.parseLiteral],
     );
     if (vars === null) return null;
@@ -350,7 +368,7 @@ ${this.name} tid file mod - start a ${this.traceType} trace
     const id = this.addTrace(trace, { modulePath });
     Output.writeln(`Created trace: #${id}`);
 
-    return Var.ZERO;
+    return Var.fromId(id);
   }
 
   protected override onShow(
@@ -375,5 +393,12 @@ ${this.name} tid file mod - start a ${this.traceType} trace
   protected override formatMeta(meta: TraceCoverageCmdLetMeta): string {
     if (meta.modulePath === null) return '';
     return `modulePath: ${Output.blue(meta.modulePath)}`;
+  }
+
+  protected override getFilename(
+    trace: CoverageTrace,
+    _meta: TraceCoverageCmdLetMeta,
+  ): string | null {
+    return trace.data().getFileName();
   }
 }

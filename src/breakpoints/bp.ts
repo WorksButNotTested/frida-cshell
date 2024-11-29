@@ -37,10 +37,6 @@ export abstract class Bp {
   public conditions: string[] = [];
   public commands: string[] = [];
 
-  public static idToVar(id: number): Var {
-    return new Var(uint64(id.toString()), `#${id}`);
-  }
-
   protected constructor(
     index: number,
     address: Var | null,

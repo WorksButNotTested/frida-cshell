@@ -96,13 +96,9 @@ js path - load commandlet JS script
   path      the absolute path of the commandlet script to load (note that paths with spaces must be quoted)`;
 
   public runSync(tokens: Token[]): Var {
-    const vars = this.transform(tokens, [this.parseLiteral]);
+    const vars = this.transform(tokens, [this.parseString]);
     if (vars === null) return this.usage();
-    let [name] = vars as [string];
-
-    if (name.length > 1 && name.startsWith('"') && name.endsWith('"')) {
-      name = name.slice(1, name.length - 1);
-    }
+    const [name] = vars as [string];
 
     Output.writeln(`Loading: ${name}`);
 
@@ -212,7 +208,7 @@ js path - load commandlet JS script
       CmdLets.registerCmdlet(cmdlet);
     }
 
-    return Var.ZERO;
+    return new Var(name);
   }
 
   private checkMandatoryMembers(cmdlet: CmdLet) {

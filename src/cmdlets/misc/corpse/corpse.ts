@@ -68,16 +68,16 @@ corpse - create a corpse file`;
           this.runChild(debug);
         },
       );
-      this.debug(
-        `Checking for corpse - core pattern: '${corePattern}', pid: ${childPid}`,
-      );
-      this.checkCorpse(corePattern, childPid);
+      const corePath = CorePattern.appendPid()
+        ? `${corePattern}.${childPid}`
+        : corePattern;
+      this.status(`Checking for corpse at '${corePath}'`);
+      this.checkCorpse(corePath);
+      return new Var(corePath);
     } finally {
       this.debug(`Checking debug file: '${debugFileName}'`);
       this.checkDebugFile(debugFileName);
     }
-
-    return Var.ZERO;
   }
 
   private runParent(childPid: number) {
@@ -226,12 +226,7 @@ corpse - create a corpse file`;
     cursor.writeUtf8String(data);
   }
 
-  private checkCorpse(corePattern: string, pid: number) {
-    const corePath = CorePattern.appendPid()
-      ? `${corePattern}.${pid}`
-      : corePattern;
-    this.status(`Checking for corpse at '${corePath}'`);
-
+  private checkCorpse(corePath: string) {
     const corpse = new File(corePath, 'rb');
     corpse.seek(0, File.SEEK_END);
     const length = corpse.tell();

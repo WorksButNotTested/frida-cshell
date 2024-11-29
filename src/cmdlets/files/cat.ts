@@ -14,7 +14,7 @@ cat file - dump file
   file      the file to dump`;
 
   public runSync(tokens: Token[]): Var {
-    const vars = this.transform(tokens, [this.parseLiteral]);
+    const vars = this.transform(tokens, [this.parseString]);
     if (vars === null) return this.usage();
 
     const [file] = vars as [string];
@@ -28,7 +28,7 @@ cat file - dump file
       Output.writeln(`failed to read file: ${Output.green(file)}`);
     }
 
-    return Var.ZERO;
+    return new Var(file);
   }
 
   public usage(): Var {

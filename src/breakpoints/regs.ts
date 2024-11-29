@@ -1,5 +1,4 @@
 import { Var } from '../vars/var.js';
-import { Bp } from './bp.js';
 
 enum PseudoRegNames {
   TID = 'tid',
@@ -58,7 +57,7 @@ export class Regs {
   }
 
   public static setBreakpointId(breakpointId: number) {
-    this.pseudoRegs[PseudoRegNames.BP] = Bp.idToVar(breakpointId);
+    this.pseudoRegs[PseudoRegNames.BP] = Var.fromId(breakpointId);
   }
 
   public static get(name: string): Var {

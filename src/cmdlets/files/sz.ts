@@ -25,7 +25,7 @@ cat file - send file
   }
 
   public override async run(tokens: Token[]): Promise<Var> {
-    const vars = this.transform(tokens, [this.parseLiteral]);
+    const vars = this.transform(tokens, [this.parseString]);
     if (vars === null) return this.usage();
 
     const [filePath] = vars as [string];
@@ -67,7 +67,7 @@ cat file - send file
       Input.setInterceptRaw(null);
       this.checkDebugFile(debugFileName);
     }
-    return Var.ZERO;
+    return new Var(filePath);
   }
 
   private checkDebugFile(debugFileName: string) {

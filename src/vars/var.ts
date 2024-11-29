@@ -1,6 +1,10 @@
 import { Format } from '../misc/format.js';
 
 export class Var {
+  public static fromId(id: number): Var {
+    return new Var(uint64(id.toString()), `#${id}`);
+  }
+
   private val: string | UInt64;
   private p: NativePointer;
   private readonly literal: string;

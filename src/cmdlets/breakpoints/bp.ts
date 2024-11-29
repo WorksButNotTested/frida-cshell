@@ -78,15 +78,12 @@ export abstract class TypedBpCmdLet
   }
 
   public usage(): Var {
+    const show = this.usageShow();
     const create = this.usageCreate();
     const modify = this.usageModify();
     const usage: string = `Usage: ${this.name}
 ${Output.bold('show:')}
-
-${this.name} - show all ${this.bpType} breakpoints
-
-${this.name} ${CmdLetBase.NUM_CHAR}n - show a ${this.bpType} breakpoint
-   ${CmdLetBase.NUM_CHAR}n      the number of the breakpoint to show
+${show}
 
 ${Output.bold('create:')}
 ${create}
@@ -103,6 +100,15 @@ ${Output.bold('NOTE:')} Set hits to '*' for unlimited breakpoint.`;
 
     Output.writeln(usage);
     return Var.ZERO;
+  }
+
+  protected usageShow(): string {
+    const usage: string = `    
+${this.name} - show all ${this.bpType} breakpoints
+
+${this.name} ${CmdLetBase.NUM_CHAR}n - show a ${this.bpType} breakpoint
+   ${CmdLetBase.NUM_CHAR}n      the number of the breakpoint to show`;
+    return usage;
   }
 
   protected parseConditional(token: Token): string | null {

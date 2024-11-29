@@ -16,7 +16,7 @@ ld path - load a module
   path      the absolute path of the module to load (note that paths with spaces must be quoted)`;
 
   public runSync(tokens: Token[]): Var {
-    const vars = this.transform(tokens, [this.parseLiteral]);
+    const vars = this.transform(tokens, [this.parseString]);
     if (vars === null) return this.usage();
     let [name] = vars as [string];
 

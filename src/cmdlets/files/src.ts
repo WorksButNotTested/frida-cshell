@@ -30,7 +30,7 @@ src path - run commands from file
   }
 
   public override async run(tokens: Token[]): Promise<Var> {
-    const vars = this.transformOptional(tokens, [], [this.parseLiteral]);
+    const vars = this.transformOptional(tokens, [], [this.parseString]);
     if (vars === null) return this.usage();
     // eslint-disable-next-line prefer-const
     let [_, [name]] = vars as [[], [string | null]];
@@ -38,16 +38,11 @@ src path - run commands from file
       if (SrcCmdLet.lastPath === null) throw new Error('path not initialized');
 
       await this.runScript(SrcCmdLet.lastPath);
-      return Var.ZERO;
+      return new Var(SrcCmdLet.lastPath);
     } else {
-      if (name.length > 1 && name.startsWith('"') && name.endsWith('"')) {
-        name = name.slice(1, name.length - 1);
-      }
-
       SrcCmdLet.lastPath = name;
       await this.runScript(name);
-
-      return Var.ZERO;
+      return new Var(name);
     }
   }
 

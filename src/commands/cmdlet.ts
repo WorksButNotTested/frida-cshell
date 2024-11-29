@@ -91,6 +91,11 @@ export abstract class CmdLetBase implements CmdLet {
     return token.getLiteral();
   }
 
+  protected parseString(token: Token): string | null {
+    if (token === null) return null;
+    return token.getString();
+  }
+
   protected parseWidth(token: Token): number | null {
     const literal = token.getLiteral();
     switch (literal) {

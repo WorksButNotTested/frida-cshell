@@ -26,6 +26,7 @@ export class Output {
   private static debugging: boolean = false;
   private static indent: boolean = false;
   private static filter: RegExp | null = null;
+  private static logFile: string | null = null;
   private static log: File | null = null;
   private static suppressed: boolean = false;
 
@@ -111,6 +112,7 @@ export class Output {
     if (this.log !== null) {
       const uncoloured = Format.removeColours(text);
       this.log.write(uncoloured);
+      this.log.flush();
     }
     send(['frida:stderr', text]);
   }
@@ -173,11 +175,12 @@ export class Output {
     return this.filter !== null;
   }
 
-  public static setLog(log: string) {
-    this.log = new File(log, 'w');
+  public static setLog(logFile: string) {
+    this.logFile = logFile;
+    this.log = new File(logFile, 'w');
   }
 
-  public static clearLog() {
+  public static clearLog(): string | null {
     if (this.log !== null) {
       const pos = this.log.tell();
       Output.writeln(`Wrote  ${Output.blue(pos.toString())} bytes to log.`);
@@ -185,6 +188,7 @@ export class Output {
       this.log.close();
       this.log = null;
     }
+    return this.logFile;
   }
 
   public static suppress(suppressed: boolean) {

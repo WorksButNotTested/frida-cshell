@@ -1,15 +1,16 @@
 import { Token } from '../../io/token.js';
 import { Var } from '../../vars/var.js';
 import { TypedBpCmdLet } from './bp.js';
-import { Bp, BpType } from '../../breakpoints/bp.js';
+import { BpType } from '../../breakpoints/bp.js';
 import { Bps } from '../../breakpoints/bps.js';
 import { BpReplacement } from '../../breakpoints/replace.js';
 import { Output } from '../../io/output.js';
+import { CmdLetBase } from '../../commands/cmdlet.js';
 
 export class ReplaceCmdLet extends TypedBpCmdLet {
   name = 'replace';
   bpType = BpType.Replacement;
-  help = `replace a function with another implementation (returns the address of the trampoline)`;
+  help = `replace a function with another implementation`;
 
   public runCreate(tokens: Token[]): Var | null {
     const vars = this.transform(tokens, [this.parseVar, this.parseVar]);
@@ -22,7 +23,7 @@ export class ReplaceCmdLet extends TypedBpCmdLet {
       Bps.add(bp);
       bp.enable();
       Output.writeln(`Created ${bp.toString()}`);
-      return Bp.idToVar(index);
+      return Var.fromId(index);
     } catch (error) {
       throw new Error(`failed to replace ${address} with ${target}, ${error}`);
     }
@@ -42,6 +43,15 @@ export class ReplaceCmdLet extends TypedBpCmdLet {
     if (bp === null) throw new Error(`breakpoint #${index} doesn't exist`);
     Output.writeln(bp.toString());
     return bp.trampoline;
+  }
+
+  protected override usageShow(): string {
+    const usage: string = `    
+${this.name} - show all ${this.bpType} breakpoints
+
+${this.name} ${CmdLetBase.NUM_CHAR}n - show a ${this.bpType} breakpoint (returns the address of the trampoline)
+   ${CmdLetBase.NUM_CHAR}n      the number of the breakpoint to show`;
+    return usage;
   }
 
   protected override usageCreate(): string {

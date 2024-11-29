@@ -179,13 +179,7 @@ corpse - create a corpse file`;
         path: m.path,
       };
     });
-    const regs = Regs.all().map(([name, value]) => {
-      return {
-        name: name,
-        addr: value.toPointer(),
-        value: value.getLiteral(),
-      };
-    });
+    const regs = this.tryGetRegs();
     const vars = Vars.all().map(([name, value]) => {
       return {
         name: name,
@@ -224,6 +218,20 @@ corpse - create a corpse file`;
       cursor = cursor.add(1);
     }
     cursor.writeUtf8String(data);
+  }
+
+  private tryGetRegs(): { name: string; addr: NativePointer; value: string }[] {
+    try {
+      return Regs.all().map(([name, value]) => {
+        return {
+          name: name,
+          addr: value.toPointer(),
+          value: value.getLiteral(),
+        };
+      });
+    } catch {
+      return [];
+    }
   }
 
   private checkCorpse(corePath: string) {

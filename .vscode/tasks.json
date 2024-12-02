@@ -315,6 +315,48 @@
 			}
 		},
 		{
+			"type": "shell",
+			"command": "service ssh start",
+			"problemMatcher": [],
+			"label": "Start SSH",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"echo": true,
+				"reveal": "silent",
+				"focus": true,
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": false,
+				"close": true
+			},
+		},
+		{
+			"type": "shell",
+			"command": "zssh -o StrictHostKeyChecking=no -t 127.0.0.1 -- ${workspaceFolder}/frida-cshell -f /bin/target64",
+			"problemMatcher": [],
+			"label": "VM ZSSH",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": false,
+				"close": false
+			},
+			"dependsOn": [
+				"Build",
+				"Start SSH"
+			],
+		},
+		{
 			"label": "Build Image",
 			"type": "shell",
 			"command": "docker buildx build --build-arg VSCODE_COMMIT_ID=$(code --version |sed -n '2p') -f .devcontainer/Dockerfile -t frida-cshell --target frida-cshell ${workspaceFolder}",
@@ -353,3 +395,5 @@
     },
 	]
 }
+
+

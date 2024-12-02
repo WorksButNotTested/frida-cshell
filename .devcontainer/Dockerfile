@@ -790,7 +790,13 @@ RUN apt-get update && \
     nano \
     psmisc \
     picocom \
-    lrzsz
+    lrzsz \
+    openssh-server \
+    zssh
+
+RUN ssh-keygen -f /root/.ssh/id_rsa -N ""
+RUN cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
+ENV FRIDA_INJECT=/usr/bin/frida-inject-64
 
 ARG VSCODE_COMMIT_ID
 ENV VSCODE_COMMIT_ID=$VSCODE_COMMIT_ID
@@ -805,3 +811,6 @@ COPY package-lock.json /root/npm-cache
 RUN npm install --ignore-scripts --no-audit --no-save --cache .
 RUN rm -rf node_modules/
 RUN rm package.json package-lock.json
+
+
+

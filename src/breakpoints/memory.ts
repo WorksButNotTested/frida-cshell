@@ -1,6 +1,7 @@
 import { Output } from '../io/output.js';
 import { Mem } from '../memory/mem.js';
 import { Format } from '../misc/format.js';
+import { Tls } from '../tls/tls.js';
 import { Var } from '../vars/var.js';
 import { Bp, BpKind, BpType } from './bp.js';
 import { Regs } from './regs.js';
@@ -94,6 +95,7 @@ export abstract class BpMemory extends Bp {
     Regs.setAddress(details.address);
     Regs.setPc(details.from);
     Regs.setBreakpointId(this.index);
+    Regs.setTls(Tls.getTls());
 
     try {
       if (this.runConditions()) {

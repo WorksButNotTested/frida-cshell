@@ -4,6 +4,7 @@ import { Regs } from './regs.js';
 import { Format } from '../misc/format.js';
 import { Var } from '../vars/var.js';
 import { Bp, BpKind, BpType } from './bp.js';
+import { Tls } from '../tls/tls.js';
 
 export abstract class BpCode extends Bp {
   public kind: BpKind = BpKind.Code;
@@ -53,6 +54,7 @@ export abstract class BpCode extends Bp {
     Regs.setContext(ctx);
     Regs.setReturnAddress(returnAddress);
     Regs.setBreakpointId(this.index);
+    Regs.setTls(Tls.getTls());
     if (retVal !== null) Regs.setRetVal(retVal);
 
     try {

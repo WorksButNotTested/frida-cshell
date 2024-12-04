@@ -5,6 +5,7 @@ enum PseudoRegNames {
   RA = 'ra',
   ADDRESS = 'addr',
   BP = 'bp',
+  TLS = 'tls',
 }
 
 type PseudoRegs = {
@@ -23,6 +24,7 @@ export class Regs {
     [PseudoRegNames.RA]: null,
     [PseudoRegNames.ADDRESS]: null,
     [PseudoRegNames.BP]: null,
+    [PseudoRegNames.TLS]: null,
   };
 
   private constructor() {}
@@ -58,6 +60,13 @@ export class Regs {
 
   public static setBreakpointId(breakpointId: number) {
     this.pseudoRegs[PseudoRegNames.BP] = Var.fromId(breakpointId);
+  }
+
+  public static setTls(tls: NativePointer) {
+    this.pseudoRegs[PseudoRegNames.TLS] = new Var(
+      uint64(tls.toString()),
+      PseudoRegNames.TLS,
+    );
   }
 
   public static get(name: string): Var {

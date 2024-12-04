@@ -71,6 +71,7 @@ import { EchoCmdLet } from '../cmdlets/misc/echo.js';
 import { CorpseCmdLet } from '../cmdlets/misc/corpse/corpse.js';
 import { ErrnoCmdLet } from '../cmdlets/misc/errno.js';
 import { SzCmdLet } from '../cmdlets/files/sz.js';
+import { TlsCmdLet } from '../cmdlets/thread/tls.js';
 
 export class CmdLets {
   private static byName: Map<string, CmdLet> = new Map<string, CmdLet>();
@@ -129,6 +130,7 @@ export class CmdLets {
     this.registerCmdletType(SymCmdLet);
     this.registerCmdletType(SzCmdLet);
     this.registerCmdletType(ThreadCmdLet);
+    this.registerCmdletType(TlsCmdLet);
     this.registerCmdletType(TraceBlockCmdLet);
     this.registerCmdletType(TraceCallCmdLet);
     this.registerCmdletType(TraceCoverageCmdLet);

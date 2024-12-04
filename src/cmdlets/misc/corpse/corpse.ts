@@ -162,13 +162,17 @@ corpse - create a corpse file`;
       new Uint8Array([0x9d, 0xe2, 0xa8, 0x9e, 0x8d, 0xe8, 0xda, 0xfd]),
     ];
     const ranges = Process.enumerateRanges('---').map(r => {
+      const file = r.file
+        ? {
+            file_path: r.file.path,
+            file_offset: r.file.offset,
+          }
+        : null;
       return {
         base: `0x${r.base.toString(16)}`,
         size: r.size,
         protection: r.protection,
-        file_path: r.file?.path ?? null,
-        file_offset: r.file?.offset ?? null,
-        file_size: r.file?.size ?? null,
+        file,
       };
     });
     const modules = Process.enumerateModules().map(m => {

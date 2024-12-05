@@ -16,6 +16,7 @@ import { APP_VERSION, GIT_COMMIT_HASH } from '../../../version.js';
 import { Overlay } from '../../../memory/overlay.js';
 import { Regs } from '../../../breakpoints/regs.js';
 import { Vars } from '../../../vars/vars.js';
+import { Madvise } from './madvise.js';
 
 export class CorpseCmdLet extends CmdLetBase {
   name = 'corpse';
@@ -34,6 +35,7 @@ corpse - create a corpse file`;
   private clone: Fork | null = null;
   private proc: Proc | null = null;
   private mem: Mem | null = null;
+  private madvise: Madvise | null = null;
 
   public runSync(tokens: Token[]): Var {
     if (tokens.length != 0) return this.usage();
@@ -47,6 +49,9 @@ corpse - create a corpse file`;
       this.warning(`SELinux may NOT be in permissive mode:
         run 'setenforce 0' to disable`);
     }
+
+    const madvise = this.madvise as Madvise;
+    madvise.tryForkAll(this.warning);
 
     /* run the clone */
     const debugFileName = Files.getRandomFileName('debug');
@@ -138,6 +143,9 @@ corpse - create a corpse file`;
       }
 
       this.writeMetadata(debug);
+
+      const madvise = this.madvise as Madvise;
+      madvise.tryDumpAll(debug);
 
       debug(`Suicide`);
       proc.kill(pid, Proc.SIGABRT);
@@ -301,6 +309,7 @@ corpse - create a corpse file`;
           this.clone = new Fork();
           this.proc = new Proc();
           this.mem = new Mem();
+          this.madvise = new Madvise();
         } catch {
           return false;
         }

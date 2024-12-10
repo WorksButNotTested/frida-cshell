@@ -8,7 +8,8 @@
 				"install",
 				"--no-audit",
 				"--offline",
-				"--cache /root/npm-cache"
+				"--cache",
+				"/root/npm-cache"
 			],
 			"problemMatcher": [],
 			"label": "Build",
@@ -365,15 +366,15 @@
 				"isDefault": true
 			},
 			"options": {
-					"cwd": "${workspaceFolder}"
+				"cwd": "${workspaceFolder}"
 			},
 			"presentation": {
-					"clear": false,
-					"reveal": "always",
-					"focus": true,
+				"clear": false,
+				"reveal": "always",
+				"focus": true,
 			}
-    },
-    {
+		},
+		{
 			"label": "Export Image",
 			"type": "shell",
 			"command": "docker save -o ${workspaceFolder}/frida-cshell.tar frida-cshell",
@@ -382,18 +383,16 @@
 				"isDefault": true
 			},
 			"options": {
-					"cwd": "${workspaceFolder}"
+				"cwd": "${workspaceFolder}"
 			},
 			"presentation": {
-					"clear": false,
-					"reveal": "always",
-					"focus": true,
+				"clear": false,
+				"reveal": "always",
+				"focus": true,
 			},
 			"dependsOn": [
 				"Build Image"
 			]
-    },
+		},
 	]
 }
-
-

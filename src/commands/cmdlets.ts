@@ -73,6 +73,7 @@ import { ErrnoCmdLet } from '../cmdlets/misc/errno.js';
 import { SzCmdLet } from '../cmdlets/files/sz.js';
 import { TlsCmdLet } from '../cmdlets/thread/tls.js';
 import { TmpCmdLet } from '../cmdlets/files/tmp.js';
+import { DumpFileCmdLet } from '../cmdlets/data/dumpfile.js';
 
 export class CmdLets {
   private static byName: Map<string, CmdLet> = new Map<string, CmdLet>();
@@ -91,6 +92,7 @@ export class CmdLets {
     this.registerCmdletType(CoverageBpCmdLet);
     this.registerCmdletType(DivCmdLet);
     this.registerCmdletType(DumpCmdLet);
+    this.registerCmdletType(DumpFileCmdLet);
     this.registerCmdletType(DumpStringCmdLet);
     this.registerCmdletType(EchoCmdLet);
     this.registerCmdletType(EndianCmdLet);

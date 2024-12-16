@@ -85,6 +85,7 @@ import { CorpseCmdLet } from '../misc/corpse/corpse.js';
 import { ErrnoCmdLet } from '../misc/errno.js';
 import { SzCmdLet } from '../files/sz.js';
 import { TlsCmdLet } from '../thread/tls.js';
+import { TmpCmdLet } from '../files/tmp.js';
 
 export class JsCmdLet extends CmdLetBase {
   name = 'js';
@@ -170,6 +171,7 @@ js path - load commandlet JS script
       SymCmdLet: SymCmdLet,
       ThreadCmdLet: ThreadCmdLet,
       TlsCmdLet: TlsCmdLet,
+      TmpCmdLet: TmpCmdLet,
       TraceBlockCmdLet: TraceBlockCmdLet,
       TraceCallCmdLet: TraceCallCmdLet,
       TraceCoverageCmdLet: TraceCoverageCmdLet,

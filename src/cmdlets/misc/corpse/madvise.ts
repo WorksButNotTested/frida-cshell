@@ -64,21 +64,25 @@ export class Madvise {
 
   public tryForkAll(debug: (msg: string) => void) {
     this.forAlignedRanges((base, size) => {
-        try {
-            this.doFork(base, size)
-        } catch (e) {
-            debug(`failed to madvise MADV_DOFORK range: ${e}, base: ${base}, size: ${size}`);
-        }
+      try {
+        this.doFork(base, size);
+      } catch (e) {
+        debug(
+          `failed to madvise MADV_DOFORK range: ${e}, base: ${base}, size: ${size}`,
+        );
+      }
     });
   }
 
   public tryDumpAll(debug: (msg: string) => void) {
     this.forAlignedRanges((base, size) => {
-        try {
-            this.doDump(base, size)
-        } catch (e) {
-            debug(`failed to madvise MADV_DODUMP range: ${e}, base: ${base}, size: ${size}`);
-        }
+      try {
+        this.doDump(base, size);
+      } catch (e) {
+        debug(
+          `failed to madvise MADV_DODUMP range: ${e}, base: ${base}, size: ${size}`,
+        );
+      }
     });
   }
 }

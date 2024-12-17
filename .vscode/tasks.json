@@ -360,7 +360,7 @@
 		{
 			"label": "Build Image",
 			"type": "shell",
-			"command": "docker buildx build --build-arg VSCODE_COMMIT_ID=$(code --version |sed -n '2p') -f .devcontainer/Dockerfile -t frida-cshell --target frida-cshell ${workspaceFolder}",
+			"command": "docker buildx build -f .devcontainer/Dockerfile -t frida-cshell --target frida-cshell ${workspaceFolder}",
 			"group": {
 				"kind": "build",
 				"isDefault": true

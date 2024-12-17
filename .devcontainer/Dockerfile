@@ -798,13 +798,6 @@ RUN ssh-keygen -f /root/.ssh/id_rsa -N ""
 RUN cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
 ENV FRIDA_INJECT=/usr/bin/frida-inject-64
 
-ARG VSCODE_COMMIT_ID
-ENV VSCODE_COMMIT_ID=$VSCODE_COMMIT_ID
-WORKDIR /root/.vscode-server/bin
-RUN curl -sL https://update.code.visualstudio.com/commit:${VSCODE_COMMIT_ID}/server-linux-x64/stable -o stable
-RUN tar xf stable
-RUN mv vscode-server-linux-x64 ${VSCODE_COMMIT_ID}
-
 WORKDIR /root/npm-cache
 COPY package.json /root/npm-cache
 COPY package-lock.json /root/npm-cache

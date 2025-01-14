@@ -66,6 +66,7 @@ export class CoverageTrace extends TraceBase<CoverageTraceData> {
     threadIds: ThreadId[],
     filename: string | null,
     modulePath: string | null,
+    suppressed: boolean,
   ) {
     const trace = new CoverageTraceData(threadIds, filename);
     super(threadIds, trace);
@@ -83,6 +84,7 @@ export class CoverageTrace extends TraceBase<CoverageTraceData> {
           Output.write(Output.blue(Format.toTextString(coverageData)));
       },
       threadFilter: t => threadIds.includes(t.id),
+      suppressed,
     });
   }
 
@@ -90,6 +92,7 @@ export class CoverageTrace extends TraceBase<CoverageTraceData> {
     threadId: ThreadId,
     filename: string | null,
     modulePath: string | null,
+    suppressed: boolean,
   ): CoverageTrace {
     const threadIds =
       threadId === -1 ? Process.enumerateThreads().map(t => t.id) : [threadId];
@@ -102,7 +105,12 @@ export class CoverageTrace extends TraceBase<CoverageTraceData> {
     if (traced.length !== 0)
       throw new Error(`trace already exists for threadIds: ${traced}`);
 
-    const trace = new CoverageTrace(threadIds, filename, modulePath);
+    const trace = new CoverageTrace(
+      threadIds,
+      filename,
+      modulePath,
+      suppressed,
+    );
     threadIds.forEach(t => Traces.set(t, trace));
     return trace;
   }
@@ -110,5 +118,13 @@ export class CoverageTrace extends TraceBase<CoverageTraceData> {
   protected doStop() {
     this.coverage.stop();
     this.trace.stop();
+  }
+
+  public isSuppressed(): boolean {
+    return this.coverage.isSuppressed();
+  }
+
+  public unsuppress() {
+    this.coverage.unsuppress();
   }
 }

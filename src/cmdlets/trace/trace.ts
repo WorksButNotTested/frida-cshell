@@ -14,12 +14,14 @@ abstract class TraceBaseCmdLet<T extends Trace, M> extends CmdLetBase {
 
   protected abstract traceType: string;
   protected abstract runCreate(tokens: Token[]): Var | null;
+  protected abstract runUnsuppress(tokens: Token[]): Var | null;
+  protected abstract getState(trace: T): string;
   protected abstract onShow(trace: T, meta: M): void;
   protected abstract onStop(trace: T, meta: M): void;
   protected abstract formatMeta(meta: M): string;
   protected abstract getFilename(trace: T, meta: M): string | null;
 
-  private byIndex: Map<number, [T, M]> = new Map<number, [T, M]>();
+  protected byIndex: Map<number, [T, M]> = new Map<number, [T, M]>();
 
   public runSync(tokens: Token[]): Var {
     const retShow = this.runShow(tokens);
@@ -34,13 +36,14 @@ abstract class TraceBaseCmdLet<T extends Trace, M> extends CmdLetBase {
     const retCreate = this.runCreate(tokens);
     if (retCreate !== null) return retCreate;
 
+    const retStart = this.runUnsuppress(tokens);
+    if (retStart !== null) return retStart;
+
     return this.usage();
   }
 
-  private printTrace(trace: Trace, meta: M, index: number) {
-    const state = trace.isStopped()
-      ? Output.red('stopped')
-      : Output.green('running');
+  private printTrace(trace: T, meta: M, index: number) {
+    const state = this.getState(trace);
     const detail = trace.data().details();
     const metaString = this.formatMeta(meta);
     const tids = trace.threads();
@@ -257,6 +260,17 @@ abstract class TraceCmdLet<T extends Trace> extends TraceBaseCmdLet<
     }
   }
 
+  protected runUnsuppress(_tokens: Token[]): Var | null {
+    return null;
+  }
+
+  protected override getState(trace: T): string {
+    const state = trace.isStopped()
+      ? Output.red('stopped')
+      : Output.green('running');
+    return state;
+  }
+
   protected override onShow(trace: Trace, meta: TraceCmdLetMeta): void {
     if (meta.file === null) {
       trace
@@ -353,37 +367,139 @@ export class TraceCoverageCmdLet extends TraceBaseCmdLet<
   help = 'traces coverage for the given thread';
   protected traceType: string = 'coverage';
 
+  protected static readonly SUPPRESS_CHAR: string = '!';
+
   protected override usageCreate(): string {
     return `
-${this.name} tid file - start a ${this.traceType} trace
+${this.name} tid file [!] - start a ${this.traceType} trace
   tid          the thread to trace [or '*' for all threads]
   file         the file to log to
+  [!]          start the trace in suppressed mode
   
-${this.name} tid file mod - start a ${this.traceType} trace
+${this.name} tid file mod [!] - start a ${this.traceType} trace
   tid          the thread to trace [or '*' for all threads]
   file         the file to log to
-  mod          the absolute path of the module to trace`;
+  mod          the absolute path of the module to trace
+  [!]          start the trace in suppressed mode`;
   }
 
   protected runCreate(tokens: Token[]): Var | null {
+    const retWithoutModule = this.runCreateWithoutModule(tokens);
+    if (retWithoutModule !== null) return retWithoutModule;
+
+    const retWithModule = this.runCreateWithModule(tokens);
+    if (retWithModule !== null) return retWithModule;
+
+    return null;
+  }
+
+  protected runCreateWithModule(tokens: Token[]): Var | null {
     const vars = this.transformOptional(
       tokens,
-      [this.parseNumberOrAll, this.parseString],
-      [this.parseLiteral],
+      [this.parseNumberOrAll, this.parseString, this.parseLiteral],
+      [this.parseSuppressedOptional],
     );
     if (vars === null) return null;
-    const [[threadid, fileName], [modulePath]] = vars as [
-      [number, string],
-      [string | null],
+    const [[threadid, fileName, modulePath], [suppressed]] = vars as [
+      [number, string, string],
+      [boolean | null | undefined],
     ];
 
-    Output.debug(`fileName: ${fileName}`);
+    if (suppressed === undefined) throw new Error('suppressed field malformed');
 
-    const trace = CoverageTrace.create(threadid, fileName, modulePath);
+    Output.debug(`fileName: ${fileName}`);
+    Output.debug(
+      `suppressed: ${suppressed ? Output.red('suppressed') : Output.green('unsupressed')} (${suppressed})`,
+    );
+
+    const trace = CoverageTrace.create(
+      threadid,
+      fileName,
+      modulePath,
+      suppressed ?? false,
+    );
     const id = this.addTrace(trace, { modulePath });
     Output.writeln(`Created trace: #${id}`);
 
     return Var.fromId(id);
+  }
+
+  protected runCreateWithoutModule(tokens: Token[]): Var | null {
+    const vars = this.transformOptional(
+      tokens,
+      [this.parseNumberOrAll, this.parseString],
+      [this.parseSuppressedOptional],
+    );
+    if (vars === null) return null;
+    const [[threadid, fileName], [suppressed]] = vars as [
+      [number, string],
+      [boolean | null | undefined],
+    ];
+
+    /* The last field may be the module name */
+    if (suppressed === undefined) return null;
+
+    Output.debug(`fileName: ${fileName}`);
+    Output.debug(
+      `suppressed: ${suppressed ? Output.red('suppressed') : Output.green('unsupressed')} (${suppressed})`,
+    );
+
+    const trace = CoverageTrace.create(
+      threadid,
+      fileName,
+      null,
+      suppressed ?? false,
+    );
+    const id = this.addTrace(trace, { modulePath: null });
+    Output.writeln(`Created trace: #${id}`);
+
+    return Var.fromId(id);
+  }
+
+  protected runUnsuppress(tokens: Token[]): Var | null {
+    const vars = this.transform(tokens, [
+      this.parseIndex,
+      this.parseSuppressed,
+    ]);
+    if (vars === null) return null;
+    const [index, _suppressed] = vars as [number, string];
+
+    const value = this.byIndex.get(index);
+    if (value === undefined) {
+      Output.writeln(`trace #${index} not found`);
+      return Var.ZERO;
+    } else {
+      const [trace, _meta] = value;
+      if (trace.isSuppressed()) {
+        trace.unsuppress();
+        Output.writeln(`trace #${index} unsuppressed`);
+      } else {
+        Output.writeln(`trace #${index} is already unsupressed`);
+      }
+      return Var.fromId(index);
+    }
+  }
+
+  protected parseSuppressed(token: Token): string | null {
+    const literal = token.getLiteral();
+    if (literal !== TraceCoverageCmdLet.SUPPRESS_CHAR) return null;
+    return literal;
+  }
+
+  protected parseSuppressedOptional(token: Token): boolean | undefined | null {
+    const literal = token.getLiteral();
+    if (literal !== TraceCoverageCmdLet.SUPPRESS_CHAR) return undefined;
+    return true;
+  }
+
+  protected override getState(trace: CoverageTrace): string {
+    if (trace.isStopped()) {
+      return Output.red('stopped');
+    } else if (trace.isSuppressed()) {
+      return Output.yellow('suppressed');
+    } else {
+      return Output.green('running');
+    }
   }
 
   protected override onShow(

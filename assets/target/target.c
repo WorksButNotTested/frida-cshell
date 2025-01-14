@@ -5,8 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 #define NUM_THREADS 5
+#define PORT 1337
+#define BUFFER_SIZE 1024
 
 typedef unsigned int uint;
 
@@ -128,12 +131,43 @@ static void *busy_loop(void *arg)
     usleep(500000);
   }
 
-  return 0;
+  return NULL;
+}
+
+static void *network_loop(void *arg)
+{
+  int server_fd, client_fd;
+  struct sockaddr_in server_addr, client_addr;
+  socklen_t addr_len = sizeof(client_addr);
+  char buffer[BUFFER_SIZE];
+  ssize_t bytes_read;
+
+  server_fd = socket(AF_INET, SOCK_STREAM, 0);
+  memset(&server_addr, 0, sizeof(server_addr));
+  server_addr.sin_family = AF_INET;
+  server_addr.sin_addr.s_addr = INADDR_ANY;
+  server_addr.sin_port = htons(PORT);
+  bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr));
+  listen(server_fd, 5);
+
+  while (1)
+  {
+    client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &addr_len);
+    while ((bytes_read = read(client_fd, buffer, sizeof(buffer))) > 0)
+    {
+      write(client_fd, buffer, bytes_read);
+    }
+    close(client_fd);
+  }
+
+  close(server_fd);
+  return NULL;
 }
 
 int main(int argc, char **argv, char **envp)
 {
   pthread_t threads[NUM_THREADS] = {0};
+  pthread_t network_thread = 0;
   int thread_indices[NUM_THREADS] = {0};
 
   int fd = open("/dev/null", O_RDWR);
@@ -152,6 +186,12 @@ int main(int argc, char **argv, char **envp)
       perror("Failed to create thread");
       return 1;
     }
+  }
+
+  if (pthread_create(&network_thread, NULL, network_loop, NULL) != 0)
+  {
+    perror("Failed to create network thread");
+    return 1;
   }
 
   while (true)

@@ -173,6 +173,6 @@ export class BpCoverage extends BpTrace {
   }
 
   protected override startTrace(threadId: ThreadId): Trace {
-    return CoverageTrace.create(threadId, null, null);
+    return CoverageTrace.create(threadId, null, null, false);
   }
 }

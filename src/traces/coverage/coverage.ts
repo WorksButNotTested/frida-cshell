@@ -24,6 +24,11 @@ export interface CoverageOptions {
    * @returns True if the thread is to be included in the coverage output, false otherwise.
    */
   threadFilter(thread: ThreadDetails): boolean;
+
+  /**
+   * Flag indicating whether the coverage information should be suppressed.
+   */
+  suppressed: boolean;
 }
 
 export interface CoverageSession {
@@ -32,6 +37,16 @@ export interface CoverageSession {
    *
    */
   stop(): void;
+
+  /**
+   * Function to unsuppress coverage
+   */
+  unsuppress(): void;
+
+  /**
+   * Function to query whether coverage is suppressed
+   */
+  isSuppressed(): boolean;
 }
 
 type CoverageEmitter = (coverageData: ArrayBuffer, isHeader: boolean) => void;
@@ -109,6 +124,7 @@ export class Coverage implements CoverageSession {
       },
       moduleFilter,
       threadFilter,
+      options.suppressed,
     );
 
     return coverage;
@@ -265,6 +281,14 @@ export class Coverage implements CoverageSession {
   private readonly emit: CoverageEmitter;
 
   /**
+   * Map to hold collected suppressed coverage data for the purposes of de-duplication
+   */
+  private readonly suppressedEvents: Map<NativePointer, NativePointer> = new Map<
+    NativePointer,
+    NativePointer
+  >();
+
+  /**
    * Map to hold collected coverage data for the purposes of de-duplication
    */
   private readonly events: Map<NativePointer, NativePointer> = new Map<
@@ -290,10 +314,16 @@ export class Coverage implements CoverageSession {
    */
   private readonly threads: ThreadDetails[];
 
+  /**
+   * Flag indicating whether coverage is suppressed
+   */
+  private suppressed: boolean;
+
   private constructor(
     emit: CoverageEmitter,
     moduleFilter: ModuleMapFilter,
     threadFilter: CoverageThreadFilter,
+    suppressed: boolean,
   ) {
     this.emit = emit;
     const map = new ModuleMap(m => {
@@ -311,6 +341,7 @@ export class Coverage implements CoverageSession {
       this.memoryRanges.set(module.base, ranges);
     }
     this.threads = Process.enumerateThreads().filter(threadFilter);
+    this.suppressed = suppressed;
 
     const stalkerOptions = {
       events: {
@@ -329,7 +360,12 @@ export class Coverage implements CoverageSession {
               Coverage.COMPILE_EVENT_START_INDEX
             ] as NativePointer;
             const end = e[Coverage.COMPILE_EVENT_END_INDEX] as NativePointer;
-            this.events.set(start, end);
+            if (this.suppressed) {
+              this.suppressedEvents.set(start, end);
+            } else if (!this.suppressedEvents.has(start)) {
+              this.events.set(start, end);
+            }
+            
           }
         });
       },
@@ -543,5 +579,13 @@ export class Coverage implements CoverageSession {
     }
 
     return false;
+  }
+
+  public isSuppressed(): boolean {
+    return this.suppressed;
+  }
+
+  public unsuppress(): void {
+    this.suppressed = false;
   }
 }

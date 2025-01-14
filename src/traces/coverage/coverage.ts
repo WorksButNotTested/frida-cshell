@@ -351,9 +351,11 @@ export class Coverage implements CoverageSession {
     const convertedEvents = eventList.map(([start, end]) =>
       this.convertEvent(start, end),
     );
-    const nonNullEvents = convertedEvents.filter(e => e !== undefined);
+    const nonNullEvents = convertedEvents.filter(
+      e => e !== undefined,
+    ) as ICoverageEvent[];
 
-    this.emitHeader(nonNullEvents.length);
+    this.emitHeader(nonNullEvents);
     for (const convertedEvent of nonNullEvents) {
       if (convertedEvent !== undefined) {
         this.emitEvent(convertedEvent);
@@ -437,14 +439,17 @@ export class Coverage implements CoverageSession {
    * format includes a number of events in the header. This is obviously not ideally suited to streaming data, so we
    * instead write the value of -1. This does not impair the operation of dragondance (which ignores the field), but
    * changes may be required for IDA lighthouse to accept this modification.
-   * @param events The number of coverage events emitted in the file
+   * @param events The coverage events to be emitted in the file
    */
-  private emitHeader(events: number): void {
+  private emitHeader(events: ICoverageEvent[]): void {
     this.emit(Coverage.convertString('DRCOV VERSION: 2\n'), true);
     this.emit(Coverage.convertString('DRCOV FLAVOR: frida\n'), true);
+
+    const referencedModules = [...new Set(events.map(e => e.moduleId))];
+
     this.emit(
       Coverage.convertString(
-        `Module Table: version 2, count ${this.modules.length}\n`,
+        `Module Table: version 2, count ${referencedModules.length}\n`,
       ),
       true,
     );
@@ -456,11 +461,13 @@ export class Coverage implements CoverageSession {
       true,
     );
 
-    this.modules.forEach((m: Module, idx: number): void => {
-      this.emitModule(idx, m);
+    
+    referencedModules.sort().forEach(id => {
+      const module = this.modules[id] as Module;
+      this.emitModule(id, module);
     });
 
-    this.emit(Coverage.convertString(`BB Table: ${events} bbs\n`), true);
+    this.emit(Coverage.convertString(`BB Table: ${events.length} bbs\n`), true);
   }
 
   /**

@@ -173,17 +173,17 @@ export abstract class TraceData {
 export interface Trace {
   stop(): void;
   data(): TraceData;
-  thread(): ThreadId;
+  threads(): ThreadId[];
   isStopped(): boolean;
 }
 
 export abstract class TraceBase<D extends TraceData> implements Trace {
-  protected threadId: ThreadId;
+  protected threadIds: ThreadId[];
   protected trace: D;
   private stopped: boolean = false;
 
-  protected constructor(threadId: ThreadId, trace: D) {
-    this.threadId = threadId;
+  protected constructor(threadIds: ThreadId[], trace: D) {
+    this.threadIds = threadIds;
     this.trace = trace;
   }
 
@@ -199,8 +199,8 @@ export abstract class TraceBase<D extends TraceData> implements Trace {
     return this.trace;
   }
 
-  public thread(): ThreadId {
-    return this.threadId;
+  public threads(): ThreadId[] {
+    return this.threadIds;
   }
 
   public isStopped(): boolean {

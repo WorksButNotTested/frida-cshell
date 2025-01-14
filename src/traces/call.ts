@@ -91,7 +91,7 @@ class CallTraceData extends TraceData {
 export class CallTrace extends TraceBase<CallTraceData> {
   private constructor(threadId: ThreadId, depth: number) {
     const trace = new CallTraceData(depth);
-    super(threadId, trace);
+    super([threadId], trace);
     Stalker.follow(threadId, {
       events: {
         call: true,
@@ -116,7 +116,8 @@ export class CallTrace extends TraceBase<CallTraceData> {
   }
 
   protected doStop() {
-    Stalker.unfollow(this.threadId);
+    const threadId = this.threadIds[0] as number;
+    Stalker.unfollow(threadId);
     Stalker.flush();
   }
 }

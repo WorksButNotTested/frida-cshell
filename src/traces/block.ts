@@ -98,7 +98,7 @@ class BlockTraceData extends TraceData {
 export class BlockTrace extends TraceBase<BlockTraceData> {
   private constructor(threadId: ThreadId, depth: number, unique: boolean) {
     const trace = new BlockTraceData(depth);
-    super(threadId, trace);
+    super([threadId], trace);
     Stalker.follow(threadId, {
       events: {
         call: true,
@@ -129,7 +129,8 @@ export class BlockTrace extends TraceBase<BlockTraceData> {
   }
 
   protected doStop() {
-    Stalker.unfollow(this.threadId);
+    const threadId = this.threadIds[0] as number;
+    Stalker.unfollow(threadId);
     Stalker.flush();
   }
 }

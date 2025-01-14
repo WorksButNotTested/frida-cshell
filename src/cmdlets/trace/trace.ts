@@ -38,23 +38,36 @@ abstract class TraceBaseCmdLet<T extends Trace, M> extends CmdLetBase {
   }
 
   private printTrace(trace: Trace, meta: M, index: number) {
-    const tid = trace.thread();
     const state = trace.isStopped()
       ? Output.red('stopped')
       : Output.green('running');
     const detail = trace.data().details();
     const metaString = this.formatMeta(meta);
-    Output.writeln(
-      [
-        `${Output.green(index.toString().padStart(3, ' '))}`,
-        `thread:`,
-        Output.blue(tid.toString()),
-        `state:`,
-        `[${state}]`,
-        detail,
-        metaString,
-      ].join(' '),
-    );
+    const tids = trace.threads();
+    if (tids.length === 1) {
+      const tid = tids[0] as number;
+      Output.writeln(
+        [
+          `${Output.green(index.toString().padStart(3, ' '))}`,
+          `thread:`,
+          Output.blue(tid.toString()),
+          `state:`,
+          `[${state}]`,
+          detail,
+          metaString,
+        ].join(' '),
+      );
+    } else {
+      Output.writeln(
+        [
+          `${Output.green(index.toString().padStart(3, ' '))}`,
+          `multiple threads, state:`,
+          `[${state}]`,
+          detail,
+          metaString,
+        ].join(' '),
+      );
+    }
   }
 
   private runShow(tokens: Token[]): Var | null {
@@ -84,8 +97,13 @@ abstract class TraceBaseCmdLet<T extends Trace, M> extends CmdLetBase {
         } else {
           Output.writeln(`trace #${index} is still running`);
         }
-        const id = trace.thread();
-        return new Var(uint64(id), `Thread: ${id}`);
+        const tids = trace.threads();
+        if (tids.length === 1) {
+          const id = tids[0] as number;
+          return new Var(uint64(id), `Thread: ${id}`);
+        } else {
+          return Var.ZERO;
+        }
       }
     }
   }
@@ -104,8 +122,7 @@ abstract class TraceBaseCmdLet<T extends Trace, M> extends CmdLetBase {
       if (trace.isStopped()) {
         Output.writeln(`trace #${index} is already stopped`);
       } else {
-        const id = trace.thread();
-        Traces.delete(id);
+        trace.threads().forEach(t => Traces.delete(t));
         this.onStop(trace, meta);
         Output.writeln(`trace #${index} stopped`);
       }
@@ -136,8 +153,7 @@ abstract class TraceBaseCmdLet<T extends Trace, M> extends CmdLetBase {
     } else {
       const [trace, meta] = value;
       const stopped = trace.isStopped();
-      const id = trace.thread();
-      Traces.delete(id);
+      trace.threads().forEach(t => Traces.delete(t));
       if (!stopped) {
         this.onStop(trace, meta);
         this.onShow(trace, meta);
@@ -340,11 +356,11 @@ export class TraceCoverageCmdLet extends TraceBaseCmdLet<
   protected override usageCreate(): string {
     return `
 ${this.name} tid file - start a ${this.traceType} trace
-  tid          the thread to trace  
+  tid          the thread to trace [or '*' for all threads]
   file         the file to log to
   
 ${this.name} tid file mod - start a ${this.traceType} trace
-  tid          the thread to trace  
+  tid          the thread to trace [or '*' for all threads]
   file         the file to log to
   mod          the absolute path of the module to trace`;
   }
@@ -352,18 +368,17 @@ ${this.name} tid file mod - start a ${this.traceType} trace
   protected runCreate(tokens: Token[]): Var | null {
     const vars = this.transformOptional(
       tokens,
-      [this.parseVar, this.parseString],
+      [this.parseNumberOrAll, this.parseString],
       [this.parseLiteral],
     );
     if (vars === null) return null;
-    const [[tid, fileName], [modulePath]] = vars as [
-      [Var, string],
+    const [[threadid, fileName], [modulePath]] = vars as [
+      [number, string],
       [string | null],
     ];
 
     Output.debug(`fileName: ${fileName}`);
 
-    const threadid = tid.toU64().toNumber();
     const trace = CoverageTrace.create(threadid, fileName, modulePath);
     const id = this.addTrace(trace, { modulePath });
     Output.writeln(`Created trace: #${id}`);

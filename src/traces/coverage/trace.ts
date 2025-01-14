@@ -5,14 +5,14 @@ import { TraceBase, TraceData, Traces } from '../trace.js';
 import { Coverage, CoverageSession } from './coverage.js';
 
 class CoverageTraceData extends TraceData {
-  private threadId: ThreadId;
+  private threadIds: ThreadId[];
   private filename: string;
   private file: File;
   private size: number = 0;
 
-  public constructor(threadId: ThreadId, filename: string | null) {
+  public constructor(threadIds: ThreadId[], filename: string | null) {
     super();
-    this.threadId = threadId;
+    this.threadIds = threadIds;
     this.filename = filename ?? Files.getRandomFileName('cov');
     this.file = new File(this.filename, 'wb+');
   }
@@ -27,14 +27,24 @@ class CoverageTraceData extends TraceData {
   }
 
   public lines(): string[] {
-    return [
-      [
-        'Wrote coverage for thread:',
-        Output.yellow(this.threadId.toString()),
-        'to:',
-        Output.green(this.filename),
-      ].join(' '),
-    ];
+    if (this.threadIds.length === 1) {
+      const threadId = this.threadIds[0] as number;
+      return [
+        [
+          'Wrote coverage for thread:',
+          Output.yellow(threadId.toString()),
+          'to:',
+          Output.green(this.filename),
+        ].join(' '),
+      ];
+    } else {
+      return [
+        [
+          'Wrote coverage multiple threads sto:',
+          Output.green(this.filename),
+        ].join(' '),
+      ];
+    }
   }
 
   public details(): string {
@@ -53,12 +63,12 @@ export class CoverageTrace extends TraceBase<CoverageTraceData> {
   private coverage: CoverageSession;
 
   private constructor(
-    threadId: ThreadId,
+    threadIds: ThreadId[],
     filename: string | null,
     modulePath: string | null,
   ) {
-    const trace = new CoverageTraceData(threadId, filename);
-    super(threadId, trace);
+    const trace = new CoverageTraceData(threadIds, filename);
+    super(threadIds, trace);
 
     let moduleFilter = Coverage.allModules;
     if (modulePath !== null) {
@@ -72,7 +82,7 @@ export class CoverageTrace extends TraceBase<CoverageTraceData> {
         if (isHeader)
           Output.write(Output.blue(Format.toTextString(coverageData)));
       },
-      threadFilter: t => t.id === threadId,
+      threadFilter: t => threadIds.includes(t.id),
     });
   }
 
@@ -81,12 +91,19 @@ export class CoverageTrace extends TraceBase<CoverageTraceData> {
     filename: string | null,
     modulePath: string | null,
   ): CoverageTrace {
-    if (Traces.has(threadId)) {
-      throw new Error(`trace already exists for threadId: ${threadId}`);
-    }
+    const threadIds =
+      threadId === -1 ? Process.enumerateThreads().map(t => t.id) : [threadId];
 
-    const trace = new CoverageTrace(threadId, filename, modulePath);
-    Traces.set(threadId, trace);
+    if (threadIds.length === 0)
+      throw new Error('failed to find any threads to trace');
+
+    const traced = threadIds.filter(t => Traces.has(t));
+
+    if (traced.length !== 0)
+      throw new Error(`trace already exists for threadIds: ${traced}`);
+
+    const trace = new CoverageTrace(threadIds, filename, modulePath);
+    threadIds.forEach(t => Traces.set(t, trace));
     return trace;
   }
 

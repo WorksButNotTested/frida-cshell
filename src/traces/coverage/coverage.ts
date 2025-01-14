@@ -348,19 +348,37 @@ export class Coverage implements CoverageSession {
     });
     Stalker.flush();
     const eventList = Array.from(this.events.entries());
-    const convertedEvents = eventList.map(([start, end]) =>
-      this.convertEvent(start, end),
-    );
-    const nonNullEvents = convertedEvents.filter(
-      e => e !== undefined,
-    ) as ICoverageEvent[];
+    const convertedEvents = eventList
+      .map(([start, end]) => this.convertEvent(start, end))
+      .filter(e => e !== undefined) as ICoverageEvent[];
 
-    this.emitHeader(nonNullEvents);
-    for (const convertedEvent of nonNullEvents) {
-      if (convertedEvent !== undefined) {
-        this.emitEvent(convertedEvent);
-      }
-    }
+    const referencedModuleIds = [
+      ...new Set(convertedEvents.map(e => e.moduleId)),
+    ].sort();
+
+    const referencedModules = this.modules.filter((_mapping, idx) =>
+      referencedModuleIds.includes(idx),
+    );
+
+    const mapping: { [moduleId: number]: number } = referencedModuleIds.reduce(
+      (dict: { [moduleId: number]: number }, item: number, index: number) => {
+        dict[item] = index;
+        return dict;
+      },
+      {} as { [moduleId: number]: number },
+    );
+
+    const remapped: ICoverageEvent[] = convertedEvents.map(
+      e =>
+        ({
+          length: e.length,
+          moduleId: mapping[e.moduleId],
+          offset: e.offset,
+        }) as ICoverageEvent,
+    );
+
+    this.emitHeader(referencedModules, convertedEvents);
+    remapped.forEach(e => this.emitEvent(e));
   }
 
   /**
@@ -436,20 +454,17 @@ export class Coverage implements CoverageSession {
 
   /**
    * Function to emit the header information at the start of the DRCOV coverage information format. Note that the
-   * format includes a number of events in the header. This is obviously not ideally suited to streaming data, so we
-   * instead write the value of -1. This does not impair the operation of dragondance (which ignores the field), but
-   * changes may be required for IDA lighthouse to accept this modification.
+   * format includes a number of events in the header.
+   * @param modules The modules referenced by the events
    * @param events The coverage events to be emitted in the file
    */
-  private emitHeader(events: ICoverageEvent[]): void {
+  private emitHeader(modules: Module[], events: ICoverageEvent[]): void {
     this.emit(Coverage.convertString('DRCOV VERSION: 2\n'), true);
     this.emit(Coverage.convertString('DRCOV FLAVOR: frida\n'), true);
 
-    const referencedModules = [...new Set(events.map(e => e.moduleId))];
-
     this.emit(
       Coverage.convertString(
-        `Module Table: version 2, count ${referencedModules.length}\n`,
+        `Module Table: version 2, count ${modules.length}\n`,
       ),
       true,
     );
@@ -461,10 +476,8 @@ export class Coverage implements CoverageSession {
       true,
     );
 
-    
-    referencedModules.sort().forEach(id => {
-      const module = this.modules[id] as Module;
-      this.emitModule(id, module);
+    modules.forEach((module, idx) => {
+      this.emitModule(idx, module);
     });
 
     this.emit(Coverage.convertString(`BB Table: ${events.length} bbs\n`), true);

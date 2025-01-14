@@ -3,6 +3,11 @@ import { Regs } from '../breakpoints/regs.js';
 import { Output } from '../io/output.js';
 import { Format } from './format.js';
 
+export enum BacktraceType {
+  Accurate = 'accurate',
+  Fuzzy = 'fuzzy',
+}
+
 export class Exception {
   public static exceptionHandler(details: ExceptionDetails): boolean {
     if (details.type === 'access-violation') {
@@ -37,14 +42,20 @@ export class Exception {
     }
     Output.writeln();
 
-    Exception.printBacktrace(details.context);
+    Exception.printBacktrace(details.context, BacktraceType.Accurate);
     Output.writeln(`${Output.bold(Output.red('*****************'))}`);
     Thread.sleep(1);
     return true;
   }
 
-  public static printBacktrace(ctx: CpuContext) {
-    Thread.backtrace(ctx, Backtracer.ACCURATE)
+  public static printBacktrace(ctx: CpuContext, backtracer: BacktraceType) {
+    Output.writeln(Output.blue(`${backtracer} backtrace:`));
+    Thread.backtrace(
+      ctx,
+      backtracer === BacktraceType.Accurate
+        ? Backtracer.ACCURATE
+        : Backtracer.FUZZY,
+    )
       .map(DebugSymbol.fromAddress)
       .forEach(s => {
         const prefix = s.moduleName === null ? '' : `${s.moduleName}!`;

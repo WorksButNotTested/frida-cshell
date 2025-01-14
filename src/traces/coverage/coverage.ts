@@ -13,8 +13,9 @@ export interface CoverageOptions {
    * Dragondance.
    *
    * @param coverageData The raw coverage data
+   * @param isHeader Flag indicating whether the data is part of the header
    */
-  onCoverage(coverageData: ArrayBuffer): void;
+  onCoverage(coverageData: ArrayBuffer, isHeader: boolean): void;
 
   /**
    * Function to determine which threads should be included in the coverage information.
@@ -33,7 +34,7 @@ export interface CoverageSession {
   stop(): void;
 }
 
-type CoverageEmitter = (coverageData: ArrayBuffer) => void;
+type CoverageEmitter = (coverageData: ArrayBuffer, isHeader: boolean) => void;
 type CoverageThreadFilter = (thread: ThreadDetails) => boolean;
 
 /**
@@ -103,8 +104,8 @@ export class Coverage implements CoverageSession {
     const threadFilter = (t: ThreadDetails) => options.threadFilter(t);
 
     const coverage = new Coverage(
-      coverageData => {
-        options.onCoverage(coverageData);
+      (coverageData, isHeader) => {
+        options.onCoverage(coverageData, isHeader);
       },
       moduleFilter,
       threadFilter,
@@ -428,7 +429,7 @@ export class Coverage implements CoverageSession {
     );
 
     const buf = ArrayBuffer.wrap(memory, Coverage.EVENT_TOTAL_SIZE);
-    this.emit(buf);
+    this.emit(buf, false);
   }
 
   /**
@@ -439,25 +440,27 @@ export class Coverage implements CoverageSession {
    * @param events The number of coverage events emitted in the file
    */
   private emitHeader(events: number): void {
-    this.emit(Coverage.convertString('DRCOV VERSION: 2\n'));
-    this.emit(Coverage.convertString('DRCOV FLAVOR: frida\n'));
+    this.emit(Coverage.convertString('DRCOV VERSION: 2\n'), true);
+    this.emit(Coverage.convertString('DRCOV FLAVOR: frida\n'), true);
     this.emit(
       Coverage.convertString(
         `Module Table: version 2, count ${this.modules.length}\n`,
       ),
+      true,
     );
 
     this.emit(
       Coverage.convertString(
         'Columns: id, base, end, entry, checksum, timestamp, path\n',
       ),
+      true,
     );
 
     this.modules.forEach((m: Module, idx: number): void => {
       this.emitModule(idx, m);
     });
 
-    this.emit(Coverage.convertString(`BB Table: ${events} bbs\n`));
+    this.emit(Coverage.convertString(`BB Table: ${events} bbs\n`), true);
   }
 
   /**
@@ -486,7 +489,7 @@ export class Coverage implements CoverageSession {
     const path = module.path;
     const elements = [moduleId, base, end, entry, checksum, timeStamp, path];
     const line = elements.join(', ');
-    this.emit(Coverage.convertString(`${line}\n`));
+    this.emit(Coverage.convertString(`${line}\n`), true);
   }
 
   /**

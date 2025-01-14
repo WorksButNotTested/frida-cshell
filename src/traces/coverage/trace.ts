@@ -1,5 +1,6 @@
 import { Output } from '../../io/output.js';
 import { Files } from '../../misc/files.js';
+import { Format } from '../../misc/format.js';
 import { TraceBase, TraceData, Traces } from '../trace.js';
 import { Coverage, CoverageSession } from './coverage.js';
 
@@ -66,8 +67,10 @@ export class CoverageTrace extends TraceBase<CoverageTraceData> {
 
     this.coverage = Coverage.start({
       moduleFilter: moduleFilter,
-      onCoverage: coverageData => {
+      onCoverage: (coverageData, isHeader) => {
         this.trace.append(coverageData);
+        if (isHeader)
+          Output.write(Output.blue(Format.toTextString(coverageData)));
       },
       threadFilter: t => t.id === threadId,
     });

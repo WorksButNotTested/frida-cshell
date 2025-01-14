@@ -136,6 +136,8 @@ static void *busy_loop(void *arg)
 
 static void *network_loop(void *arg)
 {
+  char thread_name[] = "Network";
+  pthread_setname_np(pthread_self(), thread_name);
   int server_fd, client_fd;
   struct sockaddr_in server_addr, client_addr;
   socklen_t addr_len = sizeof(client_addr);

@@ -73,32 +73,29 @@ class ThreadArea {
 
 export class TlsIa32 {
   private static readonly SYS_get_thread_area: number = 0xf4;
-  private fnSyscall: SystemFunction<number, [number | UInt64, NativePointer]>;
-
   private static readonly SHELL_CODE: Uint8Array = new Uint8Array([
     /* xor eax, eax */ 0x31, 0xc0, /* mov ax, gs */ 0x66, 0x8c, 0xe8,
     /* ret */ 0xc3,
   ]);
+
+  private fnSyscall: SystemFunction<number, [number | UInt64, NativePointer]>;
+  private readonly codeGetSeg: NativePointer;
+  private readonly fnGetSeg: NativeFunction<number, []>;
 
   constructor() {
     const pSyscall = Module.findExportByName(null, 'syscall');
     if (pSyscall === null) throw new Error('failed to find syscall');
 
     this.fnSyscall = new SystemFunction(pSyscall, 'int', ['size_t', 'pointer']);
+
+    this.codeGetSeg = Memory.alloc(Process.pageSize);
+    this.codeGetSeg.writeByteArray(TlsIa32.SHELL_CODE.buffer as ArrayBuffer);
+    Memory.protect(this.codeGetSeg, Process.pageSize, 'r-x');
+    this.fnGetSeg = new NativeFunction(this.codeGetSeg, 'int', []);
   }
 
   public getSegment(): Selector {
-    const buffer = Memory.alloc(
-      TlsIa32.SHELL_CODE.length + 2 * Process.pageSize,
-    );
-    Output.debug(`buffer: ${buffer.toString(16)}`);
-    const shellCode = buffer.add(Process.pageSize);
-    Output.debug(`shellCode: ${shellCode.toString(16)}`);
-    shellCode.writeByteArray(TlsIa32.SHELL_CODE.buffer as ArrayBuffer);
-    const fnPtr = new NativeFunction(shellCode, 'int', []);
-    Memory.protect(shellCode, TlsIa32.SHELL_CODE.length, 'r-x');
-    const seg = fnPtr();
-    Memory.protect(shellCode, TlsIa32.SHELL_CODE.length, 'rw-');
+    const seg = this.fnGetSeg();
     return new Selector(seg);
   }
 

@@ -283,10 +283,8 @@ export class Coverage implements CoverageSession {
   /**
    * Map to hold collected suppressed coverage data for the purposes of de-duplication
    */
-  private readonly suppressedEvents: Map<NativePointer, NativePointer> = new Map<
-    NativePointer,
-    NativePointer
-  >();
+  private readonly suppressedEvents: Map<NativePointer, NativePointer> =
+    new Map<NativePointer, NativePointer>();
 
   /**
    * Map to hold collected coverage data for the purposes of de-duplication
@@ -365,7 +363,6 @@ export class Coverage implements CoverageSession {
             } else if (!this.suppressedEvents.has(start)) {
               this.events.set(start, end);
             }
-            
           }
         });
       },

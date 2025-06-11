@@ -164,7 +164,7 @@ sym addr - display symbol information associated with an address
         return Var.ZERO;
       }
     } else {
-      const address = Module.findExportByName(null, name);
+      const address = Module.findGlobalExportByName(name);
       if (address !== null) {
         Output.writeln(
           `${Output.green(name.padEnd(40, '.'))} ${Output.yellow(Format.toHexString(address))}`,

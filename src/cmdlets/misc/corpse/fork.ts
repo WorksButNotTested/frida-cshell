@@ -1,7 +1,7 @@
 export class Fork {
   private fnFork: SystemFunction<number, []>;
   public constructor() {
-    const pFork = Module.findExportByName(null, 'fork');
+    const pFork = Module.findGlobalExportByName('fork');
     if (pFork === null) throw new Error('failed to find fork');
 
     this.fnFork = new SystemFunction(pFork, 'int', []);

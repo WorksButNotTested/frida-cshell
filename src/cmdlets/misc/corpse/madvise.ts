@@ -10,7 +10,7 @@ export class Madvise {
   >;
 
   constructor() {
-    const pMadvise = Module.findExportByName(null, 'madvise');
+    const pMadvise = Module.findGlobalExportByName('madvise');
     if (pMadvise === null) throw new Error('failed to find madvise');
 
     this.fnMadvise = new SystemFunction(pMadvise, 'int', [

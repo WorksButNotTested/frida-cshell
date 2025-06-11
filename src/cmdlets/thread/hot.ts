@@ -333,7 +333,7 @@ hot name duration - show execution time for given thread during a given time per
   public override isSupported(): boolean {
     switch (Process.platform) {
       case 'linux':
-        this.pSysConf = Module.findExportByName(null, 'sysconf');
+        this.pSysConf = Module.findGlobalExportByName('sysconf');
         return true;
       case 'windows':
       case 'barebone':

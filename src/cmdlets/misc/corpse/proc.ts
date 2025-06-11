@@ -21,7 +21,7 @@ export class Proc {
   >;
 
   public constructor() {
-    const pWaitPid = Module.findExportByName(null, 'waitpid');
+    const pWaitPid = Module.findGlobalExportByName('waitpid');
     if (pWaitPid === null) throw new Error('failed to find waitpid');
 
     this.fnWaitPid = new SystemFunction(pWaitPid, 'int', [
@@ -30,17 +30,17 @@ export class Proc {
       'int',
     ]);
 
-    const pGetPid = Module.findExportByName(null, 'getpid');
+    const pGetPid = Module.findGlobalExportByName('getpid');
     if (pGetPid === null) throw new Error('failed to find getpid');
 
     this.fnGetPid = new SystemFunction(pGetPid, 'int', []);
 
-    const pKill = Module.findExportByName(null, 'kill');
+    const pKill = Module.findGlobalExportByName('kill');
     if (pKill === null) throw new Error('failed to find kill');
 
     this.fnKill = new SystemFunction(pKill, 'int', ['int', 'int']);
 
-    const pSyscall = Module.findExportByName(null, 'syscall');
+    const pSyscall = Module.findGlobalExportByName('syscall');
     if (pSyscall === null) throw new Error('failed to find syscall');
 
     this.fnSyscall = new SystemFunction(pSyscall, 'int', [

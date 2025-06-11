@@ -3,7 +3,7 @@ export class Dumpable {
   private fnSetPrctl: SystemFunction<number, [number, number | UInt64]>;
 
   public constructor() {
-    const pPrctl = Module.findExportByName(null, 'prctl');
+    const pPrctl = Module.findGlobalExportByName('prctl');
     if (pPrctl === null) throw new Error('failed to find prctl');
 
     this.fnSetPrctl = new SystemFunction(pPrctl, 'int', ['int', 'size_t']);

@@ -298,14 +298,14 @@ sh - run a shell`;
       case 'freebsd':
       case 'linux':
       case 'qnx':
-        this.pGetEnv = Module.findExportByName(null, 'getenv');
-        this.pPipe = Module.findExportByName(null, 'pipe');
-        this.pFork = Module.findExportByName(null, 'fork');
-        this.pClose = Module.findExportByName(null, 'close');
-        this.pDup2 = Module.findExportByName(null, 'dup2');
-        this.pExecV = Module.findExportByName(null, 'execv');
-        this.pExit = Module.findExportByName(null, 'exit');
-        this.pWaitPid = Module.findExportByName(null, 'waitpid');
+        this.pGetEnv = Module.findGlobalExportByName('getenv');
+        this.pPipe = Module.findGlobalExportByName('pipe');
+        this.pFork = Module.findGlobalExportByName('fork');
+        this.pClose = Module.findGlobalExportByName('close');
+        this.pDup2 = Module.findGlobalExportByName('dup2');
+        this.pExecV = Module.findGlobalExportByName('execv');
+        this.pExit = Module.findGlobalExportByName('exit');
+        this.pWaitPid = Module.findGlobalExportByName('waitpid');
 
         if (
           this.pGetEnv == null ||

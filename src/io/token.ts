@@ -52,7 +52,7 @@ export class Token {
     const v = Vars.get(this.value);
     if (v !== null) return v;
 
-    const address = Module.findExportByName(null, this.value);
+    const address = Module.findGlobalExportByName(this.value);
     if (address !== null) {
       return new Var(uint64(address.toString()), this.value);
     }

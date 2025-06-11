@@ -25,7 +25,7 @@ export class Mem {
   >;
 
   public constructor() {
-    const pMmap = Module.findExportByName(null, 'mmap');
+    const pMmap = Module.findGlobalExportByName('mmap');
     if (pMmap === null) throw new Error('failed to find mmap');
 
     this.fnMmap = new SystemFunction(pMmap, 'pointer', [
@@ -37,7 +37,7 @@ export class Mem {
       'size_t',
     ]);
 
-    const pMprotect = Module.findExportByName(null, 'mprotect');
+    const pMprotect = Module.findGlobalExportByName('mprotect');
     if (pMprotect === null) throw new Error('failed to find mprotect');
 
     this.fnMprotect = new SystemFunction(pMprotect, 'int', [

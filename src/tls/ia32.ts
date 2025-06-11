@@ -83,7 +83,7 @@ export class TlsIa32 {
   private readonly fnGetSeg: NativeFunction<number, []>;
 
   constructor() {
-    const pSyscall = Module.findExportByName(null, 'syscall');
+    const pSyscall = Module.findGlobalExportByName('syscall');
     if (pSyscall === null) throw new Error('failed to find syscall');
 
     this.fnSyscall = new SystemFunction(pSyscall, 'int', ['size_t', 'pointer']);

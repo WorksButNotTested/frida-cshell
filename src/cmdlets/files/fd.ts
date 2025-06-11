@@ -237,10 +237,10 @@ fd idx - show the given file descriptor
   public override isSupported(): boolean {
     switch (Process.platform) {
       case 'linux':
-        this.pOpenDir = Module.findExportByName(null, 'opendir');
-        this.pCloseDir = Module.findExportByName(null, 'closedir');
-        this.pReadDir = Module.findExportByName(null, 'readdir');
-        this.pReadLink = Module.findExportByName(null, 'readlink');
+        this.pOpenDir = Module.findGlobalExportByName('opendir');
+        this.pCloseDir = Module.findGlobalExportByName('closedir');
+        this.pReadDir = Module.findGlobalExportByName('readdir');
+        this.pReadLink = Module.findGlobalExportByName('readlink');
 
         if (
           this.pOpenDir === null ||
@@ -253,8 +253,8 @@ fd idx - show the given file descriptor
       case 'darwin':
       case 'freebsd':
       case 'qnx':
-        this.pGetDTableSize = Module.findExportByName(null, 'getdtablesize');
-        this.pFcntl = Module.findExportByName(null, 'fcntl');
+        this.pGetDTableSize = Module.findGlobalExportByName('getdtablesize');
+        this.pFcntl = Module.findGlobalExportByName('fcntl');
 
         if (this.pGetDTableSize === null || this.pFcntl === null) return false;
         break;

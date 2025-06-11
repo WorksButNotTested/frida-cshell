@@ -3,7 +3,7 @@ export class TlsX64 {
   private readonly arch_prctl: SystemFunction<number, [number, NativePointer]>;
 
   constructor() {
-    const pArchPrctl = Module.findExportByName(null, 'arch_prctl');
+    const pArchPrctl = Module.findGlobalExportByName('arch_prctl');
     if (pArchPrctl === null) throw new Error('failed to find arch_prctl');
     this.arch_prctl = new SystemFunction(pArchPrctl, 'int', ['int', 'pointer']);
   }

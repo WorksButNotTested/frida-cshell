@@ -13,7 +13,7 @@ export class Rlimit {
   };
 
   public constructor() {
-    const pSetrlimit = Module.findExportByName(null, 'setrlimit');
+    const pSetrlimit = Module.findGlobalExportByName('setrlimit');
     if (pSetrlimit === null) throw new Error('failed to find setrlimit');
 
     this.fnSetrlimit = new SystemFunction(pSetrlimit, 'int', [

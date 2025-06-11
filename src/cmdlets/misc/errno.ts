@@ -64,10 +64,8 @@ errno - display the errno value`;
   public override isSupported(): boolean {
     switch (Process.platform) {
       case 'linux': {
-        const pErrnoLocation = Module.findExportByName(
-          null,
-          '__errno_location',
-        );
+        const pErrnoLocation =
+          Module.findGlobalExportByName('__errno_location');
         if (pErrnoLocation === null) return false;
         this.fnErrnoLocation = new SystemFunction(
           pErrnoLocation,

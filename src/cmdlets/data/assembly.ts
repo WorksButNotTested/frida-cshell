@@ -43,7 +43,7 @@ l address <bytes> - show disassembly listing
       const mask = ptr(1).not();
       cursor = cursor.and(mask);
     }
-    let buffer = new Uint8Array(0);
+    let buffer: Uint8Array = new Uint8Array(0);
 
     try {
       const minLength = this.maxInstructionLen();

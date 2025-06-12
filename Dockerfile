@@ -126,23 +126,24 @@ RUN tar -C /root/ -j -x -v -f /tmp/busybox-1.36.1.tar.bz2
 FROM platform AS busybox-arm64
 COPY --from=busybox-source /root/busybox-1.36.1 /root/busybox-1.36.1
 WORKDIR /root/busybox-1.36.1
-RUN mkdir build
+RUN mkdir /root/busybox/
 
 RUN make \
-    O=/root/busybox-1.36.1/build \
+    O=/root/busybox/ \
     CROSS_COMPILE=aarch64-linux-gnu- \
     CFLAGS="-march=armv8-a" \
     defconfig
 
-RUN echo "CONFIG_STATIC=y" >> /root/busybox-1.36.1/build/.config
-RUN sed -i "s/CONFIG_TC=y/CONFIG_TC=n/g" /root/busybox-1.36.1/build/.config
+RUN echo "CONFIG_STATIC=y" >> /root/busybox/.config
+RUN sed -i "s/CONFIG_TC=y/CONFIG_TC=n/g" /root/busybox/.config
 
 RUN make \
-    O=/root/busybox-1.36.1/build \
+    O=/root/busybox/ \
     CROSS_COMPILE=aarch64-linux-gnu- \
     CFLAGS="-march=armv8-a" \
     -j8 \
-    install
+    install && \
+    rm -rf /root/busybox-1.36.1
 
 ################################################################################
 # BUSYBOX-x64                                                                  #
@@ -150,19 +151,20 @@ RUN make \
 FROM platform AS busybox-x64
 COPY --from=busybox-source /root/busybox-1.36.1 /root/busybox-1.36.1
 WORKDIR /root/busybox-1.36.1
-RUN mkdir build
+RUN mkdir /root/busybox/
 
 RUN make \
-    O=/root/busybox-1.36.1/build \
+    O=/root/busybox/ \
     defconfig
 
-RUN echo "CONFIG_STATIC=y" >> /root/busybox-1.36.1/build/.config
-RUN sed -i "s/CONFIG_TC=y/CONFIG_TC=n/g" /root/busybox-1.36.1/build/.config
+RUN echo "CONFIG_STATIC=y" >> /root/busybox/.config
+RUN sed -i "s/CONFIG_TC=y/CONFIG_TC=n/g" /root/busybox/.config
 
 RUN make \
-    O=/root/busybox-1.36.1/build \
+    O=/root/busybox/ \
     -j8 \
-    install
+    install && \
+    rm -rf /root/busybox-1.36.1
 
 ################################################################################
 # INITRD-BASE                                                                  #
@@ -192,10 +194,10 @@ COPY assets/initrd/entropy.c /root/entropy.c
 # INITRD-ARM64                                                                 #
 ################################################################################
 FROM initrd-base AS initrd-arm64
-COPY --from=busybox-arm64 /root/busybox-1.36.1/build/_install/bin /root/initramfs/bin/
-COPY --from=busybox-arm64 /root/busybox-1.36.1/build/_install/sbin /root/initramfs/sbin/
-COPY --from=busybox-arm64 /root/busybox-1.36.1/build/_install/usr /root/initramfs/usr/
-COPY --from=busybox-arm64 /root/busybox-1.36.1/build/_install/linuxrc /root/initramfs/linuxrc
+COPY --from=busybox-arm64 /root/busybox/_install/bin /root/initramfs/bin/
+COPY --from=busybox-arm64 /root/busybox/_install/sbin /root/initramfs/sbin/
+COPY --from=busybox-arm64 /root/busybox/_install/usr /root/initramfs/usr/
+COPY --from=busybox-arm64 /root/busybox/_install/linuxrc /root/initramfs/linuxrc
 RUN aarch64-linux-gnu-gcc \
     -march=armv8-a \
     -static \
@@ -322,10 +324,10 @@ RUN find . | cpio -o --format=newc -R root:root > /root/initramfs-arm64be.img
 # INITRD-x64                                                                   #
 ################################################################################
 FROM initrd-base AS initrd-x64
-COPY --from=busybox-x64 /root/busybox-1.36.1/build/_install/bin /root/initramfs/bin/
-COPY --from=busybox-x64 /root/busybox-1.36.1/build/_install/sbin /root/initramfs/sbin/
-COPY --from=busybox-x64 /root/busybox-1.36.1/build/_install/usr /root/initramfs/usr/
-COPY --from=busybox-x64 /root/busybox-1.36.1/build/_install/linuxrc /root/initramfs/linuxrc
+COPY --from=busybox-x64 /root/busybox/_install/bin /root/initramfs/bin/
+COPY --from=busybox-x64 /root/busybox/_install/sbin /root/initramfs/sbin/
+COPY --from=busybox-x64 /root/busybox/_install/usr /root/initramfs/usr/
+COPY --from=busybox-x64 /root/busybox/_install/linuxrc /root/initramfs/linuxrc
 RUN gcc \
     -static \
     -o /root/initramfs/sbin/entropy \

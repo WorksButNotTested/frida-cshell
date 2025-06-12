@@ -62,22 +62,20 @@ RUN apt-get install -y nodejs
 FROM platform AS kernel-source
 WORKDIR /root/
 RUN wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.15.2.tar.xz
-RUN tar xf linux-6.15.2.tar.xz
 
 ################################################################################
 # KERNEL-ARM64                                                                 #
 ################################################################################
 FROM platform AS kernel-arm64
-COPY --from=kernel-source /root/linux-6.15.2 /root/linux-6.15.2
-WORKDIR /root/linux-6.15.2
-
-RUN mkdir build
-RUN ARCH=arm64 make O=/root/linux-6.15.2/build/ defconfig
-RUN echo "CONFIG_COMPAT=y" >> /root/linux-6.15.2/build/.config
-
-WORKDIR /root/linux-6.15.2/build/
-
-RUN ARCH=arm64 \
+WORKDIR /root/
+COPY --from=kernel-source /root/linux-6.15.2.tar.xz /root/linux-6.15.2.tar.xz
+RUN tar xf linux-6.15.2.tar.xz && \
+    cd /root/linux-6.15.2 && \
+    mkdir build && \
+    ARCH=arm64 make O=/root/linux-6.15.2/build/ defconfig && \
+    echo "CONFIG_COMPAT=y" >> /root/linux-6.15.2/build/.config && \
+    cd /root/linux-6.15.2/build/ && \
+    ARCH=arm64 \
     CROSS_COMPILE=aarch64-linux-gnu- \
     CFLAGS="-march=armv8-a" \
     make \
@@ -96,15 +94,14 @@ COPY --from=ghcr.io/frida/x-tools-linux-be-target /root/Image.gz /root/zImage-ar
 # KERNEL-x64                                                                   #
 ################################################################################
 FROM platform AS kernel-x64
-COPY --from=kernel-source /root/linux-6.15.2 /root/linux-6.15.2
-WORKDIR /root/linux-6.15.2
-
-RUN mkdir build
-RUN make O=/root/linux-6.15.2/build/ defconfig
-
-WORKDIR /root/linux-6.15.2/build/
-
-RUN make \
+WORKDIR /root/
+COPY --from=kernel-source /root/linux-6.15.2.tar.xz /root/linux-6.15.2.tar.xz
+RUN tar xf linux-6.15.2.tar.xz && \
+    cd /root/linux-6.15.2 && \
+    mkdir build && \
+    make O=/root/linux-6.15.2/build/ defconfig && \
+    cd /root/linux-6.15.2/build/ && \
+    make \
         -j8 \
         bzImage && \
     cp /root/linux-6.15.2/build/arch/x86_64/boot/bzImage /root/bzImage-x64 \

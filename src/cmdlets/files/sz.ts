@@ -7,7 +7,6 @@ import { OutputBuffer } from '../../io/zmodem/output.js';
 import { Sz } from '../../io/zmodem/sz.js';
 import { Zmodem } from '../../io/zmodem/zmodem.js';
 import { Files } from '../../misc/files.js';
-import { Version } from '../../misc/version.js';
 import { Var } from '../../vars/var.js';
 
 export class SzCmdLet extends CmdLetBase {
@@ -94,11 +93,7 @@ cat file - send file
   public override isSupported(): boolean {
     switch (Process.platform) {
       case 'linux':
-        if (Version.VERSION >= Version.BINARY_MODE_MIN_VERSION) {
-          return true;
-        } else {
-          return false;
-        }
+        return true;
       case 'windows':
       case 'barebone':
       case 'darwin':

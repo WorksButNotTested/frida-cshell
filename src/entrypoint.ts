@@ -13,6 +13,7 @@ import { SrcCmdLet } from './cmdlets/files/src.js';
 import { Exception } from './misc/exception.js';
 import { Version } from './misc/version.js';
 import { Format } from './misc/format.js';
+import { APP_VERSION } from './version.js';
 
 export const HOME_DIR: string = Process.getHomeDir();
 export const DEFAULT_SRC_PATH: string = HOME_DIR.endsWith('/')
@@ -29,6 +30,14 @@ rpc.exports = {
       Output.setDebugging(params.debug);
       Output.debug(`params: ${JSON.stringify(params)}`);
     }
+    if (!Version.isSupported()) {
+      Output.writeln(
+        Output.red(
+          `Unsupported Frida version: ${Version.VERSION}, frida-cshell ${APP_VERSION}, requires at least ${Version.MIN_SUPPORTED_VERSION}`,
+        ),
+      );
+      return;
+    }
     Output.debug(`init - stage: ${stage}`);
     Output.banner();
     Process.setExceptionHandler(Exception.exceptionHandler);
@@ -43,6 +52,10 @@ rpc.exports = {
    * by the user including the newline.
    */
   async onFridaStdin(data: string, bytes: ArrayBuffer | null) {
+    if (!Version.isSupported()) {
+      return;
+    }
+
     if (bytes === null) {
       await Input.read(Format.toByteArray(data));
     } else {
@@ -54,10 +67,6 @@ rpc.exports = {
    * console mode to RAW
    */
   getFridaTerminalMode() {
-    if (Version.VERSION >= Version.BINARY_MODE_MIN_VERSION) {
-      return 'binary';
-    } else {
-      return 'raw';
-    }
+    return 'binary';
   },
 };

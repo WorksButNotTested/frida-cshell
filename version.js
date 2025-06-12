@@ -16,7 +16,7 @@ try {
 const outputPath = path.resolve('.', 'src', 'version.ts');
 const content = `
     export const GIT_COMMIT_HASH = '${commitHash}';
-    export const APP_VERSION = '${version}';
+    export const APP_VERSION = 'v${version}';
     `;
 
 fs.writeFileSync(outputPath, content, { encoding: 'utf8' });

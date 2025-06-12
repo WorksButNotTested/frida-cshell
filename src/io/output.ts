@@ -4,6 +4,7 @@ import { DEFAULT_SRC_PATH } from '../entrypoint.js';
 import { Format } from '../misc/format.js';
 import { APP_VERSION, GIT_COMMIT_HASH } from '../version.js';
 import { Endian } from '../misc/endian.js';
+import { Version } from '../misc/version.js';
 
 export class Output {
   private static readonly shell: string[] = [
@@ -40,7 +41,7 @@ export class Output {
     const metadata: [string, string][] = Object.entries({
       cshell: APP_VERSION,
       commit: GIT_COMMIT_HASH,
-      frida: Frida.version,
+      frida: Version.VERSION.toString(),
       runtime: Script.runtime,
       arch: Process.arch,
       endian: Endian.get(),

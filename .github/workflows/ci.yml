@@ -6,6 +6,10 @@ on:
 jobs:
   release:
     name: Release
+
+    permissions:
+      contents: write
+
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -46,3 +50,78 @@ jobs:
           asset_path: ${{ github.workspace }}/frida-cshell
           asset_name: frida-cshell-${{ github.ref_name  }}
           asset_content_type: text/x-shellscript
+
+  docker:
+    name: Docker
+    runs-on: ubuntu-24.04
+
+    permissions:
+      packages: write
+      contents: read
+
+    outputs:
+      image: ${{ steps.set-image.outputs.image }}
+
+    steps:
+      - name: Get Repo Name
+        run: echo "REPO_LOWER=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Set Image Output
+        id: set-image
+        run: echo "image=ghcr.io/${REPO_LOWER}:latest" >> $GITHUB_OUTPUT
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Extract tag
+        id: tag
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Restore Docker build cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          # We want to be able to update the cache if the Dockerfile is changed,
+          # but still be able to use previous versions if available.
+          key: ${{ runner.os }}-buildx-${{ github.ref }}-${{ hashFiles('Dockerfile') }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-${{ github.ref }}-
+            ${{ runner.os }}-buildx-
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker-container
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ env.REPO_LOWER }}:latest
+            ghcr.io/${{ env.REPO_LOWER }}:${{ env.VERSION }}
+          cache-from: |
+            type=registry,ref=ghcr.io/${{ env.REPO_LOWER }}:cache
+            type=local,src=/tmp/.buildx-cache
+          cache-to: |
+            ${{ github.ref == 'refs/heads/main' && 'type=registry,ref=ghcr.io/${{ env.REPO_LOWER }}:cache,mode=max' || 'type=local,dest=/tmp/.buildx-cache' }}
+
+      - name: Save Docker build cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          # We want to be able to update the cache if the Dockerfile is changed,
+          # but still be able to use previous versions if available.
+          key: ${{ runner.os }}-buildx-${{ github.ref }}-${{ hashFiles('Dockerfile') }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-${{ github.ref }}-
+            ${{ runner.os }}-buildx-

@@ -182,7 +182,7 @@
 		},
 		{
 			"type": "shell",
-			"command": "vm-arm32 sh /home/ws/frida-cshell -f /bin/target32",
+			"command": "vm-arm64 sh /home/ws/frida-cshell -f /bin/target32",
 			"problemMatcher": [],
 			"label": "VM arm32",
 			"group": {
@@ -236,7 +236,7 @@
 		},
 		{
 			"type": "shell",
-			"command": "vm-x86 sh /home/ws/frida-cshell -f /bin/target32",
+			"command": "vm-x64 sh /home/ws/frida-cshell -f /bin/target32",
 			"problemMatcher": [],
 			"label": "VM x86",
 			"group": {

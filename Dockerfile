@@ -87,7 +87,7 @@ RUN ARCH=arm64 \
 ################################################################################
 # KERNEL-ARM64BE                                                               #
 ################################################################################
-FROM platform as kernel-arm64be
+FROM platform AS kernel-arm64be
 COPY --from=ghcr.io/frida/x-tools-linux-be-target /root/Image.gz /root/zImage-arm64be
 
 ################################################################################
@@ -161,73 +161,6 @@ RUN make \
     install
 
 ################################################################################
-# FRIDA SOURCE                                                                 #
-################################################################################
-FROM platform AS frida-source
-WORKDIR /root/
-RUN git clone -b 17.1.4 https://github.com/frida/frida-core.git
-
-################################################################################
-# FRIDA-arm32                                                                  #
-################################################################################
-FROM ghcr.io/frida/x-tools-linux-armhf:latest AS frida-arm32
-COPY --from=frida-source /root/frida-core /root/frida-core
-WORKDIR /root/frida-core
-RUN ./configure \
-    --host=$XTOOLS_HOST
-RUN make
-
-################################################################################
-# FRIDA-arm32be                                                                #
-################################################################################
-FROM ghcr.io/frida/x-tools-linux-armbe8:latest AS frida-arm32be
-COPY --from=frida-source /root/frida-core /root/frida-core
-WORKDIR /root/frida-core
-RUN ./configure \
-    --host=$XTOOLS_HOST
-RUN make
-
-################################################################################
-# FRIDA-arm64                                                                  #
-################################################################################
-FROM ghcr.io/frida/x-tools-linux-arm64:latest AS frida-arm64
-COPY --from=frida-source /root/frida-core /root/frida-core
-WORKDIR /root/frida-core
-RUN ./configure \
-    --host=$XTOOLS_HOST
-RUN make
-
-################################################################################
-# FRIDA-arm64be                                                                #
-################################################################################
-FROM ghcr.io/frida/x-tools-linux-arm64be:latest AS frida-arm64be
-COPY --from=frida-source /root/frida-core /root/frida-core
-WORKDIR /root/frida-core
-RUN ./configure \
-    --host=$XTOOLS_HOST
-RUN make
-
-################################################################################
-# FRIDA-x86                                                                    #
-################################################################################
-FROM ghcr.io/frida/x-tools-linux-x86:latest AS frida-x86
-COPY --from=frida-source /root/frida-core /root/frida-core
-WORKDIR /root/frida-core
-RUN ./configure \
-    --host=$XTOOLS_HOST
-RUN make
-
-################################################################################
-# FRIDA-x64                                                                    #
-################################################################################
-FROM ghcr.io/frida/x-tools-linux-x86_64:latest AS frida-x64
-COPY --from=frida-source /root/frida-core /root/frida-core
-WORKDIR /root/frida-core
-RUN ./configure \
-    --host=$XTOOLS_HOST
-RUN make
-
-################################################################################
 # INITRD-BASE                                                                  #
 ################################################################################
 FROM platform AS initrd-base
@@ -267,8 +200,10 @@ RUN aarch64-linux-gnu-gcc \
 RUN cp -av /usr/arm-linux-gnueabihf/lib/ /root/initramfs/lib
 RUN cp -av /usr/aarch64-linux-gnu/lib/ /root/initramfs/lib64
 RUN ln -s /lib64/ld-linux-aarch64.so.1 /root/initramfs/lib/ld-linux-aarch64.so.1
-COPY --from=frida-arm64 /root/frida-core/build/inject/frida-inject /root/initramfs/bin/frida-inject-64
-COPY --from=frida-arm32 /root/frida-core/build/inject/frida-inject /root/initramfs/bin/frida-inject-32
+RUN wget -qO- https://github.com/frida/frida/releases/download/17.1.4/frida-inject-17.1.4-linux-arm64.xz | xz -d > /root/initramfs/bin/frida-inject-64
+RUN chmod +x /root/initramfs/bin/frida-inject-64
+RUN wget -qO- https://github.com/frida/frida/releases/download/17.1.4/frida-inject-17.1.4-linux-armhf.xz | xz -d > /root/initramfs/bin/frida-inject-32
+RUN chmod +x /root/initramfs/bin/frida-inject-32
 COPY assets/target/target.c /root/target.c
 COPY assets/target/module.c /root/module.c
 RUN aarch64-linux-gnu-gcc \
@@ -331,8 +266,10 @@ COPY assets/initrd/passwd /root/initramfs/etc/passwd
 COPY assets/initrd/motd /root/initramfs/etc/motd
 COPY assets/initrd/.profile /root/initramfs/.profile
 COPY assets/initrd/.cshellrc /root/initramfs/.cshellrc
-COPY --from=frida-arm64be /root/frida-core/build/inject/frida-inject /root/initramfs/bin/frida-inject-64
-COPY --from=frida-arm32be /root/frida-core/build/inject/frida-inject /root/initramfs/bin/frida-inject-32
+RUN wget -qO- https://github.com/frida/frida/releases/download/17.1.4/frida-inject-17.1.4-linux-arm64be.xz | xz -d > /root/initramfs/bin/frida-inject-64
+RUN chmod +x /root/initramfs/bin/frida-inject-64
+RUN wget -qO- https://github.com/frida/frida/releases/download/17.1.4/frida-inject-17.1.4-linux-armbe8.xz | xz -d > /root/initramfs/bin/frida-inject-32
+RUN chmod +x /root/initramfs/bin/frida-inject-32
 COPY assets/target/target.c /root/target.c
 COPY assets/target/module.c /root/module.c
 RUN aarch64_be-linux-gnu-gcc \
@@ -403,8 +340,10 @@ RUN cp /usr/i686-linux-gnu/lib/libm.so.6 /root/initramfs/lib/libm.so.6
 RUN cp /usr/i686-linux-gnu/lib/librt.so.1 /root/initramfs/lib/librt.so.1
 RUN cp /usr/i686-linux-gnu/lib/libpthread.so.0 /root/initramfs/lib/libpthread.so.0
 RUN cp /usr/i686-linux-gnu/lib/libc.so.6 /root/initramfs/lib/libc.so.6
-COPY --from=frida-x64 /root/frida-core/build/inject/frida-inject /root/initramfs/bin/frida-inject-64
-COPY --from=frida-x86 /root/frida-core/build/inject/frida-inject /root/initramfs/bin/frida-inject-32
+RUN wget -qO- https://github.com/frida/frida/releases/download/17.1.4/frida-inject-17.1.4-linux-x86_64.xz | xz -d > /root/initramfs/bin/frida-inject-64
+RUN chmod +x /root/initramfs/bin/frida-inject-64
+RUN wget -qO- https://github.com/frida/frida/releases/download/17.1.4/frida-inject-17.1.4-linux-x86.xz | xz -d > /root/initramfs/bin/frida-inject-32
+RUN chmod +x /root/initramfs/bin/frida-inject-32
 COPY assets/target/target.c /root/target.c
 COPY assets/target/module.c /root/module.c
 RUN gcc \
@@ -469,8 +408,10 @@ COPY --from=initrd-arm64 /root/initramfs-arm64.img /root/initramfs-arm64.img
 COPY --from=initrd-arm64be /root/initramfs-arm64be.img /root/initramfs-arm64be.img
 COPY --from=initrd-x64 /root/initramfs-x64.img /root/initramfs-x64.img
 
-COPY --from=frida-x64 /root/frida-core/build/inject/frida-inject /usr/bin/frida-inject-64
-COPY --from=frida-x86 /root/frida-core/build/inject/frida-inject /usr/bin/frida-inject-32
+RUN wget -qO- https://github.com/frida/frida/releases/download/17.1.4/frida-inject-17.1.4-linux-x86_64.xz | xz -d > /usr/bin/frida-inject-64
+RUN chmod +x /usr/bin/frida-inject-64
+RUN wget -qO- https://github.com/frida/frida/releases/download/17.1.4/frida-inject-17.1.4-linux-x86.xz | xz -d > /usr/bin/frida-inject-32
+RUN chmod +x /usr/bin/frida-inject-32
 
 COPY --from=initrd-x64 /root/initramfs/bin/target64 /usr/bin/target64
 COPY --from=initrd-x64 /root/initramfs/bin/module64.so /usr/bin/module64.so

@@ -85,6 +85,12 @@ RUN ARCH=arm64 \
         Image.gz
 
 ################################################################################
+# KERNEL-ARM64BE                                                               #
+################################################################################
+FROM platform as kernel-arm64be
+COPY --from=ghcr.io/frida/x-tools-linux-be-target /root/Image.gz /root/zImage-arm64be
+
+################################################################################
 # KERNEL-x64                                                                   #
 ################################################################################
 FROM platform AS kernel-x64
@@ -172,9 +178,29 @@ RUN ./configure \
 RUN make
 
 ################################################################################
+# FRIDA-arm32be                                                                #
+################################################################################
+FROM ghcr.io/frida/x-tools-linux-armbe8:latest AS frida-arm32be
+COPY --from=frida-source /root/frida-core /root/frida-core
+WORKDIR /root/frida-core
+RUN ./configure \
+    --host=$XTOOLS_HOST
+RUN make
+
+################################################################################
 # FRIDA-arm64                                                                  #
 ################################################################################
 FROM ghcr.io/frida/x-tools-linux-arm64:latest AS frida-arm64
+COPY --from=frida-source /root/frida-core /root/frida-core
+WORKDIR /root/frida-core
+RUN ./configure \
+    --host=$XTOOLS_HOST
+RUN make
+
+################################################################################
+# FRIDA-arm64be                                                                #
+################################################################################
+FROM ghcr.io/frida/x-tools-linux-arm64be:latest AS frida-arm64be
 COPY --from=frida-source /root/frida-core /root/frida-core
 WORKDIR /root/frida-core
 RUN ./configure \
@@ -264,7 +290,7 @@ RUN aarch64-linux-gnu-gcc \
     -lpthread \
     -o /root/initramfs/bin/target64 \
     /root/target.c
-    RUN arm-linux-gnueabihf-gcc \
+RUN arm-linux-gnueabihf-gcc \
     -Wall \
     -Werror \
     -no-pie \
@@ -286,6 +312,70 @@ RUN arm-linux-gnueabihf-gcc \
 COPY assets/cshell/test.js /root/initramfs/root/
 COPY assets/initrd/init-arm64 /root/initramfs/init
 RUN find . | cpio -o --format=newc -R root:root > /root/initramfs-arm64.img
+
+################################################################################
+# INITRD-ARM64BE                                                               #
+################################################################################
+FROM platform AS initrd-arm64be
+COPY --from=ghcr.io/frida/x-tools-linux-be-target /root/initramfs.img /root/initramfs.img
+COPY --from=ghcr.io/frida/x-tools-linux-armbe8 /opt/x-tools /opt/x-tools
+COPY --from=ghcr.io/frida/x-tools-linux-arm64be /opt/x-tools /opt/x-tools
+ENV PATH="/opt/x-tools/armeb-linux-gnueabi/bin:$PATH"
+ENV PATH="/opt/x-tools/aarch64_be-linux-gnu/bin:$PATH"
+RUN mkdir /root/initramfs/
+WORKDIR /root/initramfs/
+RUN cat /root/initramfs.img | cpio --extract
+RUN mkdir -p /root/initramfs/home/ws
+COPY assets/initrd/group /root/initramfs/etc/group
+COPY assets/initrd/passwd /root/initramfs/etc/passwd
+COPY assets/initrd/motd /root/initramfs/etc/motd
+COPY assets/initrd/.profile /root/initramfs/.profile
+COPY assets/initrd/.cshellrc /root/initramfs/.cshellrc
+COPY --from=frida-arm64be /root/frida-core/build/inject/frida-inject /root/initramfs/bin/frida-inject-64
+COPY --from=frida-arm32be /root/frida-core/build/inject/frida-inject /root/initramfs/bin/frida-inject-32
+COPY assets/target/target.c /root/target.c
+COPY assets/target/module.c /root/module.c
+RUN aarch64_be-linux-gnu-gcc \
+    -Wall \
+    -Werror \
+    -no-pie \
+    -shared \
+    -fPIC \
+    -march=armv8-a \
+    -o /root/initramfs/bin/module64.so \
+    /root/module.c
+RUN aarch64_be-linux-gnu-gcc \
+    -g \
+    -Wall \
+    -Werror \
+    -no-pie \
+    -march=armv8-a \
+    -D_GNU_SOURCE \
+    -lpthread \
+    -o /root/initramfs/bin/target64 \
+    /root/target.c
+RUN armeb-linux-gnueabi-gcc \
+    -Wall \
+    -Werror \
+    -no-pie \
+    -shared \
+    -fPIC \
+    -marm \
+    -o /root/initramfs/bin/module32.so \
+    /root/module.c
+RUN armeb-linux-gnueabi-gcc \
+    -g \
+    -Wall \
+    -Werror \
+    -no-pie \
+    -marm \
+    -D_GNU_SOURCE \
+    -lpthread \
+    -o /root/initramfs/bin/target32 \
+    /root/target.c    
+COPY assets/cshell/test.js /root/initramfs/root/
+COPY assets/initrd/init-arm64be /root/initramfs/init
+RUN find . | cpio -o --format=newc -R root:root > /root/initramfs-arm64be.img
 
 ################################################################################
 # INITRD-x64                                                                   #
@@ -334,7 +424,7 @@ RUN gcc \
     -lpthread \
     -o /root/initramfs/bin/target64 \
     /root/target.c
-    RUN i686-linux-gnu-gcc \
+RUN i686-linux-gnu-gcc \
     -Wall \
     -Werror \
     -no-pie \
@@ -356,32 +446,9 @@ COPY assets/initrd/init-x64 /root/initramfs/init
 RUN find . | cpio -o --format=newc -R root:root > /root/initramfs-x64.img
 
 ################################################################################
-# CSHELL                                                                       #
-################################################################################
-FROM platform AS cshell
-COPY --from=kernel-arm64 /root/linux-6.15.2/build/arch/arm64/boot/Image.gz /root/zImage-arm64
-COPY --from=kernel-x64 /root/linux-6.15.2/build/arch/x86_64/boot/bzImage /root/bzImage-x64
-COPY --from=initrd-arm64 /root/initramfs-arm64.img /root/initramfs-arm64.img
-COPY --from=initrd-x64 /root/initramfs-x64.img /root/initramfs-x64.img
-RUN mkdir /home/ws/
-COPY --from=frida-x64 /root/frida-core/build/inject/frida-inject /usr/bin/frida-inject-64
-COPY --from=frida-x86 /root/frida-core/build/inject/frida-inject /usr/bin/frida-inject-32
-
-
-COPY --from=initrd-x64 /root/initramfs/bin/target64 /usr/bin/target64
-COPY --from=initrd-x64 /root/initramfs/bin/module64.so /usr/bin/module64.so
-COPY --from=initrd-x64 /root/initramfs/bin/target32 /usr/bin/target32
-COPY --from=initrd-x64 /root/initramfs/bin/module32.so /usr/bin/module32.so
-COPY assets/cshell/test.js /root/
-COPY assets/cshell/vm-arm64 /bin/vm-arm64
-COPY assets/cshell/vm-x64 /bin/vm-x64
-COPY assets/cshell/vm-pty /bin/vm-pty
-WORKDIR /root/
-
-################################################################################
 # FRIDA-CSHELL                                                                 #
 ################################################################################
-FROM cshell AS frida-cshell
+FROM platform AS frida-cshell
 RUN apt-get update && \
     apt-get install -y \
     nano \
@@ -395,12 +462,31 @@ RUN ssh-keygen -f /root/.ssh/id_rsa -N ""
 RUN cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
 ENV FRIDA_INJECT=/usr/bin/frida-inject-64
 
+COPY --from=kernel-arm64 /root/linux-6.15.2/build/arch/arm64/boot/Image.gz /root/zImage-arm64
+COPY --from=kernel-arm64be /root/zImage-arm64be /root/zImage-arm64be
+COPY --from=kernel-x64 /root/linux-6.15.2/build/arch/x86_64/boot/bzImage /root/bzImage-x64
+COPY --from=initrd-arm64 /root/initramfs-arm64.img /root/initramfs-arm64.img
+COPY --from=initrd-arm64be /root/initramfs-arm64be.img /root/initramfs-arm64be.img
+COPY --from=initrd-x64 /root/initramfs-x64.img /root/initramfs-x64.img
+
+COPY --from=frida-x64 /root/frida-core/build/inject/frida-inject /usr/bin/frida-inject-64
+COPY --from=frida-x86 /root/frida-core/build/inject/frida-inject /usr/bin/frida-inject-32
+
+COPY --from=initrd-x64 /root/initramfs/bin/target64 /usr/bin/target64
+COPY --from=initrd-x64 /root/initramfs/bin/module64.so /usr/bin/module64.so
+COPY --from=initrd-x64 /root/initramfs/bin/target32 /usr/bin/target32
+COPY --from=initrd-x64 /root/initramfs/bin/module32.so /usr/bin/module32.so
+COPY assets/cshell/test.js /root/
+COPY assets/cshell/vm-arm64 /bin/vm-arm64
+COPY assets/cshell/vm-arm64be /bin/vm-arm64be
+COPY assets/cshell/vm-x64 /bin/vm-x64
+COPY assets/cshell/vm-pty /bin/vm-pty
+
+RUN mkdir /home/ws/
 WORKDIR /root/npm-cache
 COPY package.json /root/npm-cache
 COPY package-lock.json /root/npm-cache
 RUN npm install --ignore-scripts --no-audit --no-save --cache .
 RUN rm -rf node_modules/
 RUN rm package.json package-lock.json
-
-
-
+WORKDIR /root

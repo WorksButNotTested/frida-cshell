@@ -14,7 +14,10 @@ import { Exception } from './misc/exception.js';
 import { Version } from './misc/version.js';
 import { Format } from './misc/format.js';
 
-export const DEFAULT_SRC_PATH: string = `${Process.getHomeDir()}/.cshellrc`;
+export const HOME_DIR: string = Process.getHomeDir();
+export const DEFAULT_SRC_PATH: string = HOME_DIR.endsWith('/')
+  ? `${HOME_DIR}.cshellrc`
+  : `${HOME_DIR}/.cshellrc`;
 
 type InitParams = {
   debug: boolean;
@@ -23,8 +26,8 @@ type InitParams = {
 rpc.exports = {
   async init(stage: string, params: InitParams | null = null) {
     if (params != null) {
-      Output.writeln(`params: ${JSON.stringify(params)}`);
       Output.setDebugging(params.debug);
+      Output.debug(`params: ${JSON.stringify(params)}`);
     }
     Output.debug(`init - stage: ${stage}`);
     Output.banner();

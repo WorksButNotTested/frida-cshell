@@ -3,6 +3,7 @@ import { Vars } from '../vars/vars.js';
 import { DEFAULT_SRC_PATH } from '../entrypoint.js';
 import { Format } from '../misc/format.js';
 import { APP_VERSION, GIT_COMMIT_HASH } from '../version.js';
+import { Endian } from '../misc/endian.js';
 
 export class Output {
   private static readonly shell: string[] = [
@@ -31,35 +32,90 @@ export class Output {
   private static suppressed: boolean = false;
 
   public static banner() {
-    this.shell
-      .map((s, i) => {
-        return { shell: s, label: this.label[i] };
-      })
-      .forEach(r => {
-        this.writeln(this.blue(`${r.shell.padEnd(21, ' ')}${r.label}`));
-      });
+    const banner: [string, string][] = this.shell.map((s, i) => [
+      (s as string).trimEnd(),
+      (this.label[i] as string).trimEnd(),
+    ]);
+
+    const metadata: [string, string][] = Object.entries({
+      cshell: APP_VERSION,
+      commit: GIT_COMMIT_HASH,
+      frida: Frida.version,
+      runtime: Script.runtime,
+      arch: Process.arch,
+      endian: Endian.get(),
+      pid: Process.id.toString(),
+      binary: Process.enumerateModules()[0]?.name ?? null,
+      script: DEFAULT_SRC_PATH,
+    }).filter(([_key, value]) => value !== null) as [string, string][];
+
+    const [maxShellLength, maxLabelLength] = banner.reduce(
+      ([maxShell, maxLabel], [shell, label]) => [
+        Math.max(maxShell, shell.length),
+        Math.max(maxLabel, label.length),
+      ],
+      [0, 0],
+    );
+
+    const [maxKeyLength, maxValueLength] = metadata.reduce(
+      ([maxKey, maxVal], [key, value]) => [
+        Math.max(maxKey, key.length),
+        Math.max(maxVal, value.length),
+      ],
+      [0, 0],
+    );
+
+    const bannerSpacer = ' '.repeat(3);
+
+    const metaPrefix: string = '| ';
+    const metaSpacer: string = ' | ';
+    const metaSuffix: string = ' |';
+
+    const maxBannerLineLength =
+      maxShellLength + bannerSpacer.length + maxLabelLength;
+    const maxMetaLineLength =
+      metaPrefix.length +
+      maxKeyLength +
+      metaSpacer.length +
+      maxValueLength +
+      metaSuffix.length;
+    const bannerIndent = ' '.repeat(
+      Math.max(0, maxMetaLineLength - maxBannerLineLength) / 2,
+    );
+
+    const metaSeperator = this.red(
+      [
+        '+-',
+        '-'.repeat(maxKeyLength),
+        '-+-',
+        '-'.repeat(maxValueLength),
+        '-+',
+      ].join(''),
+    );
+
+    banner.forEach(([shell, label]) => {
+      this.write(bannerIndent);
+      this.write(this.blue(shell.padEnd(maxShellLength, ' ')));
+      this.write(bannerSpacer);
+      this.write(this.blue(label.padEnd(maxLabelLength, ' ')));
+      this.writeln();
+    });
 
     this.writeln();
-    this.writeln(
-      this.bold(
-        [
-          `CSHELL: v${APP_VERSION}`,
-          `COMMIT: ${GIT_COMMIT_HASH}`,
-          `FRIDA: ${Frida.version}`,
-          `RUNTIME: ${Script.runtime}`,
-        ].join('\n'),
-      ),
-    );
-    this.writeln(`init script: ${Output.bold(DEFAULT_SRC_PATH)}`);
 
-    this.writeln('Attached to:');
-    this.writeln(`\tPID:  ${this.green(Process.id.toString())}`);
+    this.writeln(metaSeperator);
 
-    const modules = Process.enumerateModules();
-    if (modules.length === 0) return;
+    for (const [key, value] of metadata) {
+      this.write(this.red(metaPrefix));
+      this.write(this.green(key.toUpperCase().padStart(maxKeyLength, ' ')));
+      this.write(this.red(metaSpacer));
+      this.write(this.bold(this.yellow(value.padEnd(maxValueLength, ' '))));
+      this.write(this.red(metaSuffix));
+      this.writeln();
+    }
+    this.writeln(metaSeperator);
 
-    const first = modules[0] as Module;
-    this.writeln(`\tName: ${this.green(first.name)}`);
+    this.writeln();
   }
 
   public static debug(buffer: string | null) {

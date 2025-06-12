@@ -118,53 +118,48 @@ RUN wget \
     -O /tmp/busybox-1.36.1.tar.bz2 \
     https://busybox.net/downloads/busybox-1.36.1.tar.bz2
 
-RUN tar -C /root/ -j -x -v -f /tmp/busybox-1.36.1.tar.bz2
-
 ################################################################################
 # BUSYBOX-ARM64                                                                #
 ################################################################################
 FROM platform AS busybox-arm64
-COPY --from=busybox-source /root/busybox-1.36.1 /root/busybox-1.36.1
-WORKDIR /root/busybox-1.36.1
-RUN mkdir /root/busybox/
-
-RUN make \
-    O=/root/busybox/ \
-    CROSS_COMPILE=aarch64-linux-gnu- \
-    CFLAGS="-march=armv8-a" \
-    defconfig
-
-RUN echo "CONFIG_STATIC=y" >> /root/busybox/.config
-RUN sed -i "s/CONFIG_TC=y/CONFIG_TC=n/g" /root/busybox/.config
-
-RUN make \
-    O=/root/busybox/ \
-    CROSS_COMPILE=aarch64-linux-gnu- \
-    CFLAGS="-march=armv8-a" \
-    -j8 \
-    install && \
-    rm -rf /root/busybox-1.36.1
+COPY --from=busybox-source /tmp/busybox-1.36.1.tar.bz2 /tmp/busybox-1.36.1.tar.bz2
+RUN tar -C /root/ -j -x -v -f /tmp/busybox-1.36.1.tar.bz2 && \
+    cd /root/busybox-1.36.1 && \
+    mkdir /root/busybox/ && \
+    make \
+        O=/root/busybox/ \
+        CROSS_COMPILE=aarch64-linux-gnu- \
+        CFLAGS="-march=armv8-a" \
+        defconfig && \
+    echo "CONFIG_STATIC=y" >> /root/busybox/.config && \
+    sed -i "s/CONFIG_TC=y/CONFIG_TC=n/g" /root/busybox/.config && \
+    make \
+        O=/root/busybox/ \
+        CROSS_COMPILE=aarch64-linux-gnu- \
+        CFLAGS="-march=armv8-a" \
+        -j8 \
+        install && \
+        rm -rf /root/busybox-1.36.1
 
 ################################################################################
 # BUSYBOX-x64                                                                  #
 ################################################################################
 FROM platform AS busybox-x64
-COPY --from=busybox-source /root/busybox-1.36.1 /root/busybox-1.36.1
-WORKDIR /root/busybox-1.36.1
-RUN mkdir /root/busybox/
+COPY --from=busybox-source /tmp/busybox-1.36.1.tar.bz2 /tmp/busybox-1.36.1.tar.bz2
 
-RUN make \
-    O=/root/busybox/ \
-    defconfig
-
-RUN echo "CONFIG_STATIC=y" >> /root/busybox/.config
-RUN sed -i "s/CONFIG_TC=y/CONFIG_TC=n/g" /root/busybox/.config
-
-RUN make \
-    O=/root/busybox/ \
-    -j8 \
-    install && \
-    rm -rf /root/busybox-1.36.1
+RUN tar -C /root/ -j -x -v -f /tmp/busybox-1.36.1.tar.bz2 && \
+    cd /root/busybox-1.36.1 && \
+    mkdir /root/busybox/ && \
+    make \
+        O=/root/busybox/ \
+        defconfig && \ 
+    echo "CONFIG_STATIC=y" >> /root/busybox/.config && \
+    sed -i "s/CONFIG_TC=y/CONFIG_TC=n/g" /root/busybox/.config && \
+    make \
+        O=/root/busybox/ \
+        -j8 \
+        install && \
+        rm -rf /root/busybox-1.36.1
 
 ################################################################################
 # INITRD-BASE                                                                  #

@@ -34,6 +34,7 @@ fd idx - show the given file descriptor
   private static readonly F_GETFD: number = 1;
   private static readonly F_GETPATH: number = 50;
 
+  private pErrnoLocation: NativePointer | null = null;
   private pOpenDir: NativePointer | null = null;
   private pCloseDir: NativePointer | null = null;
   private pReadDir: NativePointer | null = null;
@@ -103,6 +104,12 @@ fd idx - show the given file descriptor
     )
       throw new Error('failed to find necessary native functions');
 
+    // int * __errno_location(void);
+    const fnErrnoLocation = new SystemFunction(
+      this.pErrnoLocation as NativePointer,
+      'pointer',
+      [],
+    );
     // DIR *opendir(const char *name);
     const fnOpenDir = new SystemFunction(this.pOpenDir, 'pointer', ['pointer']);
     // int closedir(DIR *dirp);
@@ -117,7 +124,15 @@ fd idx - show the given file descriptor
       'int',
     ]);
 
-    const path = Memory.allocUtf8String('/proc/self/fd/');
+    const { value: errnoLocation, errno: errnoLocationErr } = fnErrnoLocation() as UnixSystemFunctionResult<NativePointer>;
+    if (errnoLocation.equals(ptr(0)))
+      throw new Error(
+        `Failed to __errno_location, errno: ${errnoLocationErr}`,
+      );
+
+    errnoLocation.writeInt(0);
+
+    const path = Memory.allocUtf8String('/proc/self/fd');
 
     const { value: dir, errno: openErrno } = fnOpenDir(
       path,
@@ -237,12 +252,14 @@ fd idx - show the given file descriptor
   public override isSupported(): boolean {
     switch (Process.platform) {
       case 'linux':
+        this.pErrnoLocation = Module.findGlobalExportByName('__errno_location');
         this.pOpenDir = Module.findGlobalExportByName('opendir');
         this.pCloseDir = Module.findGlobalExportByName('closedir');
         this.pReadDir = Module.findGlobalExportByName('readdir');
         this.pReadLink = Module.findGlobalExportByName('readlink');
 
         if (
+          this.pErrnoLocation === null ||
           this.pOpenDir === null ||
           this.pCloseDir === null ||
           this.pReadDir === null ||

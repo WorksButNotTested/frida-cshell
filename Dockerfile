@@ -82,7 +82,9 @@ RUN ARCH=arm64 \
     CFLAGS="-march=armv8-a" \
     make \
         -j8 \
-        Image.gz
+        Image.gz && \
+    cp /root/linux-6.15.2/build/arch/arm64/boot/Image.gz /root/zImage-arm64 \
+    && rm -rf /root/linux-6.15.2
 
 ################################################################################
 # KERNEL-ARM64BE                                                               #
@@ -104,7 +106,9 @@ WORKDIR /root/linux-6.15.2/build/
 
 RUN make \
         -j8 \
-        bzImage
+        bzImage && \
+    cp /root/linux-6.15.2/build/arch/x86_64/boot/bzImage /root/bzImage-x64 \
+    && rm -rf /root/linux-6.15.2
 
 ################################################################################
 # BUSYBOX SOURCE                                                               #
@@ -401,9 +405,9 @@ RUN ssh-keygen -f /root/.ssh/id_rsa -N ""
 RUN cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
 ENV FRIDA_INJECT=/usr/bin/frida-inject-64
 
-COPY --from=kernel-arm64 /root/linux-6.15.2/build/arch/arm64/boot/Image.gz /root/zImage-arm64
+COPY --from=kernel-arm64 /root/zImage-arm64 /root/zImage-arm64
 COPY --from=kernel-arm64be /root/zImage-arm64be /root/zImage-arm64be
-COPY --from=kernel-x64 /root/linux-6.15.2/build/arch/x86_64/boot/bzImage /root/bzImage-x64
+COPY --from=kernel-x64 /root/bzImage-x64 /root/bzImage-x64
 COPY --from=initrd-arm64 /root/initramfs-arm64.img /root/initramfs-arm64.img
 COPY --from=initrd-arm64be /root/initramfs-arm64be.img /root/initramfs-arm64be.img
 COPY --from=initrd-x64 /root/initramfs-x64.img /root/initramfs-x64.img

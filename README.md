@@ -1,10 +1,72 @@
 # Overview
-The C-Shell is a command line interpreter embedded as part of the `frida-inject` tool, it takes inspiration from the VxWorks C-Shell and is intended to allow the user to interactively inspect a running process by issuing commands. By setting `frida-inject` to use raw mode, the tool acts as a dumb byte pump sending and receiving raw key-strokes between the TTY and the C-shell. It is implmented purely in about 4k lines of Typescript (which is embedded as a resource) and converts the user's input into calls into the [FRIDA JS API bindings](https://frida.re/docs/javascript-api/).
+The C-Shell is a command line interpreter which can be used in conjunction with the `frida-inject` tool, it takes inspiration from the VxWorks C-Shell and is intended to allow the user to interactively inspect a running process by issuing commands. By setting `frida-inject` to use `raw` and `interactive` modes, the script can read and write raw bytes to the TTY allowing direct interation with the user. It is implmented purely in about 12k lines of Typescript (which is embedded as a resource into a shell script which launches `frida-inject`) and converts the user's input into calls into the [FRIDA JS API bindings](https://frida.re/docs/javascript-api/). 
 
-# Getting Started
-The C-Shell can be started by using the `-s` flag provided to the `frida-inject` tool as follows:
-* `frida-inject -f <file> --interactive -s frida-cshell.js`
-* `frida-inject -p <pid> --interactive -s frida-cshell.js`
+It is intended to allow much more dynamic interaction with a process, without requiring the user to write and modify JS each time they wish to inspect something new. It works much more like a debugger, but without the complex syntax of GDB and without stopping threads (which can interefere with watchdog timers). It is extensible too, allowing the user to define macros, run commands from a file, as well as add new commands in an adhoc fashion via `JS` (so if you want to add a command to dump some application specific data format then you can).
+
+Some of the key features are:
+* Add breakpoints on function entry and exit, instructions, memory access (without stopping the target application)
+* Log coverage data (using stalker) for a function to show the executed blocks or calls for a function or thread.
+* Collect coverage data into a dynamoRIO format file for inspection with `lighthouse` (IDA) or `lightkeeper` (Ghidra) for a function or thread or application.
+* Patch a function with another implementation (including one written in JS)
+* Modify memory, or dump it to screen or to a file
+* Show diassassembly listings or register contents
+* Dump a file or show the open file descriptors for the process
+* Perform basic math operations with a relatively simple syntax
+* Query symbol and virtual memory information
+* Create a coredump of the running process without killing it
+* Call any function in the application with any arguments you like
+* Display the value of `errno`
+* Log all commands and output to file
+* Filter command output using regular expressions
+* Command history
+* Create and manage variables (to give a friendly name to strings, addresses or numbers)
+* Load modules and display module information
+* Show the threads running in the application and their backtraces
+* Determine which threads are busiest and compare to a baseline
+
+# Install
+## Using NPM as root
+The easiest way to install `frida-cshell` is to use the command:
+```bash
+sudo npm install -g frida-cshell
+```
+
+## Using NPM as a normal user
+If you can't or don't want to install `frida-cshell` as root, then you can install and run it as follows:
+```bash
+npm install frida-cshell
+```
+```bash
+npm exec frida-cshell
+```
+
+## Adhoc
+Alternatively you can download the [latest](https://github.com/WorksButNotTested/frida-cshell/releases/latest) directly from release from GitHub and download and run the `frida-cshell-x.y.z` bash script
+
+# Options
+The `frida-cshell` script presents the following options:
+```
+# ./frida-cshell -h
+Usage
+  ./frida-cshell [OPTION?]
+
+Help Options:
+  -h,   show help options
+
+Application Options:
+  -f    spawn FILE
+  -n    attach to NAME
+  -p    attach to PID
+  -V    enable verbose mode
+```
+It assumes that `frida-inject` can be found on the path, otherwise an alternative can be provided using the `FRIDA_INJECT` environment variable. As an example, it can be used as follows:
+
+# Advanced
+Alternatively you can use `frida-inject` directly to load the `frida-inject-x.y.z.js` script (available from the [releases](https://github.com/WorksButNotTested/frida-cshell/releases/latest) page).
+
+**Important** Be sure to include the `--interactive` command line option, in addition to your other usual options, otherwise the terminal will appear non-responsive.
+
+# Startup
 
 When launched the user will see the welcome banner as shown below:
 
@@ -23,40 +85,6 @@ Attached to:
 ```
 **Important** Be sure to include the `--interactive` command line option, otherwise the terminal will appear non-responsive.
 
-# Wrapper
-Alternatively, included in the release is a wrapper shell script `frida-cshell`:
-```
-# ./frida-cshell -h
-Usage
-  ./frida-cshell [OPTION?]
-
-Help Options:
-  -h,   show help options
-
-Application Options:
-  -f    spawn FILE
-  -n    attach to NAME
-  -p    attach to PID
-  -V    enable verbose mode
-```
-It assumes that `frida-inject` can be found on the path, otherwise an alternative can be provided using the `FRIDA_INJECT` environment variable. As an example, it can be used as follows:
-
-```
-# FRIDA_INJECT=frida-inject-64 ./frida-cshell -f ./target
-     _.---._                   _          _ _
- .'"".'/|\'.""'.              | |        | | |
-:  .' / | \ '.  :     ____ ___| |__   ___| | |
-'.'  /  |  \  '.'    /  _ / __| '_ \ / _ \ | |
- `. /   |   \ .'     | (__\__ \ | | | |__/ | |
-   `-.__|__.-'       \____|___/_| |_|\___|_|_|
-
-CSHELL v1.0.6, running in FRIDA 0.0.0 using QJS
-Attached to:
-        PID:  253520
-        Name: target
-
-->
-```
 # Init Scripts
 Commands which should be run on start-up can be provided in a file name `.cshellrc` in the current directory. An example can be found [here](assets/initrd/.cshellrc)
 

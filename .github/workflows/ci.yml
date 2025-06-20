@@ -25,14 +25,14 @@ jobs:
       - name: Install
         id: install
         run: npm install
+      - name: Release
+        id: release
+        uses: justincy/github-action-npm-release@2.0.1
       - name: Publish to npmjs
         if: ${{ steps.release.outputs.released == 'true' }}
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPMJS }}
-      - name: Release
-        id: release
-        uses: justincy/github-action-npm-release@2.0.1
       - name: Upload JS
         id: uploadjs
         uses: actions/upload-release-asset@v1

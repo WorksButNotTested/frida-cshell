@@ -28,11 +28,11 @@ jobs:
       - name: Release
         id: release
         uses: justincy/github-action-npm-release@2.0.1
+      - name: Set up .npmrc
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPMJS }}" > ~/.npmrc
       - name: Publish to npmjs
         if: ${{ steps.release.outputs.released == 'true' }}
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPMJS }}
       - name: Upload JS
         id: uploadjs
         uses: actions/upload-release-asset@v1

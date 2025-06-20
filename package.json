@@ -1,7 +1,7 @@
 {
   "name": "frida-cshell",
   "description": "Frida CShell",
-  "version": "1.9.7",
+  "version": "1.9.8",
   "keywords": [
     "frida-gum"
   ],
@@ -13,6 +13,9 @@
   "authors": [
     "WorksButNotTested"
   ],
+  "bin": {
+    "frida-cshell": "./frida-cshell"
+  },
   "scripts": {
     "prepare": "npm run version && npm run build && npm run package && npm run copy",
     "build": "frida-compile src/entrypoint.ts -o frida-cshell.js -c",
